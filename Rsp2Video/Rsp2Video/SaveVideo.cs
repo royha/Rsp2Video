@@ -530,7 +530,7 @@ namespace RSPro2Video
             AddClosingCard();
 
             // Add 1/2 second of black.
-            AddOpeningBlackVideo(0.5f);
+            AddBlack(0.5f);
         }
 
         /// <summary>
@@ -691,7 +691,7 @@ namespace RSPro2Video
             AddClosingCard();
 
             // Add 1/2 second of black.
-            AddOpeningBlackVideo(0.5f);
+            AddBlack(0.5f);
         }
 
         /// <summary>
@@ -840,7 +840,7 @@ namespace RSPro2Video
                         }
 
                         // Add 1/2 second of black.
-                        AddOpeningBlackVideo(0.5f);
+                        AddBlack(0.5f);
                     }
                 }
             }
@@ -956,7 +956,7 @@ namespace RSPro2Video
             }
 
             // Add 1/2 second of black.
-            AddOpeningBlackVideo(0.5f);
+            AddBlack(0.5f);
         }
 
         /// <summary>
@@ -1059,7 +1059,7 @@ namespace RSPro2Video
             }
 
             // Add 1/2 second of black.
-            AddOpeningBlackVideo(0.5f);
+            AddBlack(0.5f);
         }
 
         /// <summary>
@@ -1167,7 +1167,7 @@ namespace RSPro2Video
                         }
 
                         // Add 1/2 second of black.
-                        AddOpeningBlackVideo(0.5f);
+                        AddBlack(0.5f);
                     }
                 }
             }
@@ -1201,7 +1201,7 @@ namespace RSPro2Video
         /// </remarks>
         /// <param name="duration">The length of time for the video of black.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool AddOpeningBlackVideo(float duration)
+        private bool AddBlack(float duration)
         {
             // Create the filename for this video clip.
             String filename = String.Format("Black.{0:0.######}", duration);
