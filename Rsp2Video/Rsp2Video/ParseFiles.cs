@@ -160,7 +160,10 @@ namespace RSPro2Video
                 return false;
             }
 
-            ExtractBokBookmarkData();
+            if (ExtractBokBookmarkData() == false)
+            {
+                return false;
+            }
 
             AssembleBokBookmarks();
 
@@ -324,7 +327,7 @@ namespace RSPro2Video
         /// <summary>
         /// Extracts the bookmark data from the .FmBok or .bok file associated with the Reverse Speech Pro audio file.
         /// </summary>
-        private void ExtractBokBookmarkData()
+        private Boolean ExtractBokBookmarkData()
         {
             int i;
             int dataStart = -1;
@@ -366,6 +369,13 @@ namespace RSPro2Video
                 Int32 len = BitConverter.ToInt32(bookmarkFileBytes, x + baseAddress);
                 x += 4;
 
+                // Check if the len is out of bounds.
+                if (len + x + baseAddress >= bookmarkFileBytes.Length)
+                {
+                    ShowBokError(newBookmark, BokBookmarks, "Out of bounds on bookmark name string length.");
+                    return false;
+                }
+
                 // Get bookmark name string.
                 String name = Encoding.UTF8.GetString(bookmarkFileBytes, x + baseAddress, len);
 
@@ -395,6 +405,13 @@ namespace RSPro2Video
                 len = BitConverter.ToInt32(bookmarkFileBytes, x + baseAddress);
                 x += 4;
 
+                // Check if the len is out of bounds.
+                if (len + x + baseAddress >= bookmarkFileBytes.Length)
+                {
+                    ShowBokError(newBookmark, BokBookmarks, "Out of bounds on bookmark text string length.");
+                    return false;
+                }
+
                 // Get bookmark text string.
                 String text = Encoding.UTF8.GetString(bookmarkFileBytes, x + baseAddress, len);
 
@@ -412,8 +429,8 @@ namespace RSPro2Video
                         break;
                 }
 
-                        // Separate transcript text from explanatory text. Explanatory text is separated from transcript text by a blank line.
-                        Match match = Regex.Match(text, @"\r\n\s*\r\n");
+                // Separate transcript text from explanatory text. Explanatory text is separated from transcript text by a blank line.
+                Match match = Regex.Match(text, @"\r\n\s*\r\n");
                 if (match.Success)
                 {
                     // The blank line was found. Extract both strings.
@@ -476,10 +493,33 @@ namespace RSPro2Video
 
                 // Get bookmark sample start.
                 newBookmark.SampleStart = BitConverter.ToInt32(bookmarkFileBytes, x + baseAddress);
+                
+                // To avoid another error, add four if SampleStart is zero.
+                if (newBookmark.SampleStart == 0)
+                {
+                    x += 4;
+                    newBookmark.SampleStart = BitConverter.ToInt32(bookmarkFileBytes, x + baseAddress);
+                }
+
+                // Check if the SampleStart is zero.
+                if (newBookmark.SampleStart == 0)
+                {
+                    ShowBokError(newBookmark, BokBookmarks, "SampleStart is zero.");
+                    return false;
+                }
+
                 x += 4;
 
                 // Get bookmark sample end.
                 newBookmark.SampleEnd = BitConverter.ToInt32(bookmarkFileBytes, x + baseAddress);
+
+                // If SampleEnd is less than SampleStart, then we have another problem.
+                if (newBookmark.SampleEnd <= newBookmark.SampleStart)
+                {
+                    ShowBokError(newBookmark, BokBookmarks, "Sample end is less than SampleStart.");
+                    return false;
+                }
+
                 x += 4;
 
                 // Skip trailing Int32 value.
@@ -494,7 +534,39 @@ namespace RSPro2Video
 
             // Sort the bookmarks.
             BokBookmarks = BokBookmarks.OrderBy(o => o.SampleStart).ToList();
+
+            return true;
         }
+
+
+        /// <summary>
+        /// Displays a fatal Bok parsing error with text that may help the user get past the error.
+        /// </summary>
+        /// <param name="newBookmark">The bookmark currently being processed.</param>
+        /// <param name="bokBookmarks">The list of bookmarks that have been processed.</param>
+        /// <param name="ErrorMessage">The error message.</param>
+        private void ShowBokError(Bookmark newBookmark, List<Bookmark> bokBookmarks, String ErrorMessage)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ErrorMessage + "\r\n\r\n");
+
+            foreach (Bookmark b in bokBookmarks)
+            {
+                sb.Append(String.Format("Name: \"{0}\"\r\nText: \"{1}\"\r\nExplanation: \"{2}\"\r\nSampleStart: {3}\r\nSampleEnd: {4}\r\n\r\n",
+                    b.Name, b.Text, b.Explanation, b.SampleStart, b.SampleEnd));
+            }
+
+            sb.Append("newBookmark\r\n");
+            sb.Append(String.Format("Name: \"{0}\"\r\nText: \"{1}\"\r\nExplanation: \"{2}\"\r\nSampleStart: {3}\r\nSampleEnd: {4}\r\n",
+                    newBookmark.Name, newBookmark.Text, newBookmark.Explanation, newBookmark.SampleStart, newBookmark.SampleEnd));
+
+            String s = sb.ToString();
+
+            Rsp2Video.ParseError ParseError = new Rsp2Video.ParseError(s);
+            ParseError.ShowDialog();
+        }
+
+
 
         /// <summary>
         /// Returns the path to the most recently written .FmBok or .bok file.

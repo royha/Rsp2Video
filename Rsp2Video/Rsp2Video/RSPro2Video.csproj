@@ -50,6 +50,12 @@
     <Compile Include="CreateReversalClips.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="ParseError.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ParseError.Designer.cs">
+      <DependentUpon>ParseError.cs</DependentUpon>
+    </Compile>
     <Compile Include="RSPro2VideoForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -72,6 +78,9 @@
     </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="VideoOutput.cs" />
+    <EmbeddedResource Include="ParseError.resx">
+      <DependentUpon>ParseError.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="RSPro2VideoForm.resx">
       <DependentUpon>RSPro2VideoForm.cs</DependentUpon>
     </EmbeddedResource>
