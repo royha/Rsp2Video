@@ -38,7 +38,7 @@ namespace RSPro2Video
         List<Bookmark> BokQuickCheckBookmarks = new List<Bookmark>();   // The list of quick check bookmarks from the .FmBok/.bok file.
         List<Bookmark> TxtForwardBookmarks = new List<Bookmark>();      // The list of forward bookmarks from the .txt/.rtf file.
         List<Bookmark> TxtReverseBookmarks = new List<Bookmark>();      // The list of reverse bookmarks from the .txt/.rtf file.
-        float MinBookmarkOverlap = 0.6f;                                // The minimum overlap for a reverse bookmark to be autoconnected to a forward bookmark.
+        float MinBookmarkOverlap = 0.6f;                                // The minimum overlap for a reverse bookmark to be autoconnected to a forward bookmark (60% overlap).
         String StoredCurrentDirectory;                                  // The current directory before this program starts changing current directories.
         String WorkingDirectory;                                        // The directory of the _tmp directory under the output video file (settings.OutputFile).
         String FramesDirectory;                                         // The directory of the _frames directory under the WorkingDirectory.
@@ -69,6 +69,7 @@ namespace RSPro2Video
         enum TextTool { None, DynamicText, Watermark }                  // The text tool to use for overlay text.
         TextTool textTool = TextTool.Watermark;
         int FontHeight;
+        int LinesOnScreen = 20;                                         // The number of text lines that can appear on sceen (smaller numbers == larger text).
         int TextPadSize;
         int LeftMarginSpaces;
         String TextBackgroundColor = "#9f000000";
@@ -110,6 +111,8 @@ namespace RSPro2Video
         CardTextAlignment ClosingCardAlignment = CardTextAlignment.Center;
 
         bool AddMeltLineBreaks = true;
+
+        bool DeleteWorkingDirectories = true;
 
         String[] VideoQualityString = { "Fast / Draft quality", "Slow / Small file", "Slowest / High quality / YouTube Upload" };
 

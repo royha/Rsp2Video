@@ -1530,7 +1530,7 @@ namespace RSPro2Video
             float transitionLength = 1.0f;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -loop 1 -i \"{2}.png\" -filter_complex \"[1:v][0:v]blend=all_expr='A*T+B*(1-T)'\" -t {3}",
+            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
                 FramesPerSecond,
                 TransitionFromFrame,
                 TransitionToFrame,
@@ -1592,7 +1592,7 @@ namespace RSPro2Video
             float transitionLength = 1.0f;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -loop 1 -i \"{2}.png\" -filter_complex \"[1:v][0:v]blend=all_expr='A*T+B*(1-T)'\" -t {3}",
+            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
                 FramesPerSecond,
                 TransitionFromFrame,
                 TransitionToFrame,
@@ -1813,7 +1813,7 @@ namespace RSPro2Video
             float transitionLength = 1.0f;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -loop 1 -i \"{2}.png\" -filter_complex \"[1:v][0:v]blend=all_expr='A*T+B*(1-T)'\" -t {3}",
+            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
                 FramesPerSecond,
                 TransitionFromFrame,
                 transitionToFrame,
@@ -1847,7 +1847,7 @@ namespace RSPro2Video
                 float transitionLength = 1.0f;
 
                 // Create the inner commands for ffmpeg. 
-                String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -loop 1 -i \"{2}.png\" -filter_complex \"[1:v][0:v]blend=all_expr='A*T+B*(1-T)'\" -t {3}",
+                String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
                     FramesPerSecond,
                     TransitionFromFrame,
                     TransitionToFrame,
