@@ -352,14 +352,15 @@ namespace RSPro2Video
             float reversalFps = FramesPerSecond * ((float)reversalRate.ReversalSpeed / (float)100);
 
             // Create the ffmpeg argument string.
-            String arguments = String.Format("-y -framerate {0:0.######} -i \"{1}\\r{2}.%06d.png\" -i \"{3}{4}\" {6} \"{3}{5}\"",
+            String arguments = String.Format("-y -framerate {0:0.######} -i \"{1}\\r{2}.%06d.png\" -i \"{3}{4}\" {6} -filter:v \"fps=fps={7:0.######}:eof_action=pass\" \"{3}{5}\"",
                     FramesPerSecond * ((float)reversalRate.ReversalSpeed / 100f),
                     FRAMES_DIR,
                     reversal.Name,
                     videoFilename,
                     OutputAudioInterimExtension,
                     OutputVideoInterimExtension,
-                    OutputImageSequenceSettings);
+                    OutputImageSequenceSettings,
+                    FramesPerSecond);
 
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo

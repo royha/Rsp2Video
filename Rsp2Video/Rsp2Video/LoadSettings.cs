@@ -38,7 +38,7 @@ namespace RSPro2Video
                 settings.ReversalRate3.ReversalTone = 70;
                 settings.ReversalRate4.UseThisRate = true;
                 settings.ReversalRate4.ReversalSpeed = 50;
-                settings.ReversalRate4.ReversalTone = 65;
+                settings.ReversalRate4.ReversalTone = 62;
                 settings.AudioDelay = 0;
 
                 settings.OutputOptionsInterimSettings = new List<String>(new String[] {
@@ -51,8 +51,8 @@ namespace RSPro2Video
                     "vcodec=libx264 preset=slow crf=16 acodec=libmp3lame" });
                 settings.OutputOptionsImageSequenceSettings = new List<String>(new String[] {
                     "-qscale:v 2",
-                    "-vcodec libx264 -preset ultrafast -crf 18 -threads 0 -acodec flac -strict -2",
-                    "-vcodec libx264 -preset slow -crf 16 -threads 0 -acodec flac -strict -2" });
+                    "-c:v libx264 -preset ultrafast -crf 18 -threads 0 -c:a aac -b:a 384k -movflags +faststart",
+                    "-c:v libx264 -preset slow -crf 16 -threads 0 -c:a aac -b:a 384k -movflags +faststart" });
                 settings.OutputOptionsFinalSettings = new List<String>(new String[] {
                     "-qscale:v 2",
                     "-pix_fmt yuv420p -vcodec libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -acodec aac -b:a 384k -movflags +faststart",
