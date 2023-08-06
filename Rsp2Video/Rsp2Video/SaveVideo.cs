@@ -1506,7 +1506,7 @@ namespace RSPro2Video
             float transitionLength = 1.0f;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -i \"{4}\" -af volume=0.0 -t {3} -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
+            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -i \"{4}\" -filter_complex \"[2:a]volume=0.0,atrim=duration={3}[a];[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
                 FramesPerSecond,
                 TransitionFromFrame,
                 TransitionToFrame,
