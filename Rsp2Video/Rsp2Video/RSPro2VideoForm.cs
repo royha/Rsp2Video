@@ -1024,9 +1024,9 @@ namespace RSPro2Video
                 checkBoxReplayForwardVideo.Checked = false;
                 radioButtonSourceBookmarkFile.Checked = true;
                 radioButtonSourceTranscriptFile.Checked = false;
-                groupBoxVideoContents.Enabled = false;
-                groupBoxAtEndOfReversals.Enabled = false;
-                groupBoxBookmarkSource.Enabled = false;
+                // groupBoxVideoContents.Enabled = false;
+                // groupBoxAtEndOfReversals.Enabled = false;
+                // groupBoxBookmarkSource.Enabled = false;
 
                 // Fill the tree view with the list of quick check bookmarks.
                 FillTreeView(BokQuickCheckBookmarks);
@@ -1041,9 +1041,9 @@ namespace RSPro2Video
                 checkBoxReplayForwardVideo.Checked = saveCheckBoxReplayForwardVideo;
                 radioButtonSourceBookmarkFile.Checked = saveRadioButtonSourceBookmarkFile;
                 radioButtonSourceTranscriptFile.Checked = saveRadioButtonSourceTranscriptFile;
-                groupBoxVideoContents.Enabled = true;
-                groupBoxAtEndOfReversals.Enabled = true;
-                groupBoxBookmarkSource.Enabled = true;
+                // groupBoxVideoContents.Enabled = true;
+                // groupBoxAtEndOfReversals.Enabled = true;
+                // groupBoxBookmarkSource.Enabled = true;
 
             }
         }
@@ -1056,11 +1056,11 @@ namespace RSPro2Video
                 FillTreeView(BokOrphanReverseBookmarks);
 
                 // Orphaned reversals don't do back and forth or replay forward.
-                groupBoxAtEndOfReversals.Enabled = false;
+                // groupBoxAtEndOfReversals.Enabled = false;
             }
             else
             {
-                groupBoxAtEndOfReversals.Enabled = true;
+                // groupBoxAtEndOfReversals.Enabled = true;
             }
         }
 
@@ -1095,30 +1095,30 @@ namespace RSPro2Video
             {
                 labelOutputVideoFile.Text = "Output video file prefix";
                 textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(textBoxSourceVideoFile.Text) + " - ";
-                checkBoxReplayForwardVideo.Checked = false;
-                checkBoxReplayForwardVideo.Enabled = false;
+                // checkBoxReplayForwardVideo.Checked = false;
+                // checkBoxReplayForwardVideo.Enabled = false;
                 labelProgressing.Enabled = false;
             }
             else
             {
                 labelOutputVideoFile.Text = "Output video filename";
                 textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(textBoxSourceVideoFile.Text);
-                checkBoxReplayForwardVideo.Enabled = true;
+                // checkBoxReplayForwardVideo.Enabled = true;
                 labelProgressing.Enabled = true;
             }
         }
 
         private void radioButtonContentsBookmarksOnly_CheckedChanged(object sender, EventArgs e)
         {
-            if (radioButtonContentsBookmarksOnly.Checked)
-            {
-                checkBoxReplayForwardVideo.Checked = false;
-                checkBoxReplayForwardVideo.Enabled = false;
-            }
-            else
-            {
-                checkBoxReplayForwardVideo.Enabled = true;
-            }
+            //if (radioButtonContentsBookmarksOnly.Checked)
+            //{
+            //    checkBoxReplayForwardVideo.Checked = false;
+            //    checkBoxReplayForwardVideo.Enabled = false;
+            //}
+            //else
+            //{
+            //    checkBoxReplayForwardVideo.Enabled = true;
+            //}
         }
 
         /// <summary>
