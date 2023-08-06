@@ -300,7 +300,7 @@ namespace RSPro2Video
         // Sometimes the bookmark text ends with the following values which 
         // throws off my algorithm by one Int32. I add a check for that specific value.
         byte[] notQuiteThere1 = { 00, 00, 00, 00, 0xFF, 00, 0x80, 00 };
-        byte[] notQuiteThere2 = { 00, 00, 00, 00, 0xFF, 00, 00, 00 };
+        byte[] notQuiteThere2 = { 00, 00, 00, 00, 0xFF, 00,   00, 00 };
 
         Byte[] bookmarkFileBytes;
 
