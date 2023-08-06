@@ -43,7 +43,8 @@ namespace RSPro2Video
 
                 settings.OutputOptionsInterimSettings = new List<String>(new String[] {
                     "-qscale:v 2",
-                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1",
+                    // "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1",
+                    "-c:v h264_nvenc -preset p2 -profile:v high -b:v 5M -bufsize 5M -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1",
                     "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1" });
                 settings.OutputOptionsInterimSettingsQmelt = new List<String>(new String[] {
                     "qscale=2",
@@ -51,7 +52,8 @@ namespace RSPro2Video
                     "vcodec=libx264 preset=slow crf=16 acodec=libmp3lame" });
                 settings.OutputOptionsImageSequenceSettings = new List<String>(new String[] {
                     "-qscale:v 2",
-                    "-c:v libx264 -preset ultrafast -crf 18 -threads 0 -c:a aac -b:a 384k -movflags +faststart",
+                    // "-c:v libx264 -preset ultrafast -crf 18 -threads 0 -c:a aac -b:a 384k -movflags +faststart",
+                    "-c:v h264_nvenc -preset p2 -profile:v high -b:v 5M -bufsize 5M -c:a aac -b:a 384k -movflags +faststart",
                     "-c:v libx264 -preset slow -crf 16 -threads 0 -c:a aac -b:a 384k -movflags +faststart" });
                 settings.OutputOptionsFinalSettings = new List<String>(new String[] {
                     "-qscale:v 2",
