@@ -58,6 +58,7 @@ namespace RSPro2Video
         // The fully-qualified path to the settings file.
         String SettingsFile = Path.Combine(Application.StartupPath, "RSPro2Video.settings");
         String AnimationFile = Path.Combine(Application.StartupPath, "animation.gif");
+        String LogFile = Path.Combine(Application.StartupPath, "log.txt");
 
         // Text settings.
         String FontName;                                                // The base font, such as "Calibri".

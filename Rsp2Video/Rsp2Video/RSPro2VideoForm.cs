@@ -43,6 +43,9 @@ namespace RSPro2Video
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            // Clear the log file.
+            File.Delete(LogFile);
+
             // Find the supporting applications (ffmpeg.exe, sox.exe, etc).
             if (FindSupportingApps() == false)
             {
@@ -556,6 +559,7 @@ namespace RSPro2Video
         {
             // Set the name of the working input file. Typically, "v.mp4".
             WorkingInputVideoFile = Path.Combine(WorkingDirectory, "v" + Path.GetExtension(settings.SourceVideoFile));
+            RelativePathToWorkingInputVideoFile = Path.GetFileName(WorkingInputVideoFile);
 
             // Copy the source video to the working directory.
             File.Copy(settings.SourceVideoFile, WorkingInputVideoFile, true);

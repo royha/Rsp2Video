@@ -73,17 +73,21 @@ namespace RSPro2Video
         /// Parses the audio file to determine the sample rate of the file.
         /// </summary>
         /// <returns>Returns true if successful; otherwise false.</returns>
+        /// &&& This must be replaced with ffmpeg.
+        /// ffprobe -v error -select_streams a -of default=noprint_wrappers=1:nokey=1 -show_entries stream=sample_rate
         private bool ValidateAndParseAudio()
         {
             if (ValidateAudio() == false) { return false; }
 
             Process process = new Process();
 
+            String arguments = "-v error -select_streams a -of default=noprint_wrappers=1:nokey=1 -show_entries stream=sample_rate \"" + textBoxSourceVideoFile.Text + "\"";
+
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo
             {
-                FileName = SoxApp,
-                Arguments = "--i " + "\"" + textBoxSoundFile.Text + "\"",
+                FileName = FfmprobeApp,
+                Arguments = arguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 CreateNoWindow = true,
@@ -94,7 +98,7 @@ namespace RSPro2Video
             process.Start();
 
             // Read the output of SoX.
-            String SoxOutput = process.StandardOutput.ReadToEnd();
+            String FfprobeOutput = process.StandardOutput.ReadToEnd();
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -103,21 +107,13 @@ namespace RSPro2Video
 
             if (ExitCode != 0)
             {
-                MessageBox.Show("There was an error reading " + textBoxSoundFile.Text + ":" + Environment.NewLine + Environment.NewLine + "Error message: " + SoxOutput,
+                MessageBox.Show("There was an error reading " + textBoxSoundFile.Text + ":" + Environment.NewLine + Environment.NewLine + "Error message: " + FfprobeOutput,
                     "Error reading Reverse Speech Pro sound file");
                 return false;
             }
 
             // Parse for the sample rate using regular expressions.
-            Match match = Regex.Match(SoxOutput, @"Sample Rate\s+:\s+(\d+)");
-            if (!match.Success)
-            {
-                labelSoundFileError.Text = "There was an error reading this file.";
-                labelSoundFileError.Visible = true;
-                return false;
-            }
-
-            if (Int32.TryParse(match.Groups[1].Value, out int rate))
+            if (Int32.TryParse(FfprobeOutput, out int rate))
             {
                 SampleRate = rate;
             }
@@ -718,18 +714,24 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmprobeApp,
-                Arguments = "\"" + textBoxSourceVideoFile.Text + "\"",
+                Arguments = "-hide_banner \"" + textBoxSourceVideoFile.Text + "\"",
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
-            // Start ffmpeg to get the video file information.
+            // Log the ffprobe command line options.
+            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
+            // Start ffprobe to get the video file information.
             process.Start();
 
             // Read the output of ffmpeg.
             String FfprobeOutput = process.StandardError.ReadToEnd();
+
+            // Log the ffprobe output.
+            File.AppendAllText(LogFile, FfprobeOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
