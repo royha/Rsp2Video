@@ -73,19 +73,19 @@ namespace RSPro2Video
             if (reversalRate.ReversalSpeed == reversalRate.ReversalTone)
             {
                 // Create a .wav file at the requested speed (ie., 70%) by using SoX "speed" feature which changes both length and tone.
-                if (CallSoxSpeed(reverseBookmark.Name, reversalNumber, startSeconds, lengthSeconds, reversalRate.ReversalSpeed) == false) { return false; }
+                if (CallFfmpegSpeed(reverseBookmark.Name, reversalNumber, startSeconds, lengthSeconds, reversalRate.ReversalSpeed) == false) { return false; }
             }
             else
             // A two step process is needed.
             {
                 // Change speed to achieve the desired tone (ReversalTone), then stretch to desired length.
-                if (CallSoxStretch(reverseBookmark.Name, reversalNumber, startSeconds, lengthSeconds, reversalRate.ReversalSpeed, reversalRate.ReversalTone) == false) { return false; }
+                if (CallFfmpegStretch(reverseBookmark.Name, reversalNumber, startSeconds, lengthSeconds, reversalRate.ReversalSpeed, reversalRate.ReversalTone) == false) { return false; }
             }
 
             return true;
         }
 
-        private bool CallSoxSpeed(string reversalName, int reversalNumber, float startSeconds, float lengthSeconds, int reversalSpeed)
+        private bool CallFfmpegSpeed(string reversalName, int reversalNumber, float startSeconds, float lengthSeconds, int reversalSpeed)
         {
             Process process = new Process();
 
@@ -94,27 +94,33 @@ namespace RSPro2Video
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo
             {
-                FileName = SoxApp,
-                Arguments = string.Format("\"{0}\" \"{1}\" trim {2:0.######} {3:0.######} reverse speed {4:0.######}",
-                    settings.RspSoundFile, audioFilename, startSeconds, lengthSeconds, reversalSpeed / (float)100.0),
+                FileName = FfmpegApp,
+                Arguments = string.Format("-y -hide_banner -ss {0:0.######} -t {1:0.######} -i \"{2}\" -vn -filter:a \"areverse, asetrate={3}*{4:0.######}, aresample={3}\" \"{5}\"",
+                    startSeconds, lengthSeconds, WorkingInputVideoFile, SampleRate, reversalSpeed / (float)100.0, audioFilename),
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
-            // Run SoX to create the .wav file.
+            // Log the ffmpeg command line options.
+            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
+            // Run ffmpeg to create the .wav file.
             process.Start();
 
             // Read the error output of SoX, if there is any.
-            String SoxOutput = process.StandardError.ReadToEnd();
+            String FfmpegOutput = process.StandardError.ReadToEnd();
 
+            // Log the ffmpeg output.
+            File.AppendAllText(LogFile, FfmpegOutput);
+            
             // Wait here for the process to exit.
             process.WaitForExit();
             int ExitCode = process.ExitCode;
             process.Close();
 
-            if (ExitCode != 0)
+            if (!(ExitCode == 0))
             {
                 return false;
             }
@@ -122,70 +128,45 @@ namespace RSPro2Video
             return true;
         }
 
-        private bool CallSoxStretch(string reversalName, int reversalNumber, float startSeconds, float lengthSeconds, int reversalSpeed, int reversalTone)
+        private bool CallFfmpegStretch(string reversalName, int reversalNumber, float startSeconds, float lengthSeconds, int reversalSpeed, int reversalTone)
         {
             Process process = new Process();
 
-            //
-            // Create the temp.wav file at the speed of the "tone" value.
-            //
+            String audioFilename = String.Format("{0}.{1}.{2}-{3}.wav", reversalName, reversalNumber, reversalSpeed, reversalTone);
 
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo
             {
-                FileName = SoxApp,
-                Arguments = string.Format("\"{0}\" _temp.wav trim {1:0.######} {2:0.######} reverse speed {3:0.######}",
-                    settings.RspSoundFile, startSeconds, lengthSeconds, reversalTone / (float)100.0),
+                FileName = FfmpegApp,
+                Arguments = string.Format("-y -hide_banner -ss {0:0.######} -t {1:0.######} -i \"{2}\" -vn -filter:a \"areverse, rubberband=pitch={3:0.######}, rubberband=tempo={4:0.######}, rubberband=pitchq=quality\" \"{5}\"",
+                    startSeconds, lengthSeconds, WorkingInputVideoFile, reversalTone / (float)100.0, reversalSpeed / (float)100.0, audioFilename),
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
-            // Run SoX to create the .wav file.
+            // Log the ffmpeg command line options.
+            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
+            // Run ffmpeg to create the .wav file.
             process.Start();
 
             // Read the error output of SoX, if there is any.
-            String SoxOutput = process.StandardError.ReadToEnd();
+            String FfmpegOutput = process.StandardError.ReadToEnd();
 
+            // Log the ffmpeg output.
+            File.AppendAllText(LogFile, FfmpegOutput);
+            
             // Wait here for the process to exit.
             process.WaitForExit();
             int ExitCode = process.ExitCode;
             process.Close();
 
-            if (ExitCode != 0)
+            if (!(ExitCode == 0))
             {
                 return false;
             }
-
-
-            //
-            // Create the final .wav file by stretching temp.wav to its final length.
-            //
-
-            String audioFilename = String.Format("{0}.{1}.{2}-{3}.wav", reversalName, reversalNumber, reversalSpeed, reversalTone);
-
-            process.StartInfo.Arguments = string.Format("_temp.wav \"{0:0.######}\" stretch {1:0.######}",
-                    audioFilename, (lengthSeconds / (reversalSpeed / (float)100.0)) / (lengthSeconds / (reversalTone / (float)100.0)));
-
-            // Run SoX to create the .wav file.
-            process.Start();
-
-            // Read the error output of SoX, if there is any.
-            SoxOutput = process.StandardError.ReadToEnd();
-
-            // Wait here for the process to exit.
-            process.WaitForExit();
-            ExitCode = process.ExitCode;
-            process.Close();
-
-            if (ExitCode != 0)
-            {
-                return false;
-            }
-
-            // Delete the temp file now that we're done with it.
-            File.Delete("_temp.wav");
 
             return true;
         }
@@ -257,19 +238,25 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmpegApp,
-                Arguments = String.Format("-y -ss {0:0.######} -i \"{1}\" -an -qscale 1 -t {2:0.######} \"{3}\\{4}.%06d.png\"",
-                    startSeconds, WorkingInputVideoFile, lengthSeconds, FRAMES_DIR, name),
+                Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -qscale 1 -t {2:0.######} \"{3}\\{4}.%06d.png\"",
+                    startSeconds, RelativePathToWorkingInputVideoFile, lengthSeconds, FRAMES_DIR, name),
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
+            // Log the ffmpeg command line options.
+            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
             // Start ffmpeg to extract the frames.
             process.Start();
 
             // Read the output of ffmpeg.
             String FfmpegOutput = process.StandardError.ReadToEnd();
+
+            // Log the ffmpeg output.
+            File.AppendAllText(LogFile, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -352,7 +339,7 @@ namespace RSPro2Video
             float reversalFps = FramesPerSecond * ((float)reversalRate.ReversalSpeed / (float)100);
 
             // Create the ffmpeg argument string.
-            String arguments = String.Format("-y -framerate {0:0.######} -i \"{1}\\r{2}.%06d.png\" -i \"{3}{4}\" {6} -filter:v \"fps=fps={7:0.######}:eof_action=pass\" \"{3}{5}\"",
+            String arguments = String.Format("-y -hide_banner -framerate {0:0.######} -i \"{1}\\r{2}.%06d.png\" -i \"{3}{4}\" {6} -filter:v \"fps=fps={7:0.######}:eof_action=pass\" \"{3}{5}\"",
                     FramesPerSecond * ((float)reversalRate.ReversalSpeed / 100f),
                     FRAMES_DIR,
                     reversal.Name,
@@ -373,11 +360,17 @@ namespace RSPro2Video
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
+            // Log the ffmpeg command line options.
+            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
             // Start ffmpeg to extract the frames.
             process.Start();
 
             // Read the output of ffmpeg.
             String FfmpegOutput = process.StandardError.ReadToEnd();
+
+            // Log the ffmpeg output.
+            File.AppendAllText(LogFile, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -456,19 +449,25 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmpegApp,
-                Arguments = String.Format("-y -ss {0:0.######} -i \"{1}\" -an -qscale 1 -t {2:0.######} -f image2 \"{3}.{4}.png\"",
-                    timeInSeconds, WorkingInputVideoFile, lengthInSeconds, bookmark.Name, suffix),
+                Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -qscale 1 -t {2:0.######} -f image2 \"{3}.{4}.png\"",
+                    timeInSeconds, RelativePathToWorkingInputVideoFile, lengthInSeconds, bookmark.Name, suffix),
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
+            // Log the ffmpeg command line options.
+            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
             // Start ffmpeg to extract the frames.
             process.Start();
 
             // Read the output of ffmpeg.
             String FfmpegOutput = process.StandardError.ReadToEnd();
+
+            // Log the ffmpeg output.
+            File.AppendAllText(LogFile, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -502,19 +501,25 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmpegApp,
-                Arguments = String.Format("-y -ss 0.0 -i \"{0}\" -an -qscale 1 -t {1:0.######} -f image2 \"OpeningFrame.png\"",
-                    WorkingInputVideoFile, lengthInSeconds),
+                Arguments = String.Format("-y -hide_banner -ss 0.0 -i \"{0}\" -an -qscale 1 -t {1:0.######} -f image2 \"OpeningFrame.png\"",
+                    RelativePathToWorkingInputVideoFile, lengthInSeconds),
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
+            // Log the ffmpeg command line options.
+            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
             // Start ffmpeg to extract the frames.
             process.Start();
 
             // Read the output of ffmpeg.
             String FfmpegOutput = process.StandardError.ReadToEnd();
+
+            // Log the ffmpeg output.
+            File.AppendAllText(LogFile, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -545,19 +550,25 @@ namespace RSPro2Video
                 process.StartInfo = new ProcessStartInfo
                 {
                     FileName = FfmpegApp,
-                    Arguments = String.Format("-y -ss {0:0.######} -i \"{1}\" -an -qscale 1 -t {2:0.######} -f image2 \"ClosingFrame.png\"",
-                        ClosingFrameTime, WorkingInputVideoFile, lengthInSeconds),
+                    Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -qscale 1 -t {2:0.######} -f image2 \"ClosingFrame.png\"",
+                        ClosingFrameTime, RelativePathToWorkingInputVideoFile, lengthInSeconds),
                     UseShellExecute = false,
                     RedirectStandardError = true,
                     CreateNoWindow = true,
                     WindowStyle = ProcessWindowStyle.Maximized
                 };
 
+                // Log the ffmpeg command line options.
+                File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
                 // Start ffmpeg to extract the frames.
                 process.Start();
 
                 // Read the output of ffmpeg.
                 String FfmpegOutput = process.StandardError.ReadToEnd();
+
+                // Log the ffmpeg output.
+                File.AppendAllText(LogFile, FfmpegOutput);
 
                 // Wait here for the process to exit.
                 process.WaitForExit();

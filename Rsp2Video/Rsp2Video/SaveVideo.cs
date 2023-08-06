@@ -147,11 +147,17 @@ namespace RSPro2Video
                     WindowStyle = ProcessWindowStyle.Maximized
                 };
 
+                // Log the command line options.
+                File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
                 // Start the copy command to combine the clips.
                 process.Start();
 
                 // Read the output of ffmpeg.
                 String cmdOutput = process.StandardError.ReadToEnd();
+
+                // Log the output.
+                File.AppendAllText(LogFile, cmdOutput);
 
                 // Wait here for the process to exit.
                 process.WaitForExit();
@@ -212,11 +218,17 @@ namespace RSPro2Video
                     WindowStyle = ProcessWindowStyle.Maximized
                 };
 
+                // Log the ffmpeg command line options.
+                File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
                 // Start ffmpeg to extract the frames.
                 process.Start();
 
                 // Read the output of ffmpeg.
                 String FfmpegOutput = process.StandardError.ReadToEnd();
+
+                // Log the ffmpeg output.
+                File.AppendAllText(LogFile, FfmpegOutput);
 
                 // Wait here for the process to exit.
                 process.WaitForExit();
@@ -264,7 +276,7 @@ namespace RSPro2Video
                 Process process = new Process();
 
                 // Create the arguments string.
-                String arguments = String.Format("-y -f concat -safe 0 -i filelist.txt -c copy \"..\\{0}\"",
+                String arguments = String.Format("-y -hide_banner -f concat -safe 0 -i filelist.txt -c copy \"..\\{0}\"",
                     videoOutput.Filename);
 
                 // Configure the process using the StartInfo properties.
@@ -278,11 +290,17 @@ namespace RSPro2Video
                     WindowStyle = ProcessWindowStyle.Maximized
                 };
 
+                // Log the ffmpeg command line options.
+                File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
                 // Start ffmpeg to extract the frames.
                 process.Start();
 
                 // Read the output of ffmpeg.
                 String FfmpegOutput = process.StandardError.ReadToEnd();
+
+                // Log the ffmpeg output.
+                File.AppendAllText(LogFile, FfmpegOutput);
 
                 // Wait here for the process to exit.
                 process.WaitForExit();
@@ -320,7 +338,7 @@ namespace RSPro2Video
                 Process process = new Process();
 
                 // Create the arguments string.
-                String arguments = String.Format("-y {0} {1} \"{2}\"",
+                String arguments = String.Format("-y -hide_banner {0} {1} \"{2}\"",
                     command,
                     OutputInterimSettings,
                     filename);
@@ -336,11 +354,17 @@ namespace RSPro2Video
                     WindowStyle = ProcessWindowStyle.Maximized
                 };
 
+                // Log the ffmpeg command line options.
+                File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
                 // Start ffmpeg to extract the frames.
                 process.Start();
 
                 // Read the output of ffmpeg.
                 String FfmpegOutput = process.StandardError.ReadToEnd();
+
+                // Log the ffmpeg output.
+                File.AppendAllText(LogFile, FfmpegOutput);
 
                 // Wait here for the process to exit.
                 process.WaitForExit();
@@ -1442,11 +1466,10 @@ namespace RSPro2Video
             String filename2 = forwardBookmark.Name;
 
             // Create the inner commands for ffmpeg.
-            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -i \"{3}\" -af volume=0.0 -t {4} -filter_complex \"[0:v][1:v]overlay\"",
+            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -t {3} -filter_complex \"[0:v][1:v]overlay\"",
                 filename1,
                 OutputVideoInterimExtension,
                 forwardBookmark.Name,
-                RelativePathToWorkingInputVideoFile,
                 duration);
 
             // Call ffmpeg.
