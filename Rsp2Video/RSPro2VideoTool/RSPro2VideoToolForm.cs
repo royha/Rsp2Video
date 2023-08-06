@@ -60,10 +60,10 @@ namespace RSPro2VideoTool
             Boolean ffmpegExists = false;
             Boolean ffprobeExists = false;
 
-            FfmpegApp = Path.Combine(ProgramFiles, "Shotcut", "ffmpeg.exe");
+            FfmpegApp = Path.Combine(ProgramFiles, "ffmpeg\\bin", "ffmpeg.exe");
             ffmpegExists = File.Exists(FfmpegApp);
 
-            FfmprobeApp = Path.Combine(ProgramFiles, "Shotcut", "ffprobe.exe");
+            FfmprobeApp = Path.Combine(ProgramFiles, "ffmpeg\\bin", "ffprobe.exe");
             ffprobeExists = File.Exists(FfmprobeApp);
 
 

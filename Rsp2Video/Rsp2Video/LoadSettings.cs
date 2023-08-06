@@ -43,8 +43,8 @@ namespace RSPro2Video
 
                 settings.OutputOptionsInterimSettings = new List<String>(new String[] {
                     "-qscale:v 2",
-                    "-vcodec libx264 -preset ultrafast -crf 18 -acodec flac -strict -2 -reset_timestamps 1",
-                    "-vcodec libx264 -preset slow -crf 16 -acodec flac -strict -2 -reset_timestamps 1" });
+                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1",
+                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1" });
                 settings.OutputOptionsInterimSettingsQmelt = new List<String>(new String[] {
                     "qscale=2",
                     "vcodec=libx264 preset=ultrafast crf=18 acodec=libmp3lame",
@@ -55,8 +55,8 @@ namespace RSPro2Video
                     "-c:v libx264 -preset slow -crf 16 -threads 0 -c:a aac -b:a 384k -movflags +faststart" });
                 settings.OutputOptionsFinalSettings = new List<String>(new String[] {
                     "-qscale:v 2",
-                    "-pix_fmt yuv420p -vcodec libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -acodec aac -b:a 384k -movflags +faststart",
-                    "-pix_fmt yuv420p -vcodec libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -acodec aac -b:a 384k -movflags +faststart" });
+                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -b:a 384k -movflags +faststart",
+                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -b:a 384k -movflags +faststart" });
                 settings.OutputOptionsFinalSettingsQmelt = new List<String>(new String[] {
                     "qscale=2",
                     "vcodec=libx264 preset=ultrafast crf=23 acodec=libmp3lame",

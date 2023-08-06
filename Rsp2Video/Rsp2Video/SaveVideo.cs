@@ -92,14 +92,7 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool AssembleVideo()
         {
-            if (settings.VideoQuality == VideoQuality.Fast)
-            {
-                return AssembleMeltVideo();
-            }
-            else
-            {
-                return AssembleMeltVideo();
-            }
+            return AssembleFfmpegVideo();
         }
 
         /// <summary>
@@ -193,9 +186,10 @@ namespace RSPro2Video
                 foreach (String clip in videoOutput.Clips)
                 {
                     // Add the clip to the list.
-                    fileList.Append(" \"");
+                    fileList.Append("file '");
                     fileList.Append(clip);
-                    fileList.Append('"');
+                    fileList.Append("'");
+                    fileList.Append(Environment.NewLine);
                 }
 
                 // Create the Process to call the external program.
@@ -257,7 +251,7 @@ namespace RSPro2Video
                 foreach(String clip in videoOutput.Clips)
                 {
                     // Follow the specific file format.
-                    String line = String.Format("file '{0}'", Path.Combine(Path.GetDirectoryName(WorkingInputVideoFile), clip));
+                    String line = String.Format("file '{0}'", clip);
 
                     // Add the line to the list.
                     fileList.Add(line);
@@ -270,8 +264,7 @@ namespace RSPro2Video
                 Process process = new Process();
 
                 // Create the arguments string.
-                String arguments = String.Format("-y -f concat -safe 0 -i filelist.txt {0} \"..\\{1}\"",
-                    OutputFinalSettings,
+                String arguments = String.Format("-y -f concat -safe 0 -i filelist.txt -c copy \"..\\{0}\"",
                     videoOutput.Filename);
 
                 // Configure the process using the StartInfo properties.
@@ -381,7 +374,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddOpeningBlackVideo(0.5f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -537,7 +530,7 @@ namespace RSPro2Video
             AddClosingCard();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddOpeningBlackVideo(0.5f);
         }
 
         /// <summary>
@@ -548,7 +541,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddOpeningBlackVideo(0.5f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -698,7 +691,7 @@ namespace RSPro2Video
             AddClosingCard();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddOpeningBlackVideo(0.5f);
         }
 
         /// <summary>
@@ -744,7 +737,7 @@ namespace RSPro2Video
                         Progress.Report(String.Format("Working: Creating {0}", outputVideoFilename));
 
                         // Add 1/2 second of black.
-                        AddBlack(0.5f);
+                        AddOpeningBlackVideo(0.5f);
 
                         // Add the video offset.
                         AddVideoOffset();
@@ -847,7 +840,7 @@ namespace RSPro2Video
                         }
 
                         // Add 1/2 second of black.
-                        AddBlack(0.5f);
+                        AddOpeningBlackVideo(0.5f);
                     }
                 }
             }
@@ -861,7 +854,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddOpeningBlackVideo(0.5f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -963,7 +956,7 @@ namespace RSPro2Video
             }
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddOpeningBlackVideo(0.5f);
         }
 
         /// <summary>
@@ -974,7 +967,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddOpeningBlackVideo(0.5f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -1066,7 +1059,7 @@ namespace RSPro2Video
             }
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddOpeningBlackVideo(0.5f);
         }
 
         /// <summary>
@@ -1113,7 +1106,7 @@ namespace RSPro2Video
                         Progress.Report(String.Format("Working: Creating {0}", outputVideoFilename));
 
                         // Add 1/2 second of black.
-                        AddBlack(0.5f);
+                        AddOpeningBlackVideo(0.5f);
 
                         // Add the video offset.
                         AddVideoOffset();
@@ -1174,7 +1167,7 @@ namespace RSPro2Video
                         }
 
                         // Add 1/2 second of black.
-                        AddBlack(0.5f);
+                        AddOpeningBlackVideo(0.5f);
                     }
                 }
             }
@@ -1208,72 +1201,82 @@ namespace RSPro2Video
         /// </remarks>
         /// <param name="duration">The length of time for the video of black.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool AddBlack(float duration)
+        private bool AddOpeningBlackVideo(float duration)
         {
             // Create the filename for this video clip.
             String filename = String.Format("Black.{0:0.######}", duration);
 
-            // Add the extension to the filename.
-            filename += OutputVideoInterimExtension;
+            // Create the inner commands for ffmpeg. 
+            String command = String.Format("-i \"v.mp4\" -vf eq=brightness=-1.0 -af volume=0.0 -t {0:0.######}",
+                duration);
 
-            // Calculate the duration in frames as qmelt.exe uses frames instead of time.
-            int durationInFrames = (int)((duration * FramesPerSecond) + 0.1f);
+            // Call ffmpeg.
+            return RunFfmpeg(filename, command);
 
-            // If this file is not in the list of created clips, create it.
-            if (CreatedClipList.IndexOf(filename) == -1)
-            {
-                // Create the Process to call the external program.
-                Process process = new Process();
+            //// Create the filename for this video clip.
+            //String filename = String.Format("Black.{0:0.######}", duration);
 
-                // Create the arguments for qmelt.exe. 
-                String arguments = String.Format("-consumer avformat:\"{0}\" {1} v.mp4 in=0 out=0 -repeat {2} -attach-track frei0r.brightness 0=0.0",
-                    filename,
-                    OutputInterimSettingsQmelt,
-                    durationInFrames);
+            //// Add the extension to the filename.
+            //filename += OutputVideoInterimExtension;
 
-                // Configure the process using the StartInfo properties.
-                process.StartInfo = new ProcessStartInfo
-                {
-                    FileName = QmeltApp,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Maximized
-                };
+            //// Calculate the duration in frames as qmelt.exe uses frames instead of time.
+            //int durationInFrames = (int)((duration * FramesPerSecond) + 0.1f);
 
-                // Start ffmpeg to extract the frames.
-                process.Start();
+            //// If this file is not in the list of created clips, create it.
+            //if (CreatedClipList.IndexOf(filename) == -1)
+            //{
+            //    // Create the Process to call the external program.
+            //    Process process = new Process();
 
-                // Read the output of qmelt.exe.
-                String QmeltOutput = process.StandardError.ReadToEnd();
+            //    // Create the arguments for qmelt.exe. 
+            //    String arguments = String.Format("-consumer avformat:\"{0}\" {1} v.mp4 in=0 out=0 -repeat {2} -attach-track frei0r.brightness 0=0.0",
+            //        filename,
+            //        OutputInterimSettingsQmelt,
+            //        durationInFrames);
 
-                // Wait here for the process to exit.
-                process.WaitForExit();
-                int ExitCode = process.ExitCode;
-                process.Close();
+            //    // Configure the process using the StartInfo properties.
+            //    process.StartInfo = new ProcessStartInfo
+            //    {
+            //        FileName = QmeltApp,
+            //        Arguments = arguments,
+            //        UseShellExecute = false,
+            //        RedirectStandardError = true,
+            //        CreateNoWindow = true,
+            //        WindowStyle = ProcessWindowStyle.Maximized
+            //    };
 
-                // Return success or failure.
-                if (!(ExitCode == 0))
-                {
-                    return false;
-                }
+            //    // Start ffmpeg to extract the frames.
+            //    process.Start();
 
-                // Add the filename to the list of created clips.
-                CreatedClipList.Add(filename);
-            }
+            //    // Read the output of qmelt.exe.
+            //    String QmeltOutput = process.StandardError.ReadToEnd();
 
-            // Add the filename to the list of clips to use to create this video.
-            VideoOutputs[VideoOutputIndex].Clips.Add(filename);
+            //    // Wait here for the process to exit.
+            //    process.WaitForExit();
+            //    int ExitCode = process.ExitCode;
+            //    process.Close();
 
-            return true;
+            //    // Return success or failure.
+            //    if (!(ExitCode == 0))
+            //    {
+            //        return false;
+            //    }
+
+            //    // Add the filename to the list of created clips.
+            //    CreatedClipList.Add(filename);
+            //}
+
+            //// Add the filename to the list of clips to use to create this video.
+            //VideoOutputs[VideoOutputIndex].Clips.Add(filename);
+
+            //return true;
         }
 
-        /// <summary>
-        /// Adds the video offset.
-        /// </summary>
-        /// <returns></returns>
-        private bool AddVideoOffset()
+            /// <summary>
+            /// Adds the video offset.
+            /// </summary>
+            /// <returns></returns>
+            private bool AddVideoOffset()
         {
             return true;
         }
