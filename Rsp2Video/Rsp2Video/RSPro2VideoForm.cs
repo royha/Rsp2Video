@@ -383,6 +383,8 @@ namespace RSPro2Video
 
         private void FillTreeView(List<Bookmark> Bookmarks)
         {
+            StringBuilder sb = new StringBuilder();
+
             treeView1.BeginUpdate();
             treeView1.Nodes.Clear();
 
@@ -393,8 +395,14 @@ namespace RSPro2Video
                 TreeNode treeNode = new TreeNode(bookmark.Name + ": " + bookmark.Text);
                 treeNode.Tag = bookmark;
                 treeNode.Checked = true;
-
                 treeView1.Nodes.Add(treeNode);
+
+                if (sb.Length > 0) { sb.Append("\r\n"); }
+                sb.Append(bookmark.Name + ": " + bookmark.Text + "\r\n");
+                if (String.IsNullOrWhiteSpace(bookmark.Explanation) == false)
+                {
+                    sb.Append("\r\n" + bookmark.Explanation + "\r\n");
+                }
 
                 for (int j = 0; j < bookmark.ReferencedBookmarks.Count; ++j)
                 {
@@ -403,14 +411,21 @@ namespace RSPro2Video
                     TreeNode childTreeNode = new TreeNode(referencedbookmark.Name + ": " + referencedbookmark.Text);
                     childTreeNode.Tag = referencedbookmark;
                     childTreeNode.Checked = true;
-
                     treeView1.Nodes[i].Nodes.Add(childTreeNode);
+
+                    sb.Append(referencedbookmark.Name + ": " + referencedbookmark.Text + "\r\n");
+                    if (String.IsNullOrWhiteSpace(referencedbookmark.Explanation) == false)
+                    {
+                        sb.Append("\r\n" + referencedbookmark.Explanation + "\r\n\r\n");
+                    }
                 }
             }
 
             treeView1.ExpandAll();
             treeView1.EndUpdate();
             if (treeView1.Nodes.Count > 0) { treeView1.SelectedNode = treeView1.Nodes[0]; }
+
+            if (sb.Length > 0) { Clipboard.SetText(sb.ToString()); }
         }
 
         /// <summary>
@@ -554,12 +569,15 @@ namespace RSPro2Video
         {
             Directory.SetCurrentDirectory(StoredCurrentDirectory);
 
-            try
+            if (DeleteWorkingDirectories == true)
             {
-                // Delete the directory and any files and directories in that directory.
-                diTmpDirectory.Delete(true);
+                try
+                {
+                    // Delete the directory and any files and directories in that directory.
+                    diTmpDirectory.Delete(true);
+                }
+                catch { return false; }
             }
-            catch { return false; }
 
             return true;
         }
@@ -570,12 +588,15 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool RemoveFrames_DirDirectory()
         {
-            try
+            if (DeleteWorkingDirectories == true)
             {
-                // Delete the directory and any files and directories in that directory.
-                fiTmpDirectory.Delete(true);
+                try
+                {
+                    // Delete the directory and any files and directories in that directory.
+                    fiTmpDirectory.Delete(true);
+                }
+                catch { return false; }
             }
-            catch { return false; }
 
             return true;
         }

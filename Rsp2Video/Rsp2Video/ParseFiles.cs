@@ -422,13 +422,16 @@ namespace RSPro2Video
                 {
                     // The blank line was found. Extract both strings.
                     int index = match.Index;
-                    newBookmark.Text = WordWrap(text.Substring(0, index)).Trim();
-                    newBookmark.Explanation = WordWrap(text.Substring(index).Trim());
+                    // newBookmark.Text = WordWrap(text.Substring(0, index)).Trim();
+                    // newBookmark.Explanation = WordWrap(text.Substring(index).Trim());
+                    newBookmark.Text = text.Substring(0, index).Trim();
+                    newBookmark.Explanation = text.Substring(index).Trim();
                 }
                 else
                 {
                     // There was no explanatory text.
-                    newBookmark.Text = WordWrap(text).Trim();
+                    // newBookmark.Text = WordWrap(text).Trim();
+                    newBookmark.Text = text.Trim();
                     newBookmark.Explanation = String.Empty;
                 }
 
@@ -816,7 +819,7 @@ namespace RSPro2Video
             // Prepare the font information
             LeftMarginSpaces = (int)Math.Round((decimal)HorizontalResolution / (decimal)VerticalResolution * 8.0m);
             FontName = "Calibri";
-            FontHeight = (int)VerticalResolution / 24;
+            FontHeight = (int)VerticalResolution / LinesOnScreen;
             TextPadSize = FontHeight / 6;
             FontForward = new Font(FontName, FontHeight, FontStyle.Regular, GraphicsUnit.Pixel);
             FontReverse = new Font(FontName, FontHeight, FontStyle.Italic | FontStyle.Bold, GraphicsUnit.Pixel);
@@ -958,13 +961,16 @@ namespace RSPro2Video
                     {
                         // The blank line was found. Extract both strings.
                         int index = match.Index;
-                        forwardBookmark.Text = WordWrap(forwardText.Substring(0, index)).Trim();
-                        forwardBookmark.Explanation = WordWrap(forwardText.Substring(index).Trim());
+                        // forwardBookmark.Text = WordWrap(forwardText.Substring(0, index)).Trim();
+                        // forwardBookmark.Explanation = WordWrap(forwardText.Substring(index).Trim());
+                        forwardBookmark.Text = forwardText.Substring(0, index).Trim();
+                        forwardBookmark.Explanation = forwardText.Substring(index).Trim();
                     }
                     else
                     {
                         // There was no explanatory text.
-                        forwardBookmark.Text = WordWrap(forwardText).Trim();
+                        // forwardBookmark.Text = WordWrap(forwardText).Trim();
+                        forwardBookmark.Text = forwardText.Trim();
                         forwardBookmark.Explanation = String.Empty;
                     }
 
@@ -992,13 +998,16 @@ namespace RSPro2Video
                     {
                         // The blank line was found. Extract both strings.
                         int index = match.Index;
-                        reverseBookmark.Text = WordWrap(reverseText.Substring(0, index)).Trim();
-                        reverseBookmark.Explanation = WordWrap(reverseText.Substring(index).Trim());
+                        // reverseBookmark.Text = WordWrap(reverseText.Substring(0, index)).Trim();
+                        // reverseBookmark.Explanation = WordWrap(reverseText.Substring(index).Trim());
+                        reverseBookmark.Text = reverseText.Substring(0, index).Trim();
+                        reverseBookmark.Explanation = reverseText.Substring(index).Trim();
                     }
                     else
                     {
                         // There was no explanatory text.
-                        reverseBookmark.Text = WordWrap(reverseText).Trim();
+                        // reverseBookmark.Text = WordWrap(reverseText).Trim();
+                        reverseBookmark.Text = reverseText.Trim();
                         reverseBookmark.Explanation = String.Empty;
                     }
 

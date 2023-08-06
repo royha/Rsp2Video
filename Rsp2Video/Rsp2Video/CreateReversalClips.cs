@@ -1234,7 +1234,8 @@ namespace RSPro2Video
             if (String.IsNullOrWhiteSpace(text)) { return; }
 
             // Word wrap the string.
-            String wordWrapped = WordWrap(text, FontForward);
+            // String wordWrapped = WordWrap(text, FontForward);
+            String wordWrapped = text;
 
             // Create new bitmap the same size as the image.
             Bitmap cardBmp = new Bitmap(HorizontalResolution, VerticalResolution, PixelFormat.Format32bppArgb);
