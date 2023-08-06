@@ -92,14 +92,7 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool AssembleVideo()
         {
-            if (settings.VideoQuality == VideoQuality.Fast)
-            {
-                return AssembleMeltVideo();
-            }
-            else
-            {
-                return AssembleMeltVideo();
-            }
+            return AssembleFfmpegVideo();
         }
 
         /// <summary>
@@ -193,9 +186,10 @@ namespace RSPro2Video
                 foreach (String clip in videoOutput.Clips)
                 {
                     // Add the clip to the list.
-                    fileList.Append(" \"");
+                    fileList.Append("file '");
                     fileList.Append(clip);
-                    fileList.Append('"');
+                    fileList.Append("'");
+                    fileList.Append(Environment.NewLine);
                 }
 
                 // Create the Process to call the external program.
@@ -257,7 +251,7 @@ namespace RSPro2Video
                 foreach(String clip in videoOutput.Clips)
                 {
                     // Follow the specific file format.
-                    String line = String.Format("file '{0}'", Path.Combine(Path.GetDirectoryName(WorkingInputVideoFile), clip));
+                    String line = String.Format("file '{0}'", clip);
 
                     // Add the line to the list.
                     fileList.Add(line);
@@ -270,8 +264,7 @@ namespace RSPro2Video
                 Process process = new Process();
 
                 // Create the arguments string.
-                String arguments = String.Format("-y -f concat -safe 0 -i filelist.txt {0} \"..\\{1}\"",
-                    OutputFinalSettings,
+                String arguments = String.Format("-y -f concat -safe 0 -i filelist.txt -c copy \"..\\{0}\"",
                     videoOutput.Filename);
 
                 // Configure the process using the StartInfo properties.
@@ -381,7 +374,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.2f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -548,7 +541,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.2f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -744,7 +737,7 @@ namespace RSPro2Video
                         Progress.Report(String.Format("Working: Creating {0}", outputVideoFilename));
 
                         // Add 1/2 second of black.
-                        AddBlack(0.5f);
+                        AddBlack(0.2f);
 
                         // Add the video offset.
                         AddVideoOffset();
@@ -861,7 +854,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.2f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -974,7 +967,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.2f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -1113,7 +1106,7 @@ namespace RSPro2Video
                         Progress.Report(String.Format("Working: Creating {0}", outputVideoFilename));
 
                         // Add 1/2 second of black.
-                        AddBlack(0.5f);
+                        AddBlack(0.2f);
 
                         // Add the video offset.
                         AddVideoOffset();
@@ -1213,67 +1206,20 @@ namespace RSPro2Video
             // Create the filename for this video clip.
             String filename = String.Format("Black.{0:0.######}", duration);
 
-            // Add the extension to the filename.
-            filename += OutputVideoInterimExtension;
+            // Create the inner commands for ffmpeg. 
+            String command = String.Format("-i \"{0}\" -vf eq=brightness=-1.0 -af volume=0.0 -t {1:0.######}",
+                RelativePathToWorkingInputVideoFile,
+                duration);
 
-            // Calculate the duration in frames as qmelt.exe uses frames instead of time.
-            int durationInFrames = (int)((duration * FramesPerSecond) + 0.1f);
-
-            // If this file is not in the list of created clips, create it.
-            if (CreatedClipList.IndexOf(filename) == -1)
-            {
-                // Create the Process to call the external program.
-                Process process = new Process();
-
-                // Create the arguments for qmelt.exe. 
-                String arguments = String.Format("-consumer avformat:\"{0}\" {1} v.mp4 in=0 out=0 -repeat {2} -attach-track frei0r.brightness 0=0.0",
-                    filename,
-                    OutputInterimSettingsQmelt,
-                    durationInFrames);
-
-                // Configure the process using the StartInfo properties.
-                process.StartInfo = new ProcessStartInfo
-                {
-                    FileName = QmeltApp,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Maximized
-                };
-
-                // Start ffmpeg to extract the frames.
-                process.Start();
-
-                // Read the output of qmelt.exe.
-                String QmeltOutput = process.StandardError.ReadToEnd();
-
-                // Wait here for the process to exit.
-                process.WaitForExit();
-                int ExitCode = process.ExitCode;
-                process.Close();
-
-                // Return success or failure.
-                if (!(ExitCode == 0))
-                {
-                    return false;
-                }
-
-                // Add the filename to the list of created clips.
-                CreatedClipList.Add(filename);
-            }
-
-            // Add the filename to the list of clips to use to create this video.
-            VideoOutputs[VideoOutputIndex].Clips.Add(filename);
-
-            return true;
+            // Call ffmpeg.
+            return RunFfmpeg(filename, command);
         }
 
-        /// <summary>
-        /// Adds the video offset.
-        /// </summary>
-        /// <returns></returns>
-        private bool AddVideoOffset()
+            /// <summary>
+            /// Adds the video offset.
+            /// </summary>
+            /// <returns></returns>
+            private bool AddVideoOffset()
         {
             return true;
         }
@@ -1297,10 +1243,11 @@ namespace RSPro2Video
                 float displayLength = (float)OpeningCard.Length / (float)ReadingCharactersPerSecond;
 
                 // Create the inner commands for ffmpeg. 
-                String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -pix_fmt yuv420p",
+                String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
                     FramesPerSecond,
                     filename,
-                    displayLength);
+                    displayLength,
+                    RelativePathToWorkingInputVideoFile);
 
                 // Call ffmpeg.
                 retval = RunFfmpeg(filename, command);
@@ -1327,10 +1274,11 @@ namespace RSPro2Video
                 float displayLength = (float)ClosingCard.Length / (float)ReadingCharactersPerSecond;
 
                 // Create the inner commands for ffmpeg. 
-                String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -pix_fmt yuv420p",
+                String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
                     FramesPerSecond,
                     filename,
-                    displayLength);
+                    displayLength,
+                    RelativePathToWorkingInputVideoFile);
 
                 // Call ffmpeg.
                 retval = RunFfmpeg(filename, command);
@@ -1385,10 +1333,11 @@ namespace RSPro2Video
             float displayLength = (float)bookmark.Explanation.Length / (float)ReadingCharactersPerSecond;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -pix_fmt yuv420p",
+            String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
                 FramesPerSecond,
                 filename,
-                displayLength);
+                displayLength,
+                RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
             return RunFfmpeg(filename, command);
@@ -1408,10 +1357,11 @@ namespace RSPro2Video
             float fadeLength = 1.0f;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -filter_complex \"[0:v]fade=t=in:d={2}\" -t {2}",
+            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -i \"{3}\" -af volume=0.0 -t {2:0.######} -filter_complex \"[0:v]fade=t=in:d={2}\" -t {2}",
                 FramesPerSecond,
                 ImageName,
-                fadeLength);
+                fadeLength,
+                RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
             return RunFfmpeg(filename, command);
@@ -1431,10 +1381,11 @@ namespace RSPro2Video
             float fadeLength = 1.0f;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -filter_complex \"[0:v]fade=t=out:d={2}\" -t {2}",
+            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -i \"{3}\" -af volume=0.0 -t {2:0.######} -filter_complex \"[0:v]fade=t=out:d={2}\" -t {2}",
                 FramesPerSecond,
                 ImageName,
-                fadeLength);
+                fadeLength,
+                RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
             return RunFfmpeg(filename, command);
@@ -1491,10 +1442,12 @@ namespace RSPro2Video
             String filename2 = forwardBookmark.Name;
 
             // Create the inner commands for ffmpeg.
-            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
+            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -i \"{3}\" -af volume=0.0 -t {4} -filter_complex \"[0:v][1:v]overlay\"",
                 filename1,
                 OutputVideoInterimExtension,
-                forwardBookmark.Name);
+                forwardBookmark.Name,
+                RelativePathToWorkingInputVideoFile,
+                duration);
 
             // Call ffmpeg.
             return RunFfmpeg(filename: filename2, command: command, AddToVideoOutputs: true);
@@ -1530,11 +1483,12 @@ namespace RSPro2Video
             float transitionLength = 1.0f;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
+            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -i \"{4}\" -af volume=0.0 -t {3} -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
                 FramesPerSecond,
                 TransitionFromFrame,
                 TransitionToFrame,
-                transitionLength);
+                transitionLength,
+                RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
             retval = RunFfmpeg(filename: filename1, command: command, AddToVideoOutputs: false);
@@ -1556,7 +1510,8 @@ namespace RSPro2Video
             command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
                 filename1,
                 OutputVideoInterimExtension,
-                reverseBookmark.Name);
+                reverseBookmark.Name,
+                RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
             return RunFfmpeg(filename: filename2, command: command, AddToVideoOutputs: true);
@@ -1592,11 +1547,12 @@ namespace RSPro2Video
             float transitionLength = 1.0f;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
+            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -i \"{4}\" -af volume=0.0 -t {3} -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
                 FramesPerSecond,
                 TransitionFromFrame,
                 TransitionToFrame,
-                transitionLength);
+                transitionLength,
+                RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
             retval = RunFfmpeg(filename: filename1, command: command, AddToVideoOutputs: false);
@@ -1615,10 +1571,12 @@ namespace RSPro2Video
             String filename2 = filename1 + ".Text";
 
             // Create the inner commands for ffmpeg.
-            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
+            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -i \"{3}\" -af volume=0.0 -t {4} -filter_complex \"[0:v][1:v]overlay\"",
                 filename1,
                 OutputVideoInterimExtension,
-                forwardBookmark.Name);
+                forwardBookmark.Name,
+                RelativePathToWorkingInputVideoFile,
+                transitionLength);
 
             // Call ffmpeg.
             return RunFfmpeg(filename: filename2, command: command, AddToVideoOutputs: true);
@@ -1679,10 +1637,11 @@ namespace RSPro2Video
             float displayLength = 1.0f;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -pix_fmt yuv420p",
+            String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######} ",
                 FramesPerSecond,
                 filename1,
-                displayLength);
+                displayLength,
+                RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
             retval = RunFfmpeg(filename: filename1, command: command, AddToVideoOutputs: false);
@@ -1701,10 +1660,12 @@ namespace RSPro2Video
             String filename2 = filename1 + ".Text";
 
             // Create the inner commands for ffmpeg.
-            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
+            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -i \"{3}\" -af volume=0.0 -t {4} -filter_complex \"[0:v][1:v]overlay\"",
                 filename1,
                 OutputVideoInterimExtension,
-                reverseBookmark.Name);
+                reverseBookmark.Name,
+                RelativePathToWorkingInputVideoFile,
+                displayLength);
 
             // Call ffmpeg.
             return RunFfmpeg(filename: filename2, command: command, AddToVideoOutputs: true);
@@ -1780,10 +1741,12 @@ namespace RSPro2Video
             String filename2 = reverseBookmark.Name + ".Forward.Text";
 
             // Create the inner commands for ffmpeg.
-            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
+            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -i \"{3}\" -af volume=0.0 -t {4} -filter_complex \"[0:v][1:v]overlay\"",
                 filename1,
                 OutputVideoInterimExtension,
-                reverseBookmark.Name);
+                reverseBookmark.Name,
+                RelativePathToWorkingInputVideoFile,
+                duration);
 
             // Call ffmpeg.
             retval = RunFfmpeg(filename: filename2, command: command, AddToVideoOutputs: true);
@@ -1813,11 +1776,12 @@ namespace RSPro2Video
             float transitionLength = 1.0f;
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
+            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -i \"{4}\" -af volume=0.0 -t {3} -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
                 FramesPerSecond,
                 TransitionFromFrame,
                 transitionToFrame,
-                transitionLength);
+                transitionLength,
+                RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
             return RunFfmpeg(filename, command);
@@ -1847,11 +1811,12 @@ namespace RSPro2Video
                 float transitionLength = 1.0f;
 
                 // Create the inner commands for ffmpeg. 
-                String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
+                String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -i \"{4}\" -af volume=0.0 -t {3} -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
                     FramesPerSecond,
                     TransitionFromFrame,
                     TransitionToFrame,
-                    transitionLength);
+                    transitionLength,
+                    RelativePathToWorkingInputVideoFile);
 
                 // Call ffmpeg.
                 retval = RunFfmpeg(filename, command);

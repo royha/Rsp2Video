@@ -71,10 +71,10 @@ namespace RSPro2Video
             Boolean qmeltExists = false;
             Boolean soxExists = false;
 
-            FfmpegApp = Path.Combine(ProgramFiles, "Shotcut", "ffmpeg.exe");
+            FfmpegApp = Path.Combine(ProgramFiles, "ffmpeg\\bin", "ffmpeg.exe");
             ffmpegExists = File.Exists(FfmpegApp);
 
-            FfmprobeApp = Path.Combine(ProgramFiles, "Shotcut", "ffprobe.exe");
+            FfmprobeApp = Path.Combine(ProgramFiles, "ffmpeg\\bin", "ffprobe.exe");
             ffprobeExists = File.Exists(FfmprobeApp);
 
             QmeltApp = Path.Combine(ProgramFiles, "Shotcut", "qmelt.exe");
@@ -441,19 +441,19 @@ namespace RSPro2Video
             // Copies the source video to the working directory.
             CopySourceVideoToWorkingDirectory();
 
-            // Create the reversal clips.
-            CreateReversalClips();
+            // Create text files from the bookmark data.
+            CreateTextImageFiles();
 
             // Create the still images for the first and last frames of the forward video clips.
             CreateForwardStills();
+
+            // Create the reversal clips.
+            CreateReversalClips();
 
             // Remove the frames directory.
             RemoveFrames_DirDirectory();
 
             progress.Report("Working: Creating text overlays.");
-
-            // Create text files from the bookmark data.
-            CreateTextImageFiles();
 
             // Run MELT to output the video.
             SaveVideo();
