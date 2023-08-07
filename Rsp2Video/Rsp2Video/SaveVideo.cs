@@ -1380,8 +1380,23 @@ namespace RSPro2Video
             // Calculate the length of time to display the card.
             float fadeLength = 1.0f;
 
-            // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -i \"{3}\" -af volume=0.0 -t {2:0.######} -filter_complex \"[0:v]fade=t=in:d={2}\" -t {2}",
+            // Create the inner commands for ffmpeg.
+            // -r {0}                       # Frame rate.
+            // -loop 1 - i \"{1}.png\"      # Loop this input stream.
+            // -i \"{3}\"                   # Use this input stream (will be used to create silent audio channel).
+            // -filter_complex              # Pass the following string to the ffmpeg filter_complex.
+            // [2:a]                        # From the third input, select the audio channel.
+            // volume=0.0,                  # Multiply the audio value by 0 (silence).
+            // atrim=duration={2:0.######}  # Set the audio duration to {3}.
+            // [a];                         # Name this stream "a" for audio.
+            // [0:v]                        # From the first input, select the video channel.
+            // fade=t=in:                   # Fade, type in (fade in).
+            // d={2}                        # Duration of the fade.
+            // [v]\"                        # Name this stream "v" for video.
+            // -map \"[v]\"                 # Put the video stream into stream 0:0.
+            // -map \"[a]\"                 # Put the audio stream into stream 0:1.
+            // -t {2:0.######}              # Set the duration of this clip (may be redundant since the audio duration and fade duration are identical).
+            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -i \"{3}\" -filter_complex \"[1:a]volume=0.0,atrim=duration={2:0.######}[a];[0:v]fade=t=in:d={2:0.######}[v]\" -map \"[v]\" -map \"[a]\" -t {2:0.######}",
                 FramesPerSecond,
                 ImageName,
                 fadeLength,
@@ -1404,8 +1419,23 @@ namespace RSPro2Video
             // Calculate the length of time to display the card.
             float fadeLength = 1.0f;
 
-            // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -i \"{3}\" -af volume=0.0 -t {2:0.######} -filter_complex \"[0:v]fade=t=out:d={2}\" -t {2}",
+            // Create the inner commands for ffmpeg.
+            // -r {0}                       # Frame rate.
+            // -loop 1 - i \"{1}.png\"      # Loop this input stream.
+            // -i \"{3}\"                   # Use this input stream (will be used to create silent audio channel).
+            // -filter_complex              # Pass the following string to the ffmpeg filter_complex.
+            // [2:a]                        # From the third input, select the audio channel.
+            // volume=0.0,                  # Multiply the audio value by 0 (silence).
+            // atrim=duration={2:0.######}  # Set the audio duration to {3}.
+            // [a];                         # Name this stream "a" for audio.
+            // [0:v]                        # From the first input, select the video channel.
+            // fade=t=out:                  # Fade, type out (fade out).
+            // d={2}                        # Duration of the fade.
+            // [v]\"                        # Name this stream "v" for video.
+            // -map \"[v]\"                 # Put the video stream into stream 0:0.
+            // -map \"[a]\"                 # Put the audio stream into stream 0:1.
+            // -t {2:0.######}              # Set the duration of this clip (may be redundant since the audio duration and fade duration are identical).
+            String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -i \"{3}\" -t {2:0.######} -filter_complex \"[1:a]volume=0.0,atrim=duration={2:0.######}[a];[0:v]fade=t=out:d={2:0.######}[v]\" -map \"[v]\" -map \"[a]\" -t {2:0.######}",
                 FramesPerSecond,
                 ImageName,
                 fadeLength,
@@ -1505,8 +1535,31 @@ namespace RSPro2Video
             // Calculate the length of time to display the card.
             float transitionLength = 1.0f;
 
-            // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -i \"{4}\" -filter_complex \"[2:a]volume=0.0,atrim=duration={3}[a];[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
+            // Create the inner commands for ffmpeg.
+            // -r {0}                                   # Frame rate.
+            // -loop 1 -t {3:0.######} -i \"{1}.png\"   # Loop this first input image for {3} seconds.
+            // -loop 1 -t {3:0.######} -i \"{2}.png\"   # Loop this second input iamge for {3} seconds.
+            // -i \"{3}\"                               # Use this input stream (will be used to create silent audio channel).
+            // -filter_complex                          # Pass the following string to the ffmpeg filter_complex.
+            // [2:a]                                    # From the third input, select the audio channel.
+            // volume=0.0,                              # Multiply the audio value by 0 (silence).
+            // atrim=duration={2:0.######}              # Set the audio duration to {3}.
+            // [a];                                     # Name this stream "a" for audio.
+            // [1]format=yuva444p,                      # Format the first image as yuva444p.
+            // fade=d={3:0.######}:                     # Set the fade duration.
+            // t=in:                                    # Set the fade type to "fade in".
+            // alpha=1,                                 # Fade only the alpha channel.
+            // setpts=                                  # Set the presentation timestamp
+            // PTS-STARTPTS/TB                          # PTS is he presentation timestamp in input
+            //                                          #   STARTPTS is the PTS of the first frame.
+            //                                          #   TB is the timebase of the input timestamps.
+            // [f0];                                    # Name this stream "f0".
+            // [0][f0]overlay,                          # Overlay stream 0 and f0.
+            // format=yuv420p                           # Format the overlayed video as yuv420p
+            // [v]\"                                    # Name the overlayed video "v" for video.
+            // -map \"[v]\"                             # Put the video stream into stream 0:0.
+            // -map \"[a]\"                             # Put the audio stream into stream 0:1.
+            String command = String.Format("-r {0} -loop 1 -t {3:0.######} -i \"{1}.png\" -loop 1 -t {3:0.######} -i \"{2}.png\" -i \"{4}\" -filter_complex \"[2:a]volume=0.0,atrim=duration={3:0.######}[a];[1]format=yuva444p,fade=d={3:0.######}:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
                 FramesPerSecond,
                 TransitionFromFrame,
                 TransitionToFrame,
@@ -1533,8 +1586,7 @@ namespace RSPro2Video
             command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
                 filename1,
                 OutputVideoInterimExtension,
-                reverseBookmark.Name,
-                RelativePathToWorkingInputVideoFile);
+                reverseBookmark.Name);
 
             // Call ffmpeg.
             return RunFfmpeg(filename: filename2, command: command, AddToVideoOutputs: true);
@@ -1569,8 +1621,31 @@ namespace RSPro2Video
             // Calculate the length of time to display the card.
             float transitionLength = 1.0f;
 
-            // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -i \"{4}\" -af volume=0.0 -t {3} -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
+            // Create the inner commands for ffmpeg.
+            // -r {0}                                   # Frame rate.
+            // -loop 1 -t {3:0.######} -i \"{1}.png\"   # Loop this first input image for {3} seconds.
+            // -loop 1 -t {3:0.######} -i \"{2}.png\"   # Loop this second input iamge for {3} seconds.
+            // -i \"{3}\"                               # Use this input stream (will be used to create silent audio channel).
+            // -filter_complex                          # Pass the following string to the ffmpeg filter_complex.
+            // [2:a]                                    # From the third input, select the audio channel.
+            // volume=0.0,                              # Multiply the audio value by 0 (silence).
+            // atrim=duration={2:0.######}              # Set the audio duration to {3}.
+            // [a];                                     # Name this stream "a" for audio.
+            // [1]format=yuva444p,                      # Format the first image as yuva444p.
+            // fade=d={3:0.######}:                     # Set the fade duration.
+            // t=in:                                    # Set the fade type to "fade in".
+            // alpha=1,                                 # Fade only the alpha channel.
+            // setpts=                                  # Set the presentation timestamp
+            // PTS-STARTPTS/TB                          # PTS is he presentation timestamp in input
+            //                                          #   STARTPTS is the PTS of the first frame.
+            //                                          #   TB is the timebase of the input timestamps.
+            // [f0];                                    # Name this stream "f0".
+            // [0][f0]overlay,                          # Overlay stream 0 and f0.
+            // format=yuv420p                           # Format the overlayed video as yuv420p
+            // [v]\"                                    # Name the overlayed video "v" for video.
+            // -map \"[v]\"                             # Put the video stream into stream 0:0.
+            // -map \"[a]\"                             # Put the audio stream into stream 0:1.
+            String command = String.Format("-r {0} -loop 1 -t {3:0.######} -i \"{1}.png\" -loop 1 -t {3:0.######} -i \"{2}.png\" -i \"{4}\" -filter_complex \"[2:a]volume=0.0,atrim=duration={3:0.######}[a];[1]format=yuva444p,fade=d={3:0.######}:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
                 FramesPerSecond,
                 TransitionFromFrame,
                 TransitionToFrame,
@@ -1594,12 +1669,10 @@ namespace RSPro2Video
             String filename2 = filename1 + ".Text";
 
             // Create the inner commands for ffmpeg.
-            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -i \"{3}\" -af volume=0.0 -t {4} -filter_complex \"[0:v][1:v]overlay\"",
+            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
                 filename1,
                 OutputVideoInterimExtension,
-                forwardBookmark.Name,
-                RelativePathToWorkingInputVideoFile,
-                transitionLength);
+                forwardBookmark.Name);
 
             // Call ffmpeg.
             return RunFfmpeg(filename: filename2, command: command, AddToVideoOutputs: true);
@@ -1683,12 +1756,10 @@ namespace RSPro2Video
             String filename2 = filename1 + ".Text";
 
             // Create the inner commands for ffmpeg.
-            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -i \"{3}\" -af volume=0.0 -t {4} -filter_complex \"[0:v][1:v]overlay\"",
+            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
                 filename1,
                 OutputVideoInterimExtension,
-                reverseBookmark.Name,
-                RelativePathToWorkingInputVideoFile,
-                displayLength);
+                reverseBookmark.Name);
 
             // Call ffmpeg.
             return RunFfmpeg(filename: filename2, command: command, AddToVideoOutputs: true);
@@ -1764,12 +1835,10 @@ namespace RSPro2Video
             String filename2 = reverseBookmark.Name + ".Forward.Text";
 
             // Create the inner commands for ffmpeg.
-            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -i \"{3}\" -af volume=0.0 -t {4} -filter_complex \"[0:v][1:v]overlay\"",
+            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
                 filename1,
                 OutputVideoInterimExtension,
-                reverseBookmark.Name,
-                RelativePathToWorkingInputVideoFile,
-                duration);
+                reverseBookmark.Name);
 
             // Call ffmpeg.
             retval = RunFfmpeg(filename: filename2, command: command, AddToVideoOutputs: true);
@@ -1798,8 +1867,31 @@ namespace RSPro2Video
             // Calculate the length of time to display the card.
             float transitionLength = 1.0f;
 
-            // Create the inner commands for ffmpeg. 
-            String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -i \"{4}\" -af volume=0.0 -t {3} -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
+            // Create the inner commands for ffmpeg.
+            // -r {0}                                   # Frame rate.
+            // -loop 1 -t {3:0.######} -i \"{1}.png\"   # Loop this first input image for {3} seconds.
+            // -loop 1 -t {3:0.######} -i \"{2}.png\"   # Loop this second input iamge for {3} seconds.
+            // -i \"{4}\"                               # Use this input stream (will be used to create silent audio channel).
+            // -filter_complex                          # Pass the following string to the ffmpeg filter_complex.
+            // [2:a]                                    # From the third input, select the audio channel.
+            // volume=0.0,                              # Multiply the audio value by 0 (silence).
+            // atrim=duration={2:0.######}              # Set the audio duration to {3}.
+            // [a];                                     # Name this stream "a" for audio.
+            // [1]format=yuva444p,                      # Format the first image as yuva444p.
+            // fade=d={3:0.######}:                     # Set the fade duration.
+            // t=in:                                    # Set the fade type to "fade in".
+            // alpha=1,                                 # Fade only the alpha channel.
+            // setpts=                                  # Set the presentation timestamp
+            // PTS-STARTPTS/TB                          # PTS is he presentation timestamp in input
+            //                                          #   STARTPTS is the PTS of the first frame.
+            //                                          #   TB is the timebase of the input timestamps.
+            // [f0];                                    # Name this stream "f0".
+            // [0][f0]overlay,                          # Overlay stream 0 and f0.
+            // format=yuv420p                           # Format the overlayed video as yuv420p
+            // [v]\"                                    # Name the overlayed video "v" for video.
+            // -map \"[v]\"                             # Put the video stream into stream 0:0.
+            // -map \"[a]\"                             # Put the audio stream into stream 0:1.
+            String command = String.Format("-r {0} -loop 1 -t {3:0.######} -i \"{1}.png\" -loop 1 -t {3:0.######} -i \"{2}.png\" -i \"{4}\" -filter_complex \"[2:a]volume=0.0,atrim=duration={3:0.######}[a];[1]format=yuva444p,fade=d={3:0.######}:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
                 FramesPerSecond,
                 TransitionFromFrame,
                 transitionToFrame,
@@ -1833,8 +1925,31 @@ namespace RSPro2Video
                 // Calculate the length of time to display the card.
                 float transitionLength = 1.0f;
 
-                // Create the inner commands for ffmpeg. 
-                String command = String.Format("-r {0} -loop 1 -t {3} -i \"{1}.png\" -loop 1 -t {3} -i \"{2}.png\" -i \"{4}\" -af volume=0.0 -t {3} -filter_complex \"[1]format=yuva444p,fade=d=1:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\"",
+                // Create the inner commands for ffmpeg.
+                // -r {0}                                   # Frame rate.
+                // -loop 1 -t {3:0.######} -i \"{1}.png\"   # Loop this first input image for {3} seconds.
+                // -loop 1 -t {3:0.######} -i \"{2}.png\"   # Loop this second input iamge for {3} seconds.
+                // -i \"{4}\"                               # Use this input stream (will be used to create silent audio channel).
+                // -filter_complex                          # Pass the following string to the ffmpeg filter_complex.
+                // [2:a]                                    # From the third input, select the audio channel.
+                // volume=0.0,                              # Multiply the audio value by 0 (silence).
+                // atrim=duration={2:0.######}              # Set the audio duration to {3}.
+                // [a];                                     # Name this stream "a" for audio.
+                // [1]format=yuva444p,                      # Format the first image as yuva444p.
+                // fade=d={3:0.######}:                     # Set the fade duration.
+                // t=in:                                    # Set the fade type to "fade in".
+                // alpha=1,                                 # Fade only the alpha channel.
+                // setpts=                                  # Set the presentation timestamp
+                // PTS-STARTPTS/TB                          # PTS is he presentation timestamp in input
+                //                                          #   STARTPTS is the PTS of the first frame.
+                //                                          #   TB is the timebase of the input timestamps.
+                // [f0];                                    # Name this stream "f0".
+                // [0][f0]overlay,                          # Overlay stream 0 and f0.
+                // format=yuv420p                           # Format the overlayed video as yuv420p
+                // [v]\"                                    # Name the overlayed video "v" for video.
+                // -map \"[v]\"                             # Put the video stream into stream 0:0.
+                // -map \"[a]\"                             # Put the audio stream into stream 0:1.
+                String command = String.Format("-r {0} -loop 1 -t {3:0.######} -i \"{1}.png\" -loop 1 -t {3:0.######} -i \"{2}.png\" -i \"{4}\"  -filter_complex \"[2:a]volume=0.0,atrim=duration={3:0.######}[a];[1]format=yuva444p,fade=d={3:0.######}:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
                     FramesPerSecond,
                     TransitionFromFrame,
                     TransitionToFrame,
