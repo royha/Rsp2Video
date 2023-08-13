@@ -107,6 +107,9 @@
             this.labelVideoRenderingTime = new System.Windows.Forms.Label();
             this.labelVideoComplete = new System.Windows.Forms.Label();
             this.buttonViewVideo = new System.Windows.Forms.Button();
+            this.labelBookmarkFile = new System.Windows.Forms.Label();
+            this.textBoxBookmarkFile = new System.Windows.Forms.TextBox();
+            this.browseButtonBookmarkFile = new System.Windows.Forms.Button();
             this.groupBoxReversalRates.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBoxInputFiles.SuspendLayout();
@@ -451,6 +454,9 @@
             // 
             // groupBoxInputFiles
             // 
+            this.groupBoxInputFiles.Controls.Add(this.browseButtonBookmarkFile);
+            this.groupBoxInputFiles.Controls.Add(this.textBoxBookmarkFile);
+            this.groupBoxInputFiles.Controls.Add(this.labelBookmarkFile);
             this.groupBoxInputFiles.Controls.Add(this.labelSourceVideoFile);
             this.groupBoxInputFiles.Controls.Add(this.browseButtonTranscriptFile);
             this.groupBoxInputFiles.Controls.Add(this.labelTranscriptFileError);
@@ -465,10 +471,10 @@
             this.groupBoxInputFiles.Controls.Add(this.textBoxSoundFile);
             this.groupBoxInputFiles.Location = new System.Drawing.Point(5, 129);
             this.groupBoxInputFiles.Name = "groupBoxInputFiles";
-            this.groupBoxInputFiles.Size = new System.Drawing.Size(710, 187);
+            this.groupBoxInputFiles.Size = new System.Drawing.Size(710, 297);
             this.groupBoxInputFiles.TabIndex = 1;
             this.groupBoxInputFiles.TabStop = false;
-            this.groupBoxInputFiles.Text = "Input files: Drag and drop your files here";
+            this.groupBoxInputFiles.Text = "Input files: Drag and drop your Bookmark file or Rsp2Video Project file here";
             // 
             // labelTranscriptFileError
             // 
@@ -531,6 +537,7 @@
             this.textBoxVideoOffset.Name = "textBoxVideoOffset";
             this.textBoxVideoOffset.Size = new System.Drawing.Size(78, 20);
             this.textBoxVideoOffset.TabIndex = 7;
+            this.textBoxVideoOffset.Visible = false;
             // 
             // labelAudioDelay
             // 
@@ -540,6 +547,7 @@
             this.labelAudioDelay.Size = new System.Drawing.Size(62, 13);
             this.labelAudioDelay.TabIndex = 24;
             this.labelAudioDelay.Text = "Audio delay";
+            this.labelAudioDelay.Visible = false;
             // 
             // labelOutputVideoFile
             // 
@@ -943,14 +951,40 @@
             this.buttonViewVideo.UseVisualStyleBackColor = true;
             this.buttonViewVideo.Click += new System.EventHandler(this.buttonViewVideo_Click);
             // 
+            // labelBookmarkFile
+            // 
+            this.labelBookmarkFile.AutoSize = true;
+            this.labelBookmarkFile.Location = new System.Drawing.Point(6, 186);
+            this.labelBookmarkFile.Name = "labelBookmarkFile";
+            this.labelBookmarkFile.Size = new System.Drawing.Size(71, 13);
+            this.labelBookmarkFile.TabIndex = 107;
+            this.labelBookmarkFile.Text = "Bookmark file";
+            // 
+            // textBoxBookmarkFile
+            // 
+            this.textBoxBookmarkFile.Location = new System.Drawing.Point(166, 183);
+            this.textBoxBookmarkFile.Name = "textBoxBookmarkFile";
+            this.textBoxBookmarkFile.Size = new System.Drawing.Size(469, 20);
+            this.textBoxBookmarkFile.TabIndex = 108;
+            // 
+            // browseButtonBookmarkFile
+            // 
+            this.browseButtonBookmarkFile.Location = new System.Drawing.Point(641, 181);
+            this.browseButtonBookmarkFile.Name = "browseButtonBookmarkFile";
+            this.browseButtonBookmarkFile.Size = new System.Drawing.Size(59, 23);
+            this.browseButtonBookmarkFile.TabIndex = 109;
+            this.browseButtonBookmarkFile.Text = "Browse...";
+            this.browseButtonBookmarkFile.UseVisualStyleBackColor = true;
+            this.browseButtonBookmarkFile.Click += new System.EventHandler(this.browseButtonBookmarkFile_Click);
+            // 
             // RSPro2VideoForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(744, 499);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel4);
-            this.Controls.Add(this.panel1);
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.buttonExit);
             this.Controls.Add(this.buttonNext);
@@ -1066,6 +1100,9 @@
         private System.Windows.Forms.TrackBar trackBarVideoQuality;
         private System.Windows.Forms.Label labelVideoQuality;
         private System.Windows.Forms.Label labelVideoRenderingTime;
+        private System.Windows.Forms.Button browseButtonBookmarkFile;
+        private System.Windows.Forms.TextBox textBoxBookmarkFile;
+        private System.Windows.Forms.Label labelBookmarkFile;
     }
 }
 

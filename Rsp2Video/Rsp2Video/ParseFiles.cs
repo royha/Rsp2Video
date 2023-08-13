@@ -31,6 +31,12 @@ namespace RSPro2Video
             labelOutputVideoFileError.Visible = false;
             labelVideoOffsetError.Visible = false;
 
+            // Find and set the video file and set the project file.
+            if (FindFilesFromBookmarkFile() == false)
+            {
+                returnValue = false;
+            }
+
             // Set logfile location.
             if (SetLogFileLocation() == false)
             {
@@ -55,10 +61,10 @@ namespace RSPro2Video
             }
 
             // Validate and parse the transcript file.
-            if (ValidateAndParseTranscript() == false)
-            {
-                returnValue = false;
-            }
+            //if (ValidateAndParseTranscript() == false)
+            //{
+            //    returnValue = false;
+            //}
 
             // Validate ouptut video file.
             if (ValidateOutputVideoFile() == false)
@@ -73,6 +79,76 @@ namespace RSPro2Video
             }
 
             return returnValue;
+        }
+
+        /// <summary>
+        /// Finds and stores the source video filename based on the bookmark filename and location.
+        /// </summary>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private bool FindFilesFromBookmarkFile()
+        {
+            String bookmarkPath;
+            try
+            {
+                bookmarkPath = Path.GetFullPath(textBoxBookmarkFile.Text).Trim();
+            }
+            catch (ArgumentException e)
+            { 
+                return false; 
+            }
+
+            String bookmarkExtension = Path.GetExtension(textBoxBookmarkFile.Text).Trim().ToLower();
+
+            switch (bookmarkExtension)
+            {
+                case ".fmbok":
+                case ".bok":
+                    // RSPro bookmark file. Verify the bookmark file exists.
+                    if (File.Exists(bookmarkPath) == false)
+                    {
+                        return false;
+                    }
+
+                    // Find the first video file to match.
+                    foreach (String extension in new String[] { ".mp4", ".webm", ".avi", ".mov", ".mkv", ".mpg", ".mpeg", ".wmv" })
+                    {
+                        String rsproBookmarkFilepath = Path.ChangeExtension(bookmarkPath, extension);
+                        if (File.Exists(rsproBookmarkFilepath) == true)
+                        {
+                            SourceVideoFile = rsproBookmarkFilepath;
+                            break;
+                        }
+                    }
+
+                    // No matching video file was found.
+                    return false;
+
+                case ".rsvideo":
+                    // RSVideo bookmark file. Verify the bookmark file exists.
+                    if (File.Exists(bookmarkPath) == false)
+                    {
+                        return false;
+                    }
+
+                    // RSVideo bookmark file. Remove ".rsvideo" from the end of the filepath to get the video file path.
+                    String rsvideoBookmarkFilepath = bookmarkPath.Substring(0, bookmarkPath.Length - 8);
+
+                    // Verify the video file exists.
+                    if (File.Exists(rsvideoBookmarkFilepath) == true)
+                    {
+                        SourceVideoFile = bookmarkPath.Substring(0, bookmarkPath.Length - 8);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                default:
+                    return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -108,10 +184,9 @@ namespace RSPro2Video
         /// ffprobe -v error -select_streams a -of default=noprint_wrappers=1:nokey=1 -show_entries stream=sample_rate
         private bool ValidateAndParseAudio()
         {
-            if (ValidateAudio() == false) { return false; }
-
             Process process = new Process();
 
+            // This ffprobe string returns the sample rate in text, and only the sample rate in text.
             String arguments = "-v error -select_streams a -of default=noprint_wrappers=1:nokey=1 -show_entries stream=sample_rate \"" + textBoxSourceVideoFile.Text + "\"";
 
             // Configure the process using the StartInfo properties.
@@ -125,10 +200,10 @@ namespace RSPro2Video
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
-            // Start SoX to get the audio file information.
+            // Start ffprobe to get the audio file information.
             process.Start();
 
-            // Read the output of SoX.
+            // Read the output of ffprobe.
             String FfprobeOutput = process.StandardOutput.ReadToEnd();
 
             // Wait here for the process to exit.
@@ -138,7 +213,7 @@ namespace RSPro2Video
 
             if (ExitCode != 0)
             {
-                MessageBox.Show("There was an error reading " + textBoxSoundFile.Text + ":" + Environment.NewLine + Environment.NewLine + "Error message: " + FfprobeOutput,
+                MessageBox.Show("There was an error reading " + textBoxSourceVideoFile.Text + ":" + Environment.NewLine + Environment.NewLine + "Error message: " + FfprobeOutput,
                     "Error reading Reverse Speech Pro sound file");
                 return false;
             }
@@ -154,28 +229,6 @@ namespace RSPro2Video
                 labelSoundFileError.Visible = true;
                 return false;
             }
-
-            return true;
-        }
-
-        private bool ValidateAudio()
-        {
-            // Validate ouptut video file.
-            if (textBoxSoundFile.Text == String.Empty)
-            {
-                labelSoundFileError.Text = "You must specify a source video file.";
-                labelSoundFileError.Visible = true;
-                return false;
-            }
-
-            if (File.Exists(textBoxSoundFile.Text) == false)
-            {
-                labelSoundFileError.Text = "The file was not found.";
-                labelSoundFileError.Visible = true;
-                return false;
-            }
-
-            // TODO: Add the code to read and validate the .FmBok/.bok file.
 
             return true;
         }

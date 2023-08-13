@@ -743,6 +743,30 @@ namespace RSPro2Video
             }
         }
 
+        private void browseButtonBookmarkFile_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                // Select initial search directory
+                String initialDirectory = String.Empty;
+                if (textBoxBookmarkFile.Text != String.Empty)
+                { 
+                    initialDirectory = Path.GetDirectoryName(textBoxBookmarkFile.Text);
+                }
+
+                openFileDialog.Title = "Bookmark file";
+                openFileDialog.InitialDirectory = initialDirectory;
+                openFileDialog.Filter = "Bookmark files (*.RSVideo, *.FmBok, *.bok)|*.RSVideo;*.FmBok;*.bok|All files (*.*)|*.*";
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    //Get the path of specified file.
+                    textBoxBookmarkFile.Text = openFileDialog.FileName;
+                }
+            }
+        }
+
         private void buttonBrowseOutputVideoFile_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
@@ -766,6 +790,9 @@ namespace RSPro2Video
 
         private void panel1_DragEnter(object sender, DragEventArgs e)
         {
+            // Default is to show that we don't accept the drag-drop.
+            e.Effect = DragDropEffects.None;
+
             if (e.Data.GetDataPresent(DataFormats.FileDrop) == false) { return; }
 
             String[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
@@ -790,6 +817,11 @@ namespace RSPro2Video
 
                     case ".rtf":
                     case ".txt":
+
+                    case ".rsp2video":
+                    case ".rsvideo":
+                    case ".fmbok":
+                    case ".bok":
                         e.Effect = DragDropEffects.Copy;
                         break;
 
@@ -809,9 +841,9 @@ namespace RSPro2Video
             // If there are no files, return.
             if (e.Data.GetDataPresent(DataFormats.FileDrop) == false) { return; }
 
-            Boolean videoFileDropped = false;
-            Boolean soundFileDropped = false;
-            Boolean transcriptFileDropped = false;
+            //Boolean videoFileDropped = false;
+            //Boolean soundFileDropped = false;
+            //Boolean transcriptFileDropped = false;
 
             // Get the list of files.
             String[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
@@ -837,7 +869,7 @@ namespace RSPro2Video
                         textBoxSourceVideoFile.Text = file;
 
                         // Set the flag that we received a video file.
-                        videoFileDropped = true;
+                        //videoFileDropped = true;
 
                         // Create the output video file textbox.
                         if (radioButtonSeparateVideos.Checked)
@@ -856,7 +888,7 @@ namespace RSPro2Video
                         textBoxSoundFile.Text = file;
 
                         // Set the flag that we received an audio file.
-                        soundFileDropped = true;
+                        //soundFileDropped = true;
                         break;
 
                     case ".rtf":
@@ -865,7 +897,19 @@ namespace RSPro2Video
                         textBoxTranscriptFile.Text = file;
 
                         // Set the flag that we received a transcript file.
-                        transcriptFileDropped = true;
+                        //transcriptFileDropped = true;
+                        break;
+
+                    case ".rsvideo":
+                    case ".fmbok":
+                    case ".bok":
+                        // If the extension is a bookmark file, set the textbox to the filename.
+                        textBoxBookmarkFile.Text = file;
+                        break;
+
+                    case ".rsp2video":
+                        // If the extension is a project file, find the bookmark file, then set the project filename.
+                        // textBoxProjectFile.Text = file;
                         break;
 
                     default:
@@ -874,10 +918,10 @@ namespace RSPro2Video
             }
 
             // If there was a video file and a sound file, but no transcript file, clear the transcript file textbox.
-            if (videoFileDropped == true && soundFileDropped == true && transcriptFileDropped == false)
-            {
-                textBoxTranscriptFile.Text = String.Empty;
-            }
+            //if (videoFileDropped == true && soundFileDropped == true && transcriptFileDropped == false)
+            //{
+            //    textBoxTranscriptFile.Text = String.Empty;
+            //}
         }
 
         private void radioButtonFnR_CheckedChanged(object sender, EventArgs e)
