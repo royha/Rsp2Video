@@ -43,9 +43,6 @@ namespace RSPro2Video
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            // Clear the log file.
-            File.Delete(LogFile);
-
             // Find the supporting applications (ffmpeg.exe, sox.exe, etc).
             if (FindSupportingApps() == false)
             {
@@ -465,6 +462,7 @@ namespace RSPro2Video
             // MoveVideoToDestinationDirectory();
 
             // Remove the temp directory.
+            
             RemoveTemp_DirDirectory();
         }
 
@@ -566,7 +564,7 @@ namespace RSPro2Video
         }
 
         /// <summary>
-        /// Removes the TEMP_DIR directory.
+        /// Removes the TEMP_DIR directory and the log file.
         /// </summary>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool RemoveTemp_DirDirectory()
@@ -575,12 +573,20 @@ namespace RSPro2Video
 
             if (DeleteWorkingDirectories == true)
             {
+                // Delete the working directory.
                 try
                 {
                     // Delete the directory and any files and directories in that directory.
                     diTmpDirectory.Delete(true);
                 }
                 catch { return false; }
+
+                // Delete the log file.
+                //try
+                //{
+                //    File.Delete(LogFile);
+                //}
+                //catch { return false; }
             }
 
             return true;

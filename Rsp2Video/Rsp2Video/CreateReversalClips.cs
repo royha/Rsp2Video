@@ -238,7 +238,7 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmpegApp,
-                Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -qscale 1 -t {2:0.######} \"{3}\\{4}.%06d.png\"",
+                Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -q:v 1 -t {2:0.######} \"{3}\\{4}.%05d.png\"",
                     startSeconds, RelativePathToWorkingInputVideoFile, lengthSeconds, FRAMES_DIR, name),
                 UseShellExecute = false,
                 RedirectStandardError = true,
@@ -339,7 +339,7 @@ namespace RSPro2Video
             float reversalFps = FramesPerSecond * ((float)reversalRate.ReversalSpeed / (float)100);
 
             // Create the ffmpeg argument string.
-            String arguments = String.Format("-y -hide_banner -framerate {0:0.######} -i \"{1}\\r{2}.%06d.png\" -i \"{3}{4}\" {6} -filter:v \"fps=fps={7:0.######}:eof_action=pass\" \"{3}{5}\"",
+            String arguments = String.Format("-y -hide_banner -framerate {0:0.######} -i \"{1}\\r{2}.%05d.png\" -i \"{3}{4}\" {6} -filter:v \"fps=fps={7:0.######}:eof_action=pass\" \"{3}{5}\"",
                     FramesPerSecond * ((float)reversalRate.ReversalSpeed / 100f),
                     FRAMES_DIR,
                     reversal.Name,
@@ -391,7 +391,7 @@ namespace RSPro2Video
             // if (outputFrameCount > Math.Floor(outputFrameCount)) { outputFrameCount = (float)Math.Floor(outputFrameCount + (float)1); }
 
             // Add the video clip to the list of clips.
-            CreatedClipList.Add(videoFilename + ".mp4");
+            CreatedClipList.Add(videoFilename + OutputVideoInterimExtension);
 
             return true;
         }
@@ -449,7 +449,7 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmpegApp,
-                Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -qscale 1 -t {2:0.######} -f image2 \"{3}.{4}.png\"",
+                Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -q:v 1 -t {2:0.######} -f image2 \"{3}.{4}.png\"",
                     timeInSeconds, RelativePathToWorkingInputVideoFile, lengthInSeconds, bookmark.Name, suffix),
                 UseShellExecute = false,
                 RedirectStandardError = true,
@@ -501,7 +501,7 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmpegApp,
-                Arguments = String.Format("-y -hide_banner -ss 0.0 -i \"{0}\" -an -qscale 1 -t {1:0.######} -f image2 \"OpeningFrame.png\"",
+                Arguments = String.Format("-y -hide_banner -ss 0.0 -i \"{0}\" -an -q:v 1 -t {1:0.######} -f image2 \"OpeningFrame.png\"",
                     RelativePathToWorkingInputVideoFile, lengthInSeconds),
                 UseShellExecute = false,
                 RedirectStandardError = true,
@@ -550,7 +550,7 @@ namespace RSPro2Video
                 process.StartInfo = new ProcessStartInfo
                 {
                     FileName = FfmpegApp,
-                    Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -qscale 1 -t {2:0.######} -f image2 \"ClosingFrame.png\"",
+                    Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -q:v 1 -t {2:0.######} -f image2 \"ClosingFrame.png\"",
                         ClosingFrameTime, RelativePathToWorkingInputVideoFile, lengthInSeconds),
                     UseShellExecute = false,
                     RedirectStandardError = true,
