@@ -36,29 +36,29 @@ namespace RSPro2Video
                 settings.ReversalRate3.UseThisRate = true;
                 settings.ReversalRate3.ReversalSpeed = 70;
                 settings.ReversalRate3.ReversalTone = 70;
-                settings.ReversalRate4.UseThisRate = true;
+                settings.ReversalRate4.UseThisRate = false;
                 settings.ReversalRate4.ReversalSpeed = 50;
-                settings.ReversalRate4.ReversalTone = 62;
+                settings.ReversalRate4.ReversalTone = 60;
                 settings.AudioDelay = 0;
 
                 settings.OutputOptionsInterimSettings = new List<String>(new String[] {
                     "-qscale:v 2",
-                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1",
+                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart -reset_timestamps 1",
                     // "-c:v h264_nvenc -preset p2 -profile:v high -b:v 5M -bufsize 5M -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1",
-                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1" });
+                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart -reset_timestamps 1" });
                 settings.OutputOptionsInterimSettingsQmelt = new List<String>(new String[] {
                     "qscale=2",
                     "vcodec=libx264 preset=ultrafast crf=18 acodec=libmp3lame",
                     "vcodec=libx264 preset=slow crf=16 acodec=libmp3lame" });
                 settings.OutputOptionsImageSequenceSettings = new List<String>(new String[] {
                     "-qscale:v 2",
-                    "-c:v libx264 -preset ultrafast -crf 18 -threads 0 -c:a aac -b:a 384k -movflags +faststart",
+                    "-c:v libx264 -preset ultrafast -crf 18 -threads 0 -c:a aac -q:a 1 -movflags +faststart",
                     // "-c:v h264_nvenc -preset p2 -profile:v high -b:v 5M -bufsize 5M -c:a aac -b:a 384k -movflags +faststart",
-                    "-c:v libx264 -preset slow -crf 16 -threads 0 -c:a aac -b:a 384k -movflags +faststart" });
+                    "-c:v libx264 -preset slow -crf 16 -threads 0 -c:a aac -q:a 1 -movflags +faststart" });
                 settings.OutputOptionsFinalSettings = new List<String>(new String[] {
                     "-qscale:v 2",
-                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -b:a 384k -movflags +faststart",
-                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -b:a 384k -movflags +faststart" });
+                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart",
+                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart" });
                 settings.OutputOptionsFinalSettingsQmelt = new List<String>(new String[] {
                     "qscale=2",
                     "vcodec=libx264 preset=ultrafast crf=23 acodec=libmp3lame",

@@ -58,7 +58,7 @@ namespace RSPro2Video
         // The fully-qualified path to the settings file.
         String SettingsFile = Path.Combine(Application.StartupPath, "RSPro2Video.settings");
         String AnimationFile = Path.Combine(Application.StartupPath, "animation.gif");
-        String LogFile = Path.Combine(Application.StartupPath, "log.txt");
+        String LogFile;
 
         // Text settings.
         String FontName;                                                // The base font, such as "Calibri".
@@ -115,7 +115,7 @@ namespace RSPro2Video
 
         bool DeleteWorkingDirectories = true;
 
-        String[] VideoQualityString = { "Fast / Draft quality", "Slow / Small file", "Slowest / High quality / YouTube Upload" };
+        String[] VideoQualityString = { "Fast / Draft quality", "Slow / YouTube upload quality", "Slowest / High quality" };
 
         // Debug related globals.
 #if (LOGSTRING)

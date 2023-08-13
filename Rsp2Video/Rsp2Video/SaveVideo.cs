@@ -276,7 +276,9 @@ namespace RSPro2Video
                 Process process = new Process();
 
                 // Create the arguments string.
-                String arguments = String.Format("-y -hide_banner -f concat -safe 0 -i filelist.txt -c copy \"..\\{0}\"",
+                String arguments = String.Format("-y -hide_banner -r {0:0.######} -f concat -safe 0 -i filelist.txt {1} \"..\\{2}\"",
+                    FramesPerSecond,
+                    OutputFinalSettings,
                     videoOutput.Filename);
 
                 // Configure the process using the StartInfo properties.
@@ -398,7 +400,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.2f);
+            AddBlack(0.5f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -565,7 +567,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.2f);
+            AddBlack(0.5f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -761,7 +763,7 @@ namespace RSPro2Video
                         Progress.Report(String.Format("Working: Creating {0}", outputVideoFilename));
 
                         // Add 1/2 second of black.
-                        AddBlack(0.2f);
+                        AddBlack(0.5f);
 
                         // Add the video offset.
                         AddVideoOffset();
@@ -878,7 +880,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.2f);
+            AddBlack(0.5f);
 
             // Add the video offset.
             AddVideoOffset();
@@ -1130,7 +1132,7 @@ namespace RSPro2Video
                         Progress.Report(String.Format("Working: Creating {0}", outputVideoFilename));
 
                         // Add 1/2 second of black.
-                        AddBlack(0.2f);
+                        AddBlack(0.5f);
 
                         // Add the video offset.
                         AddVideoOffset();

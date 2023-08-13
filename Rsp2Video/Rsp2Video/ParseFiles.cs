@@ -31,6 +31,12 @@ namespace RSPro2Video
             labelOutputVideoFileError.Visible = false;
             labelVideoOffsetError.Visible = false;
 
+            // Set logfile location.
+            if (SetLogFileLocation() == false)
+            {
+                returnValue = false;
+            }
+
             // Validate and parse the video file.
             if (ValidateAndParseVideo() == false)
             {
@@ -67,6 +73,31 @@ namespace RSPro2Video
             }
 
             return returnValue;
+        }
+
+        /// <summary>
+        /// Creates a log file using the source video filename + ".log"
+        /// </summary>
+        /// <returns>Returns true if successful; otherwise false.</returns>
+        private bool SetLogFileLocation()
+        {
+            // Add ".log" to the end of the full path and filename of the source video file, just like Kdenlive.
+            LogFile = Path.GetFullPath(textBoxSourceVideoFile.Text) + ".log";
+
+            // Delete the log file.
+            try
+            {
+                File.Delete(LogFile);
+            }
+            catch { }
+
+            // Write the initial log entry.
+            String LogEntry = String.Format("***Log start time: {0}\r\nFilename: {1}\r\n\r\n",
+                DateTime.Now.ToString(), textBoxSourceVideoFile.Text);
+
+            File.AppendAllText(LogFile, LogEntry);
+
+            return true;
         }
 
         /// <summary>
@@ -794,7 +825,8 @@ namespace RSPro2Video
             };
 
             // Log the ffprobe command line options.
-            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            File.AppendAllText(LogFile, String.Format("\r\n\r\n***Command line: \"{0}\" {1}\r\n\r\n", 
+                process.StartInfo.FileName, process.StartInfo.Arguments));
 
             // Start ffprobe to get the video file information.
             process.Start();
