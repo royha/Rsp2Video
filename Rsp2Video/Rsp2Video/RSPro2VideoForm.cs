@@ -207,15 +207,18 @@ namespace RSPro2Video
             buttonNext.Text = "Next >";
 
             // If there is no transcript file, gray out the Bookmark source.
-            if (textBoxTranscriptFile.Text == null || textBoxTranscriptFile.Text == String.Empty)
-            {
-                groupBoxBookmarkSource.Enabled = false;
-                radioButtonSourceBookmarkFile.Checked = true;
-            }
-            else
-            {
-                groupBoxBookmarkSource.Enabled = true;
-            }
+            //if (textBoxTranscriptFile.Text == null || textBoxTranscriptFile.Text == String.Empty)
+            //{
+            //    groupBoxBookmarkSource.Enabled = false;
+            //    radioButtonSourceBookmarkFile.Checked = true;
+            //}
+            //else
+            //{
+            //    groupBoxBookmarkSource.Enabled = true;
+            //}
+
+            groupBoxBookmarkSource.Enabled = false;
+            radioButtonSourceBookmarkFile.Checked = true;
 
             // Fill the TreeView.
             // Forward and backward selected?
@@ -663,86 +666,6 @@ namespace RSPro2Video
             return path;
         }
 
-        private void browseButtonSourceVideoFile_Click(object sender, EventArgs e)
-        {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-                // Select initial search directory
-                String initialDirectory = String.Empty;
-                if (textBoxSourceVideoFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSourceVideoFile.Text); }
-                else if (textBoxSoundFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSoundFile.Text); }
-                else if (textBoxTranscriptFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxTranscriptFile.Text); }
-
-                openFileDialog.Title = "Source video file";
-                openFileDialog.InitialDirectory = initialDirectory;
-                openFileDialog.Filter = "Video files (*.mp4, *.webm, *.avi, *.mov, *.mkv, *.mpg, *.mpeg, *.wmv)|*.mp4;*.webm;*.avi;*.mov;*.mkv;*.mpg;*.mpeg;*.wmv|All files (*.*)|*.*";
-                openFileDialog.RestoreDirectory = true;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    //Get the path of specified file.
-                    textBoxSourceVideoFile.Text = openFileDialog.FileName;
-
-                    // Set the output video file.
-                    // Create the output video file textbox.
-                    if (radioButtonSeparateVideos.Checked)
-                    {
-                        textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(openFileDialog.FileName) + "-";
-                    }
-                    else
-                    {
-                        textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(openFileDialog.FileName);
-                    }
-                }
-            }
-        }
-
-        private void browseButtonSoundFile_Click(object sender, EventArgs e)
-        {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-                // Select initial search directory.
-                String initialDirectory = String.Empty;
-                if (textBoxSoundFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSoundFile.Text); }
-                else if (textBoxTranscriptFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxTranscriptFile.Text); }
-                else if (textBoxSourceVideoFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSourceVideoFile.Text); }
-
-                openFileDialog.Title = "Reverse Speech Pro sound file";
-                openFileDialog.InitialDirectory = initialDirectory;
-                openFileDialog.Filter = "Audio files (*.wav, *.mp3)|*.wav;*.mp3;|All files (*.*)|*.*";
-                openFileDialog.RestoreDirectory = true;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    //Get the path of specified file
-                    textBoxSoundFile.Text = openFileDialog.FileName;
-                }
-            }
-        }
-
-        private void browseButtonTranscriptFile_Click(object sender, EventArgs e)
-        {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-                // Select initial search directory.
-                String initialDirectory = String.Empty;
-                if (textBoxTranscriptFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxTranscriptFile.Text); }
-                else if (textBoxSoundFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSoundFile.Text); }
-                else if (textBoxSourceVideoFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSourceVideoFile.Text); }
-
-                openFileDialog.Title = "Reverse Speech Pro transcript file";
-                openFileDialog.InitialDirectory = initialDirectory;
-                openFileDialog.Filter = "Transcript files (*.rtf, *.txt)|*.rtf;*.txt|All files (*.*)|*.*";
-                openFileDialog.RestoreDirectory = true;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    //Get the path of specified file
-                    textBoxTranscriptFile.Text = openFileDialog.FileName;
-                }
-            }
-        }
-
         private void browseButtonBookmarkFile_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
@@ -941,10 +864,10 @@ namespace RSPro2Video
             if (radioButtonBookmarkTypeFnR.Checked)
             {
                 // If we have a transcript file, enable the bookmark source group box.
-                if (textBoxTranscriptFile.Text != null && textBoxTranscriptFile.Text != String.Empty)
-                {
-                    groupBoxBookmarkSource.Enabled = true;
-                }
+                //if (textBoxTranscriptFile.Text != null && textBoxTranscriptFile.Text != String.Empty)
+                //{
+                //    groupBoxBookmarkSource.Enabled = true;
+                //}
 
                 // Fill the tree view with the bookmarks from the specified source.
                 if (radioButtonSourceTranscriptFile.Checked)

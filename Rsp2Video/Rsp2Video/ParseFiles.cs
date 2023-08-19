@@ -22,9 +22,9 @@ namespace RSPro2Video
         private bool ValidateAndParseFiles()
         {
             // Clear the error messages.
-            labelSourceVideoFileError.Visible = false;
-            labelSoundFileError.Visible = false;
-            labelTranscriptFileError.Visible = false;
+            //labelSourceVideoFileError.Visible = false;
+            //labelSoundFileError.Visible = false;
+            //labelTranscriptFileError.Visible = false;
             labelOutputVideoFileError.Visible = false;
             labelVideoOffsetError.Visible = false;
             labelBookmarkFileError.Visible = false;
@@ -282,15 +282,15 @@ namespace RSPro2Video
                 return false;
             }
 
-            // Parse for the sample rate using regular expressions.
+            // Parse for the sample rate.
             if (Int32.TryParse(FfprobeOutput, out int rate))
             {
                 SampleRate = rate;
             }
             else
             {
-                labelSoundFileError.Text = "There was an error reading this file.";
-                labelSoundFileError.Visible = true;
+                labelBookmarkFileError.Text = "There was an error reading the video file.";
+                labelBookmarkFileError.Visible = true;
                 return false;
             }
 
@@ -374,8 +374,7 @@ namespace RSPro2Video
                     return false;
                 }
 
-                if (labelSourceVideoFileError.Visible == false &&
-                    labelOutputVideoFileError.Visible == false &&
+                if (labelOutputVideoFileError.Visible == false &&
                     outputPath == Path.GetFullPath(settings.SourceVideoFile))
                 {
                     labelOutputVideoFileError.Text = "The Output video file must not be the same as the Source video file.";
@@ -718,37 +717,37 @@ namespace RSPro2Video
         /// </summary>
         /// <param name="wavFilePath"></param>
         /// <returns>The path to the most recently written .FmBok or .bok file, or null if neither file was found.</returns>
-        private string GetBookmarkFilePath(string wavFilePath)
-        {
-            String bmarkFilePath;
+        //private string GetBookmarkFilePath(string wavFilePath)
+        //{
+        //    String bmarkFilePath;
 
-            // Search for the fileinfo for the .FmBok/.bok files.
-            String fmBokFilePath = Path.ChangeExtension(wavFilePath, ".FmBok");
-            FileInfo fmBokFileInfo = new FileInfo(fmBokFilePath);
-            String bokFilePath = Path.ChangeExtension(wavFilePath, ".bok");
-            FileInfo bokFileInfo = new FileInfo(bokFilePath);
+        //    // Search for the fileinfo for the .FmBok/.bok files.
+        //    String fmBokFilePath = Path.ChangeExtension(wavFilePath, ".FmBok");
+        //    FileInfo fmBokFileInfo = new FileInfo(fmBokFilePath);
+        //    String bokFilePath = Path.ChangeExtension(wavFilePath, ".bok");
+        //    FileInfo bokFileInfo = new FileInfo(bokFilePath);
 
-            // If neither exist, it's an error.
-            if (fmBokFileInfo.Exists == false && bokFileInfo.Exists == false)
-            {
-                labelSoundFileError.Text = "The bookmark (.FmBok/.bok) file for this sound file was not found.";
-                labelSoundFileError.Visible = true;
-                return null;
-            }
+        //    // If neither exist, it's an error.
+        //    if (fmBokFileInfo.Exists == false && bokFileInfo.Exists == false)
+        //    {
+        //        labelSoundFileError.Text = "The bookmark (.FmBok/.bok) file for this sound file was not found.";
+        //        labelSoundFileError.Visible = true;
+        //        return null;
+        //    }
 
-            // If both exist, use the newest one.
-            if (fmBokFileInfo.Exists == true && bokFileInfo.Exists == true)
-            {
-                bmarkFilePath = (fmBokFileInfo.LastWriteTime > bokFileInfo.LastWriteTime) ? fmBokFilePath : bokFilePath;
-            }
-            else
-            {
-                // Otherwise, use the one that exists.
-                bmarkFilePath = (fmBokFileInfo.Exists) ? fmBokFilePath : bokFilePath;
-            }
+        //    // If both exist, use the newest one.
+        //    if (fmBokFileInfo.Exists == true && bokFileInfo.Exists == true)
+        //    {
+        //        bmarkFilePath = (fmBokFileInfo.LastWriteTime > bokFileInfo.LastWriteTime) ? fmBokFilePath : bokFilePath;
+        //    }
+        //    else
+        //    {
+        //        // Otherwise, use the one that exists.
+        //        bmarkFilePath = (fmBokFileInfo.Exists) ? fmBokFilePath : bokFilePath;
+        //    }
 
-            return bmarkFilePath;
-        }
+        //    return bmarkFilePath;
+        //}
 
         /// <summary>
         /// Assembles bookmark lists (Forward and Reverse, orphan reversals, and quick check).
@@ -965,8 +964,8 @@ namespace RSPro2Video
             Match match = Regex.Match(FfprobeOutput, @"(\d+|\d+\.\d+) fps,");
             if (!match.Success)
             {
-                labelSourceVideoFileError.Text = "There was an error reading this file.";
-                labelSourceVideoFileError.Visible = true;
+                labelBookmarkFileError.Text = "There was an error reading the video file.";
+                labelBookmarkFileError.Visible = true;
                 return false;
             }
 
@@ -976,8 +975,8 @@ namespace RSPro2Video
             }
             else
             {
-                labelSourceVideoFileError.Text = "There was an error reading this file.";
-                labelSourceVideoFileError.Visible = true;
+                labelBookmarkFileError.Text = "There was an error reading the video file.";
+                labelBookmarkFileError.Visible = true;
                 return false;
             }
 
@@ -985,8 +984,8 @@ namespace RSPro2Video
             match = Regex.Match(FfprobeOutput, @" (\d\d\d+)x(\d\d+)[, ]");
             if (!match.Success)
             {
-                labelSourceVideoFileError.Text = "There was an error reading this file.";
-                labelSourceVideoFileError.Visible = true;
+                labelBookmarkFileError.Text = "There was an error reading the video file.";
+                labelBookmarkFileError.Visible = true;
                 return false;
             }
 
@@ -996,8 +995,8 @@ namespace RSPro2Video
             }
             else
             {
-                labelSourceVideoFileError.Text = "There was an error reading this file.";
-                labelSourceVideoFileError.Visible = true;
+                labelBookmarkFileError.Text = "There was an error reading the video file.";
+                labelBookmarkFileError.Visible = true;
                 return false;
             }
 
@@ -1007,8 +1006,8 @@ namespace RSPro2Video
             }
             else
             {
-                labelSourceVideoFileError.Text = "There was an error reading this file.";
-                labelSourceVideoFileError.Visible = true;
+                labelBookmarkFileError.Text = "There was an error reading the video file.";
+                labelBookmarkFileError.Visible = true;
                 return false;
             }
 
@@ -1016,8 +1015,8 @@ namespace RSPro2Video
             match = Regex.Match(FfprobeOutput, @"\r\n\s+Duration: (\d\d):(\d\d):(\d\d)\.(\d\d)[, ]");
             if (!match.Success)
             {
-                labelSourceVideoFileError.Text = "There was an error reading this file.";
-                labelSourceVideoFileError.Visible = true;
+                labelBookmarkFileError.Text = "There was an error reading the video file.";
+                labelBookmarkFileError.Visible = true;
                 return false;
             }
             if (!Int32.TryParse(match.Groups[1].Value, out int hours) ||
@@ -1025,8 +1024,8 @@ namespace RSPro2Video
                 !Int32.TryParse(match.Groups[3].Value, out int seconds) ||
                 !Int32.TryParse(match.Groups[4].Value, out int hundredths))
             {
-                labelSourceVideoFileError.Text = "There was an error reading this file.";
-                labelSourceVideoFileError.Visible = true;
+                labelBookmarkFileError.Text = "There was an error reading the video file.";
+                labelBookmarkFileError.Visible = true;
                 return false;
             }
 
@@ -1085,183 +1084,183 @@ namespace RSPro2Video
         /// and location of each bookmark.
         /// </summary>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool ValidateAndParseTranscript()
-        {
-            // An empty transcript file means the .FmBok/.bok file will be used.
-            if (textBoxTranscriptFile.Text == String.Empty)
-            {
-                return true;
-            }
+        //private bool ValidateAndParseTranscript()
+        //{
+        //    // An empty transcript file means the .FmBok/.bok file will be used.
+        //    if (textBoxTranscriptFile.Text == String.Empty)
+        //    {
+        //        return true;
+        //    }
 
-            if (File.Exists(textBoxTranscriptFile.Text) == false)
-            {
-                labelTranscriptFileError.Text = "The file was not found.";
-                labelTranscriptFileError.Visible = true;
-                return false;
-            }
+        //    if (File.Exists(textBoxTranscriptFile.Text) == false)
+        //    {
+        //        labelTranscriptFileError.Text = "The file was not found.";
+        //        labelTranscriptFileError.Visible = true;
+        //        return false;
+        //    }
 
-            // Read the transcript file. Make sure there is one blank line at the start of the file.
-            String text = "\r\n" + File.ReadAllText(textBoxTranscriptFile.Text);
+        //    // Read the transcript file. Make sure there is one blank line at the start of the file.
+        //    String text = "\r\n" + File.ReadAllText(textBoxTranscriptFile.Text);
 
-            // Remove RTF encoding, if it's there.
-            Transcript = Regex.Replace(text, @"\{\*?\\[^{}]+}|[{}]|\\\n?[A-Za-z]+\n?(?:-?\d+)?[ ]?", "");
+        //    // Remove RTF encoding, if it's there.
+        //    Transcript = Regex.Replace(text, @"\{\*?\\[^{}]+}|[{}]|\\\n?[A-Za-z]+\n?(?:-?\d+)?[ ]?", "");
 
-            // Extract the details from the transcript file.
-            ExtractTranscriptBookmarkData();
+        //    // Extract the details from the transcript file.
+        //    ExtractTranscriptBookmarkData();
 
-            return true;
-        }
+        //    return true;
+        //}
 
-        private bool ValidateTranscript()
-        {
-            // Validate Transcript file.
-            if (textBoxTranscriptFile.Text == String.Empty)
-            {
-                return true;
-            }
+        //private bool ValidateTranscript()
+        //{
+        //    // Validate Transcript file.
+        //    if (textBoxTranscriptFile.Text == String.Empty)
+        //    {
+        //        return true;
+        //    }
 
-            if (File.Exists(textBoxTranscriptFile.Text) == false)
-            {
-                labelSourceVideoFileError.Text = "The file was not found.";
-                labelSourceVideoFileError.Visible = true;
-                return false;
-            }
+        //    if (File.Exists(textBoxTranscriptFile.Text) == false)
+        //    {
+        //        labelSourceVideoFileError.Text = "The file was not found.";
+        //        labelSourceVideoFileError.Visible = true;
+        //        return false;
+        //    }
 
-            return true;
-        }
+        //    return true;
+        //}
 
-        /// <summary>
-        /// Parses the transcript file (.FmBok/.bok) for bookmark data.
-        /// </summary>
-        private bool ExtractTranscriptBookmarkData()
-        {
-            // Parse through the upper section of the transcript file.
-            String textArea = Transcript.Substring(0, Transcript.IndexOf("\r\nDo not edit anything below here. "));
-            if (textArea == null) { return false; }
+        ///// <summary>
+        ///// Parses the transcript file (.FmBok/.bok) for bookmark data.
+        ///// </summary>
+        //private bool ExtractTranscriptBookmarkData()
+        //{
+        //    // Parse through the upper section of the transcript file.
+        //    String textArea = Transcript.Substring(0, Transcript.IndexOf("\r\nDo not edit anything below here. "));
+        //    if (textArea == null) { return false; }
 
-            // Extract the opening and closing cards.
-            Match cardMatch = Regex.Match(textArea, @"(?i)(openingcard|opening card): ([\s\S]*?.+)\r\n(closing|f = )");
-            if (cardMatch.Success)
-            {
-                TxtOpeningCard = cardMatch.Groups[2].Value;
-            }
+        //    // Extract the opening and closing cards.
+        //    Match cardMatch = Regex.Match(textArea, @"(?i)(openingcard|opening card): ([\s\S]*?.+)\r\n(closing|f = )");
+        //    if (cardMatch.Success)
+        //    {
+        //        TxtOpeningCard = cardMatch.Groups[2].Value;
+        //    }
 
-            cardMatch = Regex.Match(textArea, @"(?i)(closingcard|closing card): ([\s\S]*?.+)\r\n(opening|f = )");
-            if (cardMatch.Success)
-            {
-                TxtClosingCard = cardMatch.Groups[2].Value;
-            }
+        //    cardMatch = Regex.Match(textArea, @"(?i)(closingcard|closing card): ([\s\S]*?.+)\r\n(opening|f = )");
+        //    if (cardMatch.Success)
+        //    {
+        //        TxtClosingCard = cardMatch.Groups[2].Value;
+        //    }
 
-            // Extract the bookmark pairs.
-            MatchCollection matches = Regex.Matches(textArea, @"([Ff]\d+): ([\s\S]*?.+)\r\n([Rr]\d+): ([\s\S]*?.+)\r\nF = ");
-            if (matches.Count == 0) { return false; }
+        //    // Extract the bookmark pairs.
+        //    MatchCollection matches = Regex.Matches(textArea, @"([Ff]\d+): ([\s\S]*?.+)\r\n([Rr]\d+): ([\s\S]*?.+)\r\nF = ");
+        //    if (matches.Count == 0) { return false; }
 
-            // Clear out the .txt/.rtf bookmark lists.
-            TxtForwardBookmarks = new List<Bookmark>();
-            TxtReverseBookmarks = new List<Bookmark>();
+        //    // Clear out the .txt/.rtf bookmark lists.
+        //    TxtForwardBookmarks = new List<Bookmark>();
+        //    TxtReverseBookmarks = new List<Bookmark>();
 
-            // Process the bookmark pairs.
-            foreach (Match m in matches)
-            {
-                if (!m.Success) { continue; }
+        //    // Process the bookmark pairs.
+        //    foreach (Match m in matches)
+        //    {
+        //        if (!m.Success) { continue; }
 
-                // Get the bookmark names and texts.
-                String forwardName = Regex.Replace(m.Groups[1].Value, @"[/:*\?<>\|*$=]", "");  // Remove characters not allowed in filenames.
-                String forwardText = m.Groups[2].Value;
-                String reverseName = Regex.Replace(m.Groups[3].Value, @"[/:*\?<>\|*$=]", "");  // Remove characters not allowed in filenames.
-                String reverseText = m.Groups[4].Value;
+        //        // Get the bookmark names and texts.
+        //        String forwardName = Regex.Replace(m.Groups[1].Value, @"[/:*\?<>\|*$=]", "");  // Remove characters not allowed in filenames.
+        //        String forwardText = m.Groups[2].Value;
+        //        String reverseName = Regex.Replace(m.Groups[3].Value, @"[/:*\?<>\|*$=]", "");  // Remove characters not allowed in filenames.
+        //        String reverseText = m.Groups[4].Value;
 
-                // If either of these bookmarks do not exist in the .FmBok/.bok file, don't use them.
-                if (FindBookmarkByName(BokBookmarks, forwardName) == null || FindBookmarkByName(BokBookmarks, reverseName) == null )
-                {
-                    continue;
-                }
+        //        // If either of these bookmarks do not exist in the .FmBok/.bok file, don't use them.
+        //        if (FindBookmarkByName(BokBookmarks, forwardName) == null || FindBookmarkByName(BokBookmarks, reverseName) == null )
+        //        {
+        //            continue;
+        //        }
 
-                // Find the bookmarks if they exist.
-                Bookmark forwardBookmark = FindBookmarkByName(TxtForwardBookmarks, forwardName);
-                Bookmark reverseBookmark = FindBookmarkByName(TxtReverseBookmarks, reverseName);
+        //        // Find the bookmarks if they exist.
+        //        Bookmark forwardBookmark = FindBookmarkByName(TxtForwardBookmarks, forwardName);
+        //        Bookmark reverseBookmark = FindBookmarkByName(TxtReverseBookmarks, reverseName);
 
-                // If the forward bookmark does not exist, create it.
-                if (forwardBookmark == null)
-                {
-                    forwardBookmark = new Bookmark();
-                    forwardBookmark.Name = forwardName;
+        //        // If the forward bookmark does not exist, create it.
+        //        if (forwardBookmark == null)
+        //        {
+        //            forwardBookmark = new Bookmark();
+        //            forwardBookmark.Name = forwardName;
 
-                    // Separate transcript text from explanatory text. Explanatory text is separated from transcript text by a blank line.
-                    Match match = Regex.Match(forwardText, @"\r\n\s*\r\n");
-                    if (match.Success)
-                    {
-                        // The blank line was found. Extract both strings.
-                        int index = match.Index;
-                        // forwardBookmark.Text = WordWrap(forwardText.Substring(0, index)).Trim();
-                        // forwardBookmark.Explanation = WordWrap(forwardText.Substring(index).Trim());
-                        forwardBookmark.Text = forwardText.Substring(0, index).Trim();
-                        forwardBookmark.Explanation = forwardText.Substring(index).Trim();
-                    }
-                    else
-                    {
-                        // There was no explanatory text.
-                        // forwardBookmark.Text = WordWrap(forwardText).Trim();
-                        forwardBookmark.Text = forwardText.Trim();
-                        forwardBookmark.Explanation = String.Empty;
-                    }
+        //            // Separate transcript text from explanatory text. Explanatory text is separated from transcript text by a blank line.
+        //            Match match = Regex.Match(forwardText, @"\r\n\s*\r\n");
+        //            if (match.Success)
+        //            {
+        //                // The blank line was found. Extract both strings.
+        //                int index = match.Index;
+        //                // forwardBookmark.Text = WordWrap(forwardText.Substring(0, index)).Trim();
+        //                // forwardBookmark.Explanation = WordWrap(forwardText.Substring(index).Trim());
+        //                forwardBookmark.Text = forwardText.Substring(0, index).Trim();
+        //                forwardBookmark.Explanation = forwardText.Substring(index).Trim();
+        //            }
+        //            else
+        //            {
+        //                // There was no explanatory text.
+        //                // forwardBookmark.Text = WordWrap(forwardText).Trim();
+        //                forwardBookmark.Text = forwardText.Trim();
+        //                forwardBookmark.Explanation = String.Empty;
+        //            }
 
-                    // Get SampleStart and SampleEnd from the .FmBok/.bok file.
-                    Bookmark bookmark = FindBookmarkByName(BokBookmarks, forwardName);
-                    if (bookmark != null)
-                    {
-                        forwardBookmark.SampleStart = bookmark.SampleStart;
-                        forwardBookmark.SampleEnd = bookmark.SampleEnd;
+        //            // Get SampleStart and SampleEnd from the .FmBok/.bok file.
+        //            Bookmark bookmark = FindBookmarkByName(BokBookmarks, forwardName);
+        //            if (bookmark != null)
+        //            {
+        //                forwardBookmark.SampleStart = bookmark.SampleStart;
+        //                forwardBookmark.SampleEnd = bookmark.SampleEnd;
 
-                        // Add this bookmark to the list.
-                        TxtForwardBookmarks.Add(forwardBookmark);
-                    }
-                }
+        //                // Add this bookmark to the list.
+        //                TxtForwardBookmarks.Add(forwardBookmark);
+        //            }
+        //        }
 
-                // If the reverse bookmark does not exist, create it.
-                if (reverseBookmark == null)
-                {
-                    reverseBookmark = new Bookmark();
-                    reverseBookmark.Name = reverseName;
+        //        // If the reverse bookmark does not exist, create it.
+        //        if (reverseBookmark == null)
+        //        {
+        //            reverseBookmark = new Bookmark();
+        //            reverseBookmark.Name = reverseName;
 
-                    // Separate transcript text from explanatory text. Explanatory text is separated from transcript text by a blank line.
-                    Match match = Regex.Match(reverseText, @"\r\n\s*\r\n");
-                    if (match.Success)
-                    {
-                        // The blank line was found. Extract both strings.
-                        int index = match.Index;
-                        // reverseBookmark.Text = WordWrap(reverseText.Substring(0, index)).Trim();
-                        // reverseBookmark.Explanation = WordWrap(reverseText.Substring(index).Trim());
-                        reverseBookmark.Text = reverseText.Substring(0, index).Trim();
-                        reverseBookmark.Explanation = reverseText.Substring(index).Trim();
-                    }
-                    else
-                    {
-                        // There was no explanatory text.
-                        // reverseBookmark.Text = WordWrap(reverseText).Trim();
-                        reverseBookmark.Text = reverseText.Trim();
-                        reverseBookmark.Explanation = String.Empty;
-                    }
+        //            // Separate transcript text from explanatory text. Explanatory text is separated from transcript text by a blank line.
+        //            Match match = Regex.Match(reverseText, @"\r\n\s*\r\n");
+        //            if (match.Success)
+        //            {
+        //                // The blank line was found. Extract both strings.
+        //                int index = match.Index;
+        //                // reverseBookmark.Text = WordWrap(reverseText.Substring(0, index)).Trim();
+        //                // reverseBookmark.Explanation = WordWrap(reverseText.Substring(index).Trim());
+        //                reverseBookmark.Text = reverseText.Substring(0, index).Trim();
+        //                reverseBookmark.Explanation = reverseText.Substring(index).Trim();
+        //            }
+        //            else
+        //            {
+        //                // There was no explanatory text.
+        //                // reverseBookmark.Text = WordWrap(reverseText).Trim();
+        //                reverseBookmark.Text = reverseText.Trim();
+        //                reverseBookmark.Explanation = String.Empty;
+        //            }
 
-                    // Get SampleStart and SampleEnd from the .FmBok/.bok file.
-                    Bookmark bookmark = FindBookmarkByName(BokBookmarks, reverseName);
-                    if (bookmark != null)
-                    {
-                        reverseBookmark.SampleStart = bookmark.SampleStart;
-                        reverseBookmark.SampleEnd = bookmark.SampleEnd;
+        //            // Get SampleStart and SampleEnd from the .FmBok/.bok file.
+        //            Bookmark bookmark = FindBookmarkByName(BokBookmarks, reverseName);
+        //            if (bookmark != null)
+        //            {
+        //                reverseBookmark.SampleStart = bookmark.SampleStart;
+        //                reverseBookmark.SampleEnd = bookmark.SampleEnd;
 
-                        // Add this bookmark to the list.
-                        TxtReverseBookmarks.Add(reverseBookmark);
-                    }
-                }
+        //                // Add this bookmark to the list.
+        //                TxtReverseBookmarks.Add(reverseBookmark);
+        //            }
+        //        }
 
-                // Connect the bookmarks.
-                forwardBookmark.ReferencedBookmarks.Add(reverseBookmark);
-                reverseBookmark.ReferencedBookmarks.Add(forwardBookmark);
-            }
+        //        // Connect the bookmarks.
+        //        forwardBookmark.ReferencedBookmarks.Add(reverseBookmark);
+        //        reverseBookmark.ReferencedBookmarks.Add(forwardBookmark);
+        //    }
 
-            return true;
-        }
+        //    return true;
+        //}
 
         /// <summary>
         /// Searches the specified list of bookmarks for a bookmark with the name specified by bookmarkName.
