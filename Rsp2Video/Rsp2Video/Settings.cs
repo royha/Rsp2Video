@@ -65,7 +65,7 @@ namespace RSPro2Video
         /// <summary>
         /// When true, the source to use for bookmark text is the .FmBok/.bok file.
         /// </summary>
-        public Boolean SourceBookmarkFile { get; set; }
+        public String SourceBookmarkFile { get; set; }
 
         /// <summary>
         /// When true, the source to use for bookmark text is the transcript file (.txt/.bok).

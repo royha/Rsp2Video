@@ -49,15 +49,19 @@ namespace RSPro2Video
                 returnValue = false;
             }
 
-            // Validate and parse the sound file.
+            // Validate and parse the audio.
             if (ValidateAndParseAudio() == false)
             {
                 returnValue = false;
             }
 
-            if (labelSoundFileError.Visible == false && ValidateAndParseBokBookmarks() == false)
+            // Validate and parse the bookmark file.
+            if (settings.BookmarkFileType == BookmarkFileType.bok || settings.BookmarkFileType == BookmarkFileType.FmBok)
             {
-                returnValue = false;
+                if (labelSoundFileError.Visible == false && ValidateAndParseBokBookmarks() == false)
+                {
+                    returnValue = false;
+                }
             }
 
             // Validate and parse the transcript file.
@@ -258,7 +262,7 @@ namespace RSPro2Video
         /// <returns></returns>
         private bool ValidateAndParseBokBookmarks()
         {
-            if (ReadBokBookmarkFile(textBoxSoundFile.Text) == false)
+            if (ReadBokBookmarkFile(settings.SourceBookmarkFile) == false)
             {
                 return false;
             }

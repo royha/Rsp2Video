@@ -21,7 +21,6 @@ namespace RSPro2Video
     public partial class RSPro2VideoForm : Form
     {
         Settings settings;                                              // The settings object stores the settings chosen by the user (filenames, options, etc).
-        String SourceVideoFile;                                         // The video file to use as input.
         int SampleRate;                                                 // The sample rate of the sound file.
         float FramesPerSecond;                                          // The frames per second of the source and output video.
         int HorizontalResolution;                                       // The horizontal resolution of the video.

@@ -856,49 +856,49 @@ namespace RSPro2Video
 
                 switch (ext)
                 {
-                    // Source video file.
-                    case ".mp4":
-                    case ".webm":
-                    case ".avi":
-                    case ".mov":
-                    case ".mkv":
-                    case ".mpg":
-                    case ".mpeg":
-                    case ".wmv":
-                        // If the extension is a video file, set the textbox to the filename.
-                        // textBoxSourceVideoFile.Text = file;
+                    //// Source video file.
+                    //case ".mp4":
+                    //case ".webm":
+                    //case ".avi":
+                    //case ".mov":
+                    //case ".mkv":
+                    //case ".mpg":
+                    //case ".mpeg":
+                    //case ".wmv":
+                    //    // If the extension is a video file, set the textbox to the filename.
+                    //    // textBoxSourceVideoFile.Text = file;
 
-                        // Set the flag that we received a video file.
-                        //videoFileDropped = true;
+                    //    // Set the flag that we received a video file.
+                    //    //videoFileDropped = true;
 
-                        // Create the output video file textbox.
-                        if (radioButtonSeparateVideos.Checked)
-                        {
-                            textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(file) + "-";
-                        }
-                        else
-                        {
-                            textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(file);
-                        }
-                        break;
+                    //    // Create the output video file textbox.
+                    //    if (radioButtonSeparateVideos.Checked)
+                    //    {
+                    //        textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(file) + "-";
+                    //    }
+                    //    else
+                    //    {
+                    //        textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(file);
+                    //    }
+                    //    break;
 
-                    case ".wav":
-                    case ".mp3":
-                        // If the extension is an audio file, set the textbox to the filename.
-                        textBoxSoundFile.Text = file;
+                    //case ".wav":
+                    //case ".mp3":
+                    //    // If the extension is an audio file, set the textbox to the filename.
+                    //    textBoxSoundFile.Text = file;
 
-                        // Set the flag that we received an audio file.
-                        //soundFileDropped = true;
-                        break;
+                    //    // Set the flag that we received an audio file.
+                    //    //soundFileDropped = true;
+                    //    break;
 
-                    case ".rtf":
-                    case ".txt":
-                        // If the extension is a transcript file, set the textbox to the filename.
-                        textBoxTranscriptFile.Text = file;
+                    //case ".rtf":
+                    //case ".txt":
+                    //    // If the extension is a transcript file, set the textbox to the filename.
+                    //    textBoxTranscriptFile.Text = file;
 
-                        // Set the flag that we received a transcript file.
-                        //transcriptFileDropped = true;
-                        break;
+                    //    // Set the flag that we received a transcript file.
+                    //    //transcriptFileDropped = true;
+                    //    break;
 
                     case ".rsvideo":
                     case ".fmbok":

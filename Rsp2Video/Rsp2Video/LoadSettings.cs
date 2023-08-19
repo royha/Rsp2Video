@@ -23,7 +23,7 @@ namespace RSPro2Video
 
                 // Default settings.
                 settings.BookmarkTypeFnR = true;
-                settings.SourceBookmarkFile = true;
+                // settings.SourceBookmarkFile = true;
                 settings.VideoContents = VideoContents.BookmarksOnly;
                 settings.VideoQuality = VideoQuality.Small;
                 settings.IncludeBackAndForth = true;
@@ -87,7 +87,7 @@ namespace RSPro2Video
             radioButtonBookmarkTypeFnR.Checked = settings.BookmarkTypeFnR;
             radioButtonBookmarkTypeQuickCheck.Checked = settings.BookmarkTypeQuickCheck;
             radioButtonBookmarkTypeOrphanedReversals.Checked = settings.BookmarkTypeOrphanedReversals;
-            radioButtonSourceBookmarkFile.Checked = settings.SourceBookmarkFile;
+            // radioButtonSourceBookmarkFile.Checked = settings.SourceBookmarkFile;
             radioButtonSourceTranscriptFile.Checked = settings.SourceTranscriptFile;
             saveRadioButtonSourceBookmarkFile = radioButtonSourceBookmarkFile.Checked;
             saveRadioButtonSourceTranscriptFile = radioButtonSourceTranscriptFile.Checked;
@@ -138,7 +138,7 @@ namespace RSPro2Video
             settings.BookmarkTypeFnR = radioButtonBookmarkTypeFnR.Checked;
             settings.BookmarkTypeQuickCheck = radioButtonBookmarkTypeQuickCheck.Checked;
             settings.BookmarkTypeOrphanedReversals = radioButtonBookmarkTypeOrphanedReversals.Checked;
-            settings.SourceBookmarkFile = radioButtonSourceBookmarkFile.Checked;
+            // settings.SourceBookmarkFile = radioButtonSourceBookmarkFile.Checked;
             settings.SourceTranscriptFile = radioButtonSourceTranscriptFile.Checked;
 
             // Set the values in the settings object corresponding to the values in the UI controls.
