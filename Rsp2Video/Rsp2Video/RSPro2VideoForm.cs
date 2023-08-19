@@ -37,8 +37,8 @@ namespace RSPro2Video
             toolTips.IsBalloon = true;
 
             // Set up the ToolTip text for panel1 controls.
-            toolTips.SetToolTip(this.labelSourceVideoFile, "Enter the original video file here.");
-            toolTips.SetToolTip(this.textBoxSourceVideoFile, "Enter the original video file here.");
+            //toolTips.SetToolTip(this.labelSourceVideoFile, "Enter the original video file here.");
+            //toolTips.SetToolTip(this.textBoxSourceVideoFile, "Enter the original video file here.");
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -207,15 +207,18 @@ namespace RSPro2Video
             buttonNext.Text = "Next >";
 
             // If there is no transcript file, gray out the Bookmark source.
-            if (textBoxTranscriptFile.Text == null || textBoxTranscriptFile.Text == String.Empty)
-            {
-                groupBoxBookmarkSource.Enabled = false;
-                radioButtonSourceBookmarkFile.Checked = true;
-            }
-            else
-            {
-                groupBoxBookmarkSource.Enabled = true;
-            }
+            //if (textBoxTranscriptFile.Text == null || textBoxTranscriptFile.Text == String.Empty)
+            //{
+            //    groupBoxBookmarkSource.Enabled = false;
+            //    radioButtonSourceBookmarkFile.Checked = true;
+            //}
+            //else
+            //{
+            //    groupBoxBookmarkSource.Enabled = true;
+            //}
+
+            groupBoxBookmarkSource.Enabled = false;
+            radioButtonSourceBookmarkFile.Checked = true;
 
             // Fill the TreeView.
             // Forward and backward selected?
@@ -663,82 +666,26 @@ namespace RSPro2Video
             return path;
         }
 
-        private void browseButtonSourceVideoFile_Click(object sender, EventArgs e)
+        private void browseButtonBookmarkFile_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 // Select initial search directory
                 String initialDirectory = String.Empty;
-                if (textBoxSourceVideoFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSourceVideoFile.Text); }
-                else if (textBoxSoundFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSoundFile.Text); }
-                else if (textBoxTranscriptFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxTranscriptFile.Text); }
+                if (textBoxBookmarkFile.Text != String.Empty)
+                { 
+                    initialDirectory = Path.GetDirectoryName(textBoxBookmarkFile.Text);
+                }
 
-                openFileDialog.Title = "Source video file";
+                openFileDialog.Title = "Bookmark file";
                 openFileDialog.InitialDirectory = initialDirectory;
-                openFileDialog.Filter = "Video files (*.mp4, *.webm, *.avi, *.mov, *.mkv, *.mpg, *.mpeg, *.wmv)|*.mp4;*.webm;*.avi;*.mov;*.mkv;*.mpg;*.mpeg;*.wmv|All files (*.*)|*.*";
+                openFileDialog.Filter = "Bookmark files (*.RSVideo, *.FmBok, *.bok)|*.RSVideo;*.FmBok;*.bok|All files (*.*)|*.*";
                 openFileDialog.RestoreDirectory = true;
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     //Get the path of specified file.
-                    textBoxSourceVideoFile.Text = openFileDialog.FileName;
-
-                    // Set the output video file.
-                    // Create the output video file textbox.
-                    if (radioButtonSeparateVideos.Checked)
-                    {
-                        textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(openFileDialog.FileName) + "-";
-                    }
-                    else
-                    {
-                        textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(openFileDialog.FileName);
-                    }
-                }
-            }
-        }
-
-        private void browseButtonSoundFile_Click(object sender, EventArgs e)
-        {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-                // Select initial search directory.
-                String initialDirectory = String.Empty;
-                if (textBoxSoundFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSoundFile.Text); }
-                else if (textBoxTranscriptFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxTranscriptFile.Text); }
-                else if (textBoxSourceVideoFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSourceVideoFile.Text); }
-
-                openFileDialog.Title = "Reverse Speech Pro sound file";
-                openFileDialog.InitialDirectory = initialDirectory;
-                openFileDialog.Filter = "Audio files (*.wav, *.mp3)|*.wav;*.mp3;|All files (*.*)|*.*";
-                openFileDialog.RestoreDirectory = true;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    //Get the path of specified file
-                    textBoxSoundFile.Text = openFileDialog.FileName;
-                }
-            }
-        }
-
-        private void browseButtonTranscriptFile_Click(object sender, EventArgs e)
-        {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-                // Select initial search directory.
-                String initialDirectory = String.Empty;
-                if (textBoxTranscriptFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxTranscriptFile.Text); }
-                else if (textBoxSoundFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSoundFile.Text); }
-                else if (textBoxSourceVideoFile.Text != String.Empty) { initialDirectory = Path.GetDirectoryName(textBoxSourceVideoFile.Text); }
-
-                openFileDialog.Title = "Reverse Speech Pro transcript file";
-                openFileDialog.InitialDirectory = initialDirectory;
-                openFileDialog.Filter = "Transcript files (*.rtf, *.txt)|*.rtf;*.txt|All files (*.*)|*.*";
-                openFileDialog.RestoreDirectory = true;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    //Get the path of specified file
-                    textBoxTranscriptFile.Text = openFileDialog.FileName;
+                    textBoxBookmarkFile.Text = openFileDialog.FileName;
                 }
             }
         }
@@ -766,6 +713,9 @@ namespace RSPro2Video
 
         private void panel1_DragEnter(object sender, DragEventArgs e)
         {
+            // Default is to show that we don't accept the drag-drop.
+            e.Effect = DragDropEffects.None;
+
             if (e.Data.GetDataPresent(DataFormats.FileDrop) == false) { return; }
 
             String[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
@@ -790,6 +740,11 @@ namespace RSPro2Video
 
                     case ".rtf":
                     case ".txt":
+
+                    case ".rsp2video":
+                    case ".rsvideo":
+                    case ".fmbok":
+                    case ".bok":
                         e.Effect = DragDropEffects.Copy;
                         break;
 
@@ -809,9 +764,9 @@ namespace RSPro2Video
             // If there are no files, return.
             if (e.Data.GetDataPresent(DataFormats.FileDrop) == false) { return; }
 
-            Boolean videoFileDropped = false;
-            Boolean soundFileDropped = false;
-            Boolean transcriptFileDropped = false;
+            //Boolean videoFileDropped = false;
+            //Boolean soundFileDropped = false;
+            //Boolean transcriptFileDropped = false;
 
             // Get the list of files.
             String[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
@@ -824,48 +779,60 @@ namespace RSPro2Video
 
                 switch (ext)
                 {
-                    // Source video file.
-                    case ".mp4":
-                    case ".webm":
-                    case ".avi":
-                    case ".mov":
-                    case ".mkv":
-                    case ".mpg":
-                    case ".mpeg":
-                    case ".wmv":
-                        // If the extension is a video file, set the textbox to the filename.
-                        textBoxSourceVideoFile.Text = file;
+                    //// Source video file.
+                    //case ".mp4":
+                    //case ".webm":
+                    //case ".avi":
+                    //case ".mov":
+                    //case ".mkv":
+                    //case ".mpg":
+                    //case ".mpeg":
+                    //case ".wmv":
+                    //    // If the extension is a video file, set the textbox to the filename.
+                    //    // textBoxSourceVideoFile.Text = file;
 
-                        // Set the flag that we received a video file.
-                        videoFileDropped = true;
+                    //    // Set the flag that we received a video file.
+                    //    //videoFileDropped = true;
 
-                        // Create the output video file textbox.
-                        if (radioButtonSeparateVideos.Checked)
-                        {
-                            textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(file) + "-";
-                        }
-                        else
-                        {
-                            textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(file);
-                        }
+                    //    // Create the output video file textbox.
+                    //    if (radioButtonSeparateVideos.Checked)
+                    //    {
+                    //        textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(file) + "-";
+                    //    }
+                    //    else
+                    //    {
+                    //        textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(file);
+                    //    }
+                    //    break;
+
+                    //case ".wav":
+                    //case ".mp3":
+                    //    // If the extension is an audio file, set the textbox to the filename.
+                    //    textBoxSoundFile.Text = file;
+
+                    //    // Set the flag that we received an audio file.
+                    //    //soundFileDropped = true;
+                    //    break;
+
+                    //case ".rtf":
+                    //case ".txt":
+                    //    // If the extension is a transcript file, set the textbox to the filename.
+                    //    textBoxTranscriptFile.Text = file;
+
+                    //    // Set the flag that we received a transcript file.
+                    //    //transcriptFileDropped = true;
+                    //    break;
+
+                    case ".rsvideo":
+                    case ".fmbok":
+                    case ".bok":
+                        // If the extension is a bookmark file, set the textbox to the filename.
+                        textBoxBookmarkFile.Text = file;
                         break;
 
-                    case ".wav":
-                    case ".mp3":
-                        // If the extension is an audio file, set the textbox to the filename.
-                        textBoxSoundFile.Text = file;
-
-                        // Set the flag that we received an audio file.
-                        soundFileDropped = true;
-                        break;
-
-                    case ".rtf":
-                    case ".txt":
-                        // If the extension is a transcript file, set the textbox to the filename.
-                        textBoxTranscriptFile.Text = file;
-
-                        // Set the flag that we received a transcript file.
-                        transcriptFileDropped = true;
+                    case ".rsp2video":
+                        // If the extension is a project file, find the bookmark file, then set the project filename.
+                        // textBoxProjectFile.Text = file;
                         break;
 
                     default:
@@ -874,10 +841,10 @@ namespace RSPro2Video
             }
 
             // If there was a video file and a sound file, but no transcript file, clear the transcript file textbox.
-            if (videoFileDropped == true && soundFileDropped == true && transcriptFileDropped == false)
-            {
-                textBoxTranscriptFile.Text = String.Empty;
-            }
+            //if (videoFileDropped == true && soundFileDropped == true && transcriptFileDropped == false)
+            //{
+            //    textBoxTranscriptFile.Text = String.Empty;
+            //}
         }
 
         private void radioButtonFnR_CheckedChanged(object sender, EventArgs e)
@@ -897,10 +864,10 @@ namespace RSPro2Video
             if (radioButtonBookmarkTypeFnR.Checked)
             {
                 // If we have a transcript file, enable the bookmark source group box.
-                if (textBoxTranscriptFile.Text != null && textBoxTranscriptFile.Text != String.Empty)
-                {
-                    groupBoxBookmarkSource.Enabled = true;
-                }
+                //if (textBoxTranscriptFile.Text != null && textBoxTranscriptFile.Text != String.Empty)
+                //{
+                //    groupBoxBookmarkSource.Enabled = true;
+                //}
 
                 // Fill the tree view with the bookmarks from the specified source.
                 if (radioButtonSourceTranscriptFile.Checked)
@@ -1104,7 +1071,7 @@ namespace RSPro2Video
             if (radioButtonSeparateVideos.Checked == true)
             {
                 labelOutputVideoFile.Text = "Output video file prefix";
-                textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(textBoxSourceVideoFile.Text) + " - ";
+                textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(settings.SourceVideoFile) + " - ";
                 // checkBoxReplayForwardVideo.Checked = false;
                 // checkBoxReplayForwardVideo.Enabled = false;
                 labelProgressing.Enabled = false;
@@ -1112,7 +1079,7 @@ namespace RSPro2Video
             else
             {
                 labelOutputVideoFile.Text = "Output video filename";
-                textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(textBoxSourceVideoFile.Text);
+                textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(settings.SourceVideoFile);
                 // checkBoxReplayForwardVideo.Enabled = true;
                 labelProgressing.Enabled = true;
             }

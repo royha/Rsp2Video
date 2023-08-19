@@ -23,7 +23,7 @@ namespace RSPro2Video
 
                 // Default settings.
                 settings.BookmarkTypeFnR = true;
-                settings.SourceBookmarkFile = true;
+                // settings.SourceBookmarkFile = true;
                 settings.VideoContents = VideoContents.BookmarksOnly;
                 settings.VideoQuality = VideoQuality.Small;
                 settings.IncludeBackAndForth = true;
@@ -69,9 +69,9 @@ namespace RSPro2Video
             }
 
             // Set the UI elements to their corresponding values in the settings object.
-            textBoxSourceVideoFile.Text = settings.SourceVideoFile;
-            textBoxSoundFile.Text = settings.RspSoundFile;
-            textBoxTranscriptFile.Text = settings.RspTranscriptFile;
+            //textBoxSourceVideoFile.Text = settings.SourceVideoFile;
+            //textBoxSoundFile.Text = settings.RspSoundFile;
+            //textBoxTranscriptFile.Text = settings.RspTranscriptFile;
             textBoxOutputFile.Text = settings.OutputVideoFile;
 
             // If the stored video offset is zero, clear the text box.
@@ -87,7 +87,7 @@ namespace RSPro2Video
             radioButtonBookmarkTypeFnR.Checked = settings.BookmarkTypeFnR;
             radioButtonBookmarkTypeQuickCheck.Checked = settings.BookmarkTypeQuickCheck;
             radioButtonBookmarkTypeOrphanedReversals.Checked = settings.BookmarkTypeOrphanedReversals;
-            radioButtonSourceBookmarkFile.Checked = settings.SourceBookmarkFile;
+            // radioButtonSourceBookmarkFile.Checked = settings.SourceBookmarkFile;
             radioButtonSourceTranscriptFile.Checked = settings.SourceTranscriptFile;
             saveRadioButtonSourceBookmarkFile = radioButtonSourceBookmarkFile.Checked;
             saveRadioButtonSourceTranscriptFile = radioButtonSourceTranscriptFile.Checked;
@@ -129,16 +129,16 @@ namespace RSPro2Video
         /// </summary>
         private void SaveSettings()
         {
-            settings.SourceVideoFile = textBoxSourceVideoFile.Text;
-            settings.RspSoundFile = textBoxSoundFile.Text;
-            settings.RspTranscriptFile = textBoxTranscriptFile.Text;
+            // settings.SourceVideoFile = textBoxSourceVideoFile.Text;
+            // settings.RspSoundFile = textBoxSoundFile.Text;
+            // settings.RspTranscriptFile = textBoxTranscriptFile.Text;
             settings.OutputVideoFile = textBoxOutputFile.Text;
             settings.AudioDelay = String.IsNullOrWhiteSpace(textBoxVideoOffset.Text) ? 0 : Int32.Parse(textBoxVideoOffset.Text);
 
             settings.BookmarkTypeFnR = radioButtonBookmarkTypeFnR.Checked;
             settings.BookmarkTypeQuickCheck = radioButtonBookmarkTypeQuickCheck.Checked;
             settings.BookmarkTypeOrphanedReversals = radioButtonBookmarkTypeOrphanedReversals.Checked;
-            settings.SourceBookmarkFile = radioButtonSourceBookmarkFile.Checked;
+            // settings.SourceBookmarkFile = radioButtonSourceBookmarkFile.Checked;
             settings.SourceTranscriptFile = radioButtonSourceTranscriptFile.Checked;
 
             // Set the values in the settings object corresponding to the values in the UI controls.
