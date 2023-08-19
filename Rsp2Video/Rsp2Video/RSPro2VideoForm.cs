@@ -37,8 +37,8 @@ namespace RSPro2Video
             toolTips.IsBalloon = true;
 
             // Set up the ToolTip text for panel1 controls.
-            toolTips.SetToolTip(this.labelSourceVideoFile, "Enter the original video file here.");
-            toolTips.SetToolTip(this.textBoxSourceVideoFile, "Enter the original video file here.");
+            //toolTips.SetToolTip(this.labelSourceVideoFile, "Enter the original video file here.");
+            //toolTips.SetToolTip(this.textBoxSourceVideoFile, "Enter the original video file here.");
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -866,7 +866,7 @@ namespace RSPro2Video
                     case ".mpeg":
                     case ".wmv":
                         // If the extension is a video file, set the textbox to the filename.
-                        textBoxSourceVideoFile.Text = file;
+                        // textBoxSourceVideoFile.Text = file;
 
                         // Set the flag that we received a video file.
                         //videoFileDropped = true;
@@ -1148,7 +1148,7 @@ namespace RSPro2Video
             if (radioButtonSeparateVideos.Checked == true)
             {
                 labelOutputVideoFile.Text = "Output video file prefix";
-                textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(textBoxSourceVideoFile.Text) + " - ";
+                textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(settings.SourceVideoFile) + " - ";
                 // checkBoxReplayForwardVideo.Checked = false;
                 // checkBoxReplayForwardVideo.Enabled = false;
                 labelProgressing.Enabled = false;
@@ -1156,7 +1156,7 @@ namespace RSPro2Video
             else
             {
                 labelOutputVideoFile.Text = "Output video filename";
-                textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(textBoxSourceVideoFile.Text);
+                textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(settings.SourceVideoFile);
                 // checkBoxReplayForwardVideo.Enabled = true;
                 labelProgressing.Enabled = true;
             }

@@ -22,6 +22,16 @@ namespace RSPro2Video
         public String RspTranscriptFile { get; set; }
 
         /// <summary>
+        /// The bookmark file.
+        /// </summary>
+        public String BookmarkFile { get; set; }
+
+        /// <summary>
+        /// Identifies the bookmark file type, such as FmBok or RSVideo.
+        /// </summary>
+        public BookmarkFileType BookmarkFileType { get; set; }
+
+        /// <summary>
         /// Name of the output file. Either a video file, or a video project file as indicated by OutputType.
         /// </summary>
         public String OutputVideoFile { get; set; }
@@ -141,6 +151,7 @@ namespace RSPro2Video
         public int ReversalTone { get; set; }
     }
 
+    public enum BookmarkFileType { None, FmBok, bok, RSVideo, Text, RTF }
     public enum VideoContents { None, FullVideo, BookmarksOnly, SeparateVideos }
     public enum OutputType { None, VideoFile, VideoProject }
     public enum VideoQuality { Fast, Small, High }

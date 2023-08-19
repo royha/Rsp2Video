@@ -82,64 +82,82 @@ namespace RSPro2Video
         }
 
         /// <summary>
-        /// Finds and stores the source video filename based on the bookmark filename and location.
+        /// Finds and stores the source video filename and the project filename based on 
+        /// the bookmark filename and location.
         /// </summary>
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private bool FindFilesFromBookmarkFile()
         {
-            String bookmarkPath;
             try
             {
-                bookmarkPath = Path.GetFullPath(textBoxBookmarkFile.Text).Trim();
+                settings.BookmarkFile = Path.GetFullPath(textBoxBookmarkFile.Text).Trim();
             }
             catch (ArgumentException e)
-            { 
+            {
+                // TODO: Update the error label text with an appropriate error message.
                 return false; 
             }
 
+            // Get the file extension of the bookmark file.
             String bookmarkExtension = Path.GetExtension(textBoxBookmarkFile.Text).Trim().ToLower();
 
             switch (bookmarkExtension)
             {
+                // RSPro bookmark file.
                 case ".fmbok":
                 case ".bok":
-                    // RSPro bookmark file. Verify the bookmark file exists.
-                    if (File.Exists(bookmarkPath) == false)
+                    // Verify the bookmark file exists.
+                    if (File.Exists(settings.BookmarkFile) == false)
                     {
                         return false;
+                    }
+
+                    if (bookmarkExtension == ".fmbok")
+                    {
+                        settings.BookmarkFileType = BookmarkFileType.FmBok;
+                    }
+                    else if (bookmarkExtension == ".bok")
+                    {
+                        settings.BookmarkFileType = BookmarkFileType.bok;
                     }
 
                     // Find the first video file to match.
                     foreach (String extension in new String[] { ".mp4", ".webm", ".avi", ".mov", ".mkv", ".mpg", ".mpeg", ".wmv" })
                     {
-                        String rsproBookmarkFilepath = Path.ChangeExtension(bookmarkPath, extension);
-                        if (File.Exists(rsproBookmarkFilepath) == true)
+                        String rsproVideoFilepath = Path.ChangeExtension(settings.BookmarkFile, extension);
+                        if (File.Exists(rsproVideoFilepath) == true)
                         {
-                            SourceVideoFile = rsproBookmarkFilepath;
-                            break;
+                            // A video file was found. Store it and return.
+                            settings.SourceVideoFile = rsproVideoFilepath;
+                            return true;
                         }
                     }
 
                     // No matching video file was found.
                     return false;
 
+                // RSVideo bookmark file.
                 case ".rsvideo":
-                    // RSVideo bookmark file. Verify the bookmark file exists.
-                    if (File.Exists(bookmarkPath) == false)
+                    // Verify the bookmark file exists.
+                    if (File.Exists(settings.BookmarkFile) == false)
                     {
                         return false;
                     }
 
+                    settings.BookmarkFileType = BookmarkFileType.RSVideo;
+
                     // RSVideo bookmark file. Remove ".rsvideo" from the end of the filepath to get the video file path.
-                    String rsvideoBookmarkFilepath = bookmarkPath.Substring(0, bookmarkPath.Length - 8);
+                    String rsvideoVideoFilepath = settings.BookmarkFile.Substring(0, settings.BookmarkFile.Length - 8);
 
                     // Verify the video file exists.
-                    if (File.Exists(rsvideoBookmarkFilepath) == true)
+                    if (File.Exists(rsvideoVideoFilepath) == true)
                     {
-                        SourceVideoFile = bookmarkPath.Substring(0, bookmarkPath.Length - 8);
+                        // The video file was found. Store it.
+                        settings.SourceVideoFile = rsvideoVideoFilepath;
                     }
                     else
                     {
+                        // The video file was not found.
                         return false;
                     }
                     break;
@@ -158,7 +176,7 @@ namespace RSPro2Video
         private bool SetLogFileLocation()
         {
             // Add ".log" to the end of the full path and filename of the source video file, just like Kdenlive.
-            LogFile = Path.GetFullPath(textBoxSourceVideoFile.Text) + ".log";
+            LogFile = Path.GetFullPath(settings.SourceVideoFile) + ".log";
 
             // Delete the log file.
             try
@@ -169,7 +187,7 @@ namespace RSPro2Video
 
             // Write the initial log entry.
             String LogEntry = String.Format("***Log start time: {0}\r\nFilename: {1}\r\n\r\n",
-                DateTime.Now.ToString(), textBoxSourceVideoFile.Text);
+                DateTime.Now.ToString(), settings.SourceVideoFile);
 
             File.AppendAllText(LogFile, LogEntry);
 
@@ -187,7 +205,8 @@ namespace RSPro2Video
             Process process = new Process();
 
             // This ffprobe string returns the sample rate in text, and only the sample rate in text.
-            String arguments = "-v error -select_streams a -of default=noprint_wrappers=1:nokey=1 -show_entries stream=sample_rate \"" + textBoxSourceVideoFile.Text + "\"";
+            String arguments = String.Format("-v error -select_streams a -of default=noprint_wrappers=1:nokey=1 -show_entries stream=sample_rate \"{0}\"",
+                settings.SourceVideoFile);
 
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo
@@ -213,7 +232,7 @@ namespace RSPro2Video
 
             if (ExitCode != 0)
             {
-                MessageBox.Show("There was an error reading " + textBoxSourceVideoFile.Text + ":" + Environment.NewLine + Environment.NewLine + "Error message: " + FfprobeOutput,
+                MessageBox.Show("There was an error reading " + settings.SourceVideoFile + ":" + Environment.NewLine + Environment.NewLine + "Error message: " + FfprobeOutput,
                     "Error reading Reverse Speech Pro sound file");
                 return false;
             }
@@ -267,7 +286,7 @@ namespace RSPro2Video
                 labelOutputVideoFileError.Visible = true;
                 return false;
             }
-            else if (textBoxSourceVideoFile.Text.Trim().ToLower() == textBoxOutputFile.Text.Trim().ToLower())
+            else if (settings.SourceVideoFile.Trim().ToLower() == textBoxOutputFile.Text.Trim().ToLower())
             {
                 labelOutputVideoFileError.Text = "The Output video file must not be the same as the Source video file.";
                 labelOutputVideoFileError.Visible = true;
@@ -312,7 +331,7 @@ namespace RSPro2Video
 
                 if (labelSourceVideoFileError.Visible == false &&
                     labelOutputVideoFileError.Visible == false &&
-                    outputPath == Path.GetFullPath(textBoxSourceVideoFile.Text))
+                    outputPath == Path.GetFullPath(settings.SourceVideoFile))
                 {
                     labelOutputVideoFileError.Text = "The Output video file must not be the same as the Source video file.";
                     labelOutputVideoFileError.Visible = true;
@@ -862,7 +881,7 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool ValidateAndParseVideo()
         {
-            if (ValidateVideo() == false) { return false; }
+            // if (ValidateVideo() == false) { return false; }
 
             Process process = new Process();
 
@@ -870,7 +889,7 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmprobeApp,
-                Arguments = "-hide_banner \"" + textBoxSourceVideoFile.Text + "\"",
+                Arguments = "-hide_banner \"" + settings.SourceVideoFile + "\"",
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
@@ -897,7 +916,7 @@ namespace RSPro2Video
 
             if (!(ExitCode == 0))
             {
-                MessageBox.Show("There was an error reading " + textBoxSourceVideoFile.Text + ":" + Environment.NewLine + Environment.NewLine + "Error message: " + FfprobeOutput,
+                MessageBox.Show("There was an error reading " + settings.SourceVideoFile + ":" + Environment.NewLine + Environment.NewLine + "Error message: " + FfprobeOutput,
                     "Error reading Source video file");
                 return false;
             }
@@ -987,25 +1006,25 @@ namespace RSPro2Video
             return true;
         }
 
-        private bool ValidateVideo()
-        {
-            // Validate ouptut video file.
-            if (textBoxSourceVideoFile.Text == String.Empty)
-            {
-                labelSourceVideoFileError.Text = "You must specify a source video file.";
-                labelSourceVideoFileError.Visible = true;
-                return false;
-            }
+        //private bool ValidateVideo()
+        //{
+        //    // Validate ouptut video file.
+        //    if (textBoxSourceVideoFile.Text == String.Empty)
+        //    {
+        //        labelSourceVideoFileError.Text = "You must specify a source video file.";
+        //        labelSourceVideoFileError.Visible = true;
+        //        return false;
+        //    }
 
-            if (File.Exists(textBoxSourceVideoFile.Text) == false)
-            {
-                labelSourceVideoFileError.Text = "The file was not found.";
-                labelSourceVideoFileError.Visible = true;
-                return false;
-            }
+        //    if (File.Exists(textBoxSourceVideoFile.Text) == false)
+        //    {
+        //        labelSourceVideoFileError.Text = "The file was not found.";
+        //        labelSourceVideoFileError.Visible = true;
+        //        return false;
+        //    }
 
-            return true;
-        }
+        //    return true;
+        //}
 
         /// <summary>
         /// Parses the Reverse Speech Pro transcript file to retrieve the text
