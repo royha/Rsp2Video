@@ -63,6 +63,9 @@
             this.checkBoxReversal1 = new System.Windows.Forms.CheckBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBoxInputFiles = new System.Windows.Forms.GroupBox();
+            this.browseButtonBookmarkFile = new System.Windows.Forms.Button();
+            this.textBoxBookmarkFile = new System.Windows.Forms.TextBox();
+            this.labelBookmarkFile = new System.Windows.Forms.Label();
             this.labelTranscriptFileError = new System.Windows.Forms.Label();
             this.labelSoundFileError = new System.Windows.Forms.Label();
             this.labelSourceVideoFileError = new System.Windows.Forms.Label();
@@ -107,9 +110,7 @@
             this.labelVideoRenderingTime = new System.Windows.Forms.Label();
             this.labelVideoComplete = new System.Windows.Forms.Label();
             this.buttonViewVideo = new System.Windows.Forms.Button();
-            this.labelBookmarkFile = new System.Windows.Forms.Label();
-            this.textBoxBookmarkFile = new System.Windows.Forms.TextBox();
-            this.browseButtonBookmarkFile = new System.Windows.Forms.Button();
+            this.labelBookmarkFileError = new System.Windows.Forms.Label();
             this.groupBoxReversalRates.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBoxInputFiles.SuspendLayout();
@@ -454,6 +455,7 @@
             // 
             // groupBoxInputFiles
             // 
+            this.groupBoxInputFiles.Controls.Add(this.labelBookmarkFileError);
             this.groupBoxInputFiles.Controls.Add(this.browseButtonBookmarkFile);
             this.groupBoxInputFiles.Controls.Add(this.textBoxBookmarkFile);
             this.groupBoxInputFiles.Controls.Add(this.labelBookmarkFile);
@@ -475,6 +477,32 @@
             this.groupBoxInputFiles.TabIndex = 1;
             this.groupBoxInputFiles.TabStop = false;
             this.groupBoxInputFiles.Text = "Input files: Drag and drop your Bookmark file or Rsp2Video Project file here";
+            // 
+            // browseButtonBookmarkFile
+            // 
+            this.browseButtonBookmarkFile.Location = new System.Drawing.Point(641, 181);
+            this.browseButtonBookmarkFile.Name = "browseButtonBookmarkFile";
+            this.browseButtonBookmarkFile.Size = new System.Drawing.Size(59, 23);
+            this.browseButtonBookmarkFile.TabIndex = 109;
+            this.browseButtonBookmarkFile.Text = "Browse...";
+            this.browseButtonBookmarkFile.UseVisualStyleBackColor = true;
+            this.browseButtonBookmarkFile.Click += new System.EventHandler(this.browseButtonBookmarkFile_Click);
+            // 
+            // textBoxBookmarkFile
+            // 
+            this.textBoxBookmarkFile.Location = new System.Drawing.Point(166, 183);
+            this.textBoxBookmarkFile.Name = "textBoxBookmarkFile";
+            this.textBoxBookmarkFile.Size = new System.Drawing.Size(469, 20);
+            this.textBoxBookmarkFile.TabIndex = 108;
+            // 
+            // labelBookmarkFile
+            // 
+            this.labelBookmarkFile.AutoSize = true;
+            this.labelBookmarkFile.Location = new System.Drawing.Point(6, 186);
+            this.labelBookmarkFile.Name = "labelBookmarkFile";
+            this.labelBookmarkFile.Size = new System.Drawing.Size(71, 13);
+            this.labelBookmarkFile.TabIndex = 107;
+            this.labelBookmarkFile.Text = "Bookmark file";
             // 
             // labelTranscriptFileError
             // 
@@ -951,31 +979,16 @@
             this.buttonViewVideo.UseVisualStyleBackColor = true;
             this.buttonViewVideo.Click += new System.EventHandler(this.buttonViewVideo_Click);
             // 
-            // labelBookmarkFile
+            // labelBookmarkFileError
             // 
-            this.labelBookmarkFile.AutoSize = true;
-            this.labelBookmarkFile.Location = new System.Drawing.Point(6, 186);
-            this.labelBookmarkFile.Name = "labelBookmarkFile";
-            this.labelBookmarkFile.Size = new System.Drawing.Size(71, 13);
-            this.labelBookmarkFile.TabIndex = 107;
-            this.labelBookmarkFile.Text = "Bookmark file";
-            // 
-            // textBoxBookmarkFile
-            // 
-            this.textBoxBookmarkFile.Location = new System.Drawing.Point(166, 183);
-            this.textBoxBookmarkFile.Name = "textBoxBookmarkFile";
-            this.textBoxBookmarkFile.Size = new System.Drawing.Size(469, 20);
-            this.textBoxBookmarkFile.TabIndex = 108;
-            // 
-            // browseButtonBookmarkFile
-            // 
-            this.browseButtonBookmarkFile.Location = new System.Drawing.Point(641, 181);
-            this.browseButtonBookmarkFile.Name = "browseButtonBookmarkFile";
-            this.browseButtonBookmarkFile.Size = new System.Drawing.Size(59, 23);
-            this.browseButtonBookmarkFile.TabIndex = 109;
-            this.browseButtonBookmarkFile.Text = "Browse...";
-            this.browseButtonBookmarkFile.UseVisualStyleBackColor = true;
-            this.browseButtonBookmarkFile.Click += new System.EventHandler(this.browseButtonBookmarkFile_Click);
+            this.labelBookmarkFileError.AutoSize = true;
+            this.labelBookmarkFileError.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.labelBookmarkFileError.Location = new System.Drawing.Point(170, 206);
+            this.labelBookmarkFileError.Name = "labelBookmarkFileError";
+            this.labelBookmarkFileError.Size = new System.Drawing.Size(189, 13);
+            this.labelBookmarkFileError.TabIndex = 110;
+            this.labelBookmarkFileError.Text = "* This Source video file was not found.";
+            this.labelBookmarkFileError.Visible = false;
             // 
             // RSPro2VideoForm
             // 
@@ -1103,6 +1116,7 @@
         private System.Windows.Forms.Button browseButtonBookmarkFile;
         private System.Windows.Forms.TextBox textBoxBookmarkFile;
         private System.Windows.Forms.Label labelBookmarkFile;
+        private System.Windows.Forms.Label labelBookmarkFileError;
     }
 }
 

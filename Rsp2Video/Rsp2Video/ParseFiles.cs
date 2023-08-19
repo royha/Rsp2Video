@@ -21,68 +21,66 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool ValidateAndParseFiles()
         {
-            // Set the default return value.
-            bool returnValue = true;
-
             // Clear the error messages.
             labelSourceVideoFileError.Visible = false;
             labelSoundFileError.Visible = false;
             labelTranscriptFileError.Visible = false;
             labelOutputVideoFileError.Visible = false;
             labelVideoOffsetError.Visible = false;
+            labelBookmarkFileError.Visible = false;
 
             // Find and set the video file and set the project file.
             if (FindFilesFromBookmarkFile() == false)
             {
-                returnValue = false;
+                return false;
             }
 
             // Set logfile location.
             if (SetLogFileLocation() == false)
             {
-                returnValue = false;
+                return false;
             }
 
             // Validate and parse the video file.
             if (ValidateAndParseVideo() == false)
             {
-                returnValue = false;
+                return false;
             }
 
             // Validate and parse the audio.
             if (ValidateAndParseAudio() == false)
             {
-                returnValue = false;
+                return false;
             }
 
             // Validate and parse the bookmark file.
             if (settings.BookmarkFileType == BookmarkFileType.bok || settings.BookmarkFileType == BookmarkFileType.FmBok)
             {
-                if (labelSoundFileError.Visible == false && ValidateAndParseBokBookmarks() == false)
+                if (labelBookmarkFileError.Visible == false && ValidateAndParseBokBookmarks() == false)
                 {
-                    returnValue = false;
+                    return false;
                 }
             }
 
             // Validate and parse the transcript file.
             //if (ValidateAndParseTranscript() == false)
             //{
-            //    returnValue = false;
+            //    return false;
             //}
 
             // Validate ouptut video file.
             if (ValidateOutputVideoFile() == false)
             {
-                returnValue = false;
+                return false;
             }
 
             // Validate video offset.
             if (ValidateVideoOffset() == false)
             {
-                returnValue = false;
+                return false;
             }
 
-            return returnValue;
+            return true;
         }
 
         /// <summary>
@@ -96,9 +94,50 @@ namespace RSPro2Video
             {
                 settings.BookmarkFile = Path.GetFullPath(textBoxBookmarkFile.Text).Trim();
             }
-            catch (ArgumentException e)
+            catch (ArgumentNullException)
             {
-                // TODO: Update the error label text with an appropriate error message.
+                labelBookmarkFileError.Text = "You must specify a bookmark file.";
+                labelBookmarkFileError.Visible = true;
+                return false;
+            }
+            catch (NotSupportedException)
+            {
+                labelBookmarkFileError.Text = "The path is not valid.";
+                labelBookmarkFileError.Visible = true;
+                return false;
+            }
+            catch (PathTooLongException)
+            {
+                labelBookmarkFileError.Text = "The path is not valid.";
+                labelBookmarkFileError.Visible = true;
+                return false;
+            }
+            catch (SecurityException)
+            {
+                labelBookmarkFileError.Text = "You do not have permissions to access this file.";
+                labelBookmarkFileError.Visible = true;
+                return false;
+            }
+            catch (ArgumentException)
+            {
+                labelBookmarkFileError.Text = "The path is not valid.";
+                labelBookmarkFileError.Visible = true;
+                return false;
+            }
+            catch (Exception e)
+            {
+                // Update the error label text with an appropriate error message.
+                if (String.IsNullOrWhiteSpace(textBoxBookmarkFile.Text) == true)
+                {
+                    labelBookmarkFileError.Text = "You must specify a bookmark file.";
+                    labelBookmarkFileError.Visible = true;
+                }
+                else
+                {
+                    labelBookmarkFileError.Text = "The path is not valid.";
+                    labelBookmarkFileError.Visible = true;
+                }
+
                 return false; 
             }
 
@@ -167,6 +206,8 @@ namespace RSPro2Video
                     break;
 
                 default:
+                    labelBookmarkFileError.Text = "This is not a recognized bookmark or project file type.";
+                    labelBookmarkFileError.Visible = true;
                     return false;
             }
 
@@ -262,7 +303,7 @@ namespace RSPro2Video
         /// <returns></returns>
         private bool ValidateAndParseBokBookmarks()
         {
-            if (ReadBokBookmarkFile(settings.SourceBookmarkFile) == false)
+            if (ReadBokBookmarkFile() == false)
             {
                 return false;
             }
@@ -417,16 +458,11 @@ namespace RSPro2Video
         /// <summary>
         /// Reads the contents of the .FmBok or .bok file into the BokBookmark list.
         /// </summary>
-        /// <param name="wavFilePath">The path to the Reverse Speech Pro audio file.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool ReadBokBookmarkFile(string wavFilePath)
+        private bool ReadBokBookmarkFile()
         {
-            // Get the path to the newest bookmark file.
-            String bookmarkFilePath = GetBookmarkFilePath(wavFilePath);
-            if (bookmarkFilePath == null) { return false; }
-
             // Read the bookmark data.
-            bookmarkFileBytes = File.ReadAllBytes(bookmarkFilePath);
+            bookmarkFileBytes = File.ReadAllBytes(settings.BookmarkFile);
 
             return true;
         }
@@ -1006,6 +1042,20 @@ namespace RSPro2Video
             FontForward = new Font(FontName, FontHeight, FontStyle.Regular, GraphicsUnit.Pixel);
             FontReverse = new Font(FontName, FontHeight, FontStyle.Italic | FontStyle.Bold, GraphicsUnit.Pixel);
             FontForwardUnderline = new Font(FontName, FontHeight, FontStyle.Underline, GraphicsUnit.Pixel);
+
+            // If the output video file is empty, set it.
+            if (String.IsNullOrEmpty(textBoxOutputFile.Text) == true)
+            {
+                // Set the output video file.
+                if (radioButtonSeparateVideos.Checked)
+                {
+                    textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(settings.SourceVideoFile) + "-";
+                }
+                else
+                {
+                    textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(settings.SourceVideoFile);
+                }
+            }
 
             return true;
         }
