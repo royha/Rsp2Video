@@ -23,7 +23,6 @@ namespace RSPro2Video
 
                 // Default settings.
                 settings.BookmarkTypeFnR = true;
-                // settings.SourceBookmarkFile = true;
                 settings.VideoContents = VideoContents.BookmarksOnly;
                 settings.VideoQuality = VideoQuality.Small;
                 settings.IncludeBackAndForth = true;

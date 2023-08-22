@@ -54,12 +54,9 @@ namespace RSPro2Video
             }
 
             // Validate and parse the bookmark file.
-            if (settings.BookmarkFileType == BookmarkFileType.bok || settings.BookmarkFileType == BookmarkFileType.FmBok)
+            if (ValidateAndParseBookmarks() == false)
             {
-                if (labelBookmarkFileError.Visible == false && ValidateAndParseBokBookmarks() == false)
-                {
-                    return false;
-                }
+                return false;
             }
 
             // Validate and parse the transcript file.
@@ -298,9 +295,29 @@ namespace RSPro2Video
         }
 
         /// <summary>
+        /// Parses a bookmark file.
+        /// </summary>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private bool ValidateAndParseBookmarks()
+        {
+            Boolean returnValue = true;
+
+            if (settings.BookmarkFileType == BookmarkFileType.bok || settings.BookmarkFileType == BookmarkFileType.FmBok)
+            {
+                returnValue = ValidateAndParseBokBookmarks();
+            }
+            else if (settings.BookmarkFileType == BookmarkFileType.RSVideo)
+            {
+                returnValue = ValidateAndParseRSVideoBookmarks();
+            }
+
+            return returnValue;
+        }
+
+        /// <summary>
         /// Loads and parses all bookmark data from the .FmBok/.bok file associated with the Reverse Speech Pro sound file.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
         private bool ValidateAndParseBokBookmarks()
         {
             if (ReadBokBookmarkFile() == false)
@@ -316,6 +333,270 @@ namespace RSPro2Video
             AssembleBokBookmarks();
 
             return true;
+        }
+
+        /// <summary>
+        /// Loads and parses all bookmark data from the .RSVideo file associated with the Reverse Speech Video file.
+        /// </summary>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private bool ValidateAndParseRSVideoBookmarks()
+        {
+            if (ReadRSVideoBookmarkFile() == false)
+            {
+                return false;
+            }
+
+            if (ExtractRSVideoBookmarkData() == false)
+            {
+                return false;
+            }
+
+            AssembleRSVideoBookmarks();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Read the .RSVideo file into a ReversalDefinition object.
+        /// </summary>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private bool ReadRSVideoBookmarkFile()
+        {
+            RSVideoReversalDefinition = DeSerializeObject<ReversalDefinition>(settings.BookmarkFile);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Parses the .RSVideo file data to create forward and reverse Bookmark data.
+        /// </summary>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private bool ExtractRSVideoBookmarkData()
+        {
+            // Extract forward bookmarks.
+            for (int i = 0; i < RSVideoReversalDefinition.Forward.Count; ++i)
+            {
+                // Skip this bookmark if it is null, empty, or if the starting or ending sample is -1.
+                if (RSVideoReversalDefinition.Forward[i].Text == null)
+                {
+                    continue;
+                }
+
+                String text = RSVideoReversalDefinition.Forward[i].Text.Trim();
+
+                if (text == String.Empty || text.IndexOf("{CrLf}{CrLf}") == 0 ||
+                    RSVideoReversalDefinition.Forward[i].ForwardStartSampleNo == -1 ||
+                    RSVideoReversalDefinition.Forward[i].ForwardEndSampleNo == -1)
+                {
+                    continue;
+                }
+
+                Bookmark newBookmark = new Bookmark();
+
+                // Create bookmark name.
+                newBookmark.Name = String.Format("F{0:00}", i + 1);
+
+                // Determine if there is an explanation.
+                int idx = text.IndexOf("{CrLf}{CrLf}");
+
+                if (idx >= 0)
+                {
+                    newBookmark.Text = text.Substring(0, idx).Trim();
+                    newBookmark.Explanation = text.Substring(idx + 12).Trim();
+                }
+                else
+                {
+                    newBookmark.Text = text;
+                    newBookmark.Explanation = String.Empty;
+                }
+
+                newBookmark.SampleStart = RSVideoReversalDefinition.Forward[i].ForwardStartSampleNo;
+                newBookmark.SampleEnd = RSVideoReversalDefinition.Forward[i].ForwardEndSampleNo;
+
+                RsvForwardBookmarks.Add(newBookmark);
+            }
+
+            // Extract reverse bookmarks.
+            for (int i = 0; i < RSVideoReversalDefinition.Reversal.Count; ++i)
+            {
+                // Skip this bookmark if it is null, empty, or if the starting or ending sample is -1.
+                if (RSVideoReversalDefinition.Reversal[i].Text == null)
+                {
+                    continue;
+                }
+
+                String text = RSVideoReversalDefinition.Reversal[i].Text.Trim();
+
+                if (text == String.Empty || text.IndexOf("{CrLf}{CrLf}") == 0 ||
+                    RSVideoReversalDefinition.Reversal[i].ReverseStartSampleNo == -1 ||
+                    RSVideoReversalDefinition.Reversal[i].ReverseEndSampleNo == -1)
+                {
+                    continue;
+                }
+
+                Bookmark newBookmark = new Bookmark();
+
+                // Create bookmark name.
+                newBookmark.Name = String.Format("R{0:00}", i + 1);
+
+                // Determine if there is an explanation.
+                int idx = text.IndexOf("{CrLf}{CrLf}");
+
+                if (idx >= 0)
+                {
+                    newBookmark.Text = text.Substring(0, idx).Trim();
+                    newBookmark.Explanation = text.Substring(idx + 12).Trim();
+                }
+                else
+                {
+                    newBookmark.Text = text;
+                    newBookmark.Explanation = String.Empty;
+                }
+
+                newBookmark.SampleStart = RSVideoReversalDefinition.Reversal[i].ReverseStartSampleNo;
+                newBookmark.SampleEnd = RSVideoReversalDefinition.Reversal[i].ReverseEndSampleNo;
+
+                RsvReverseBookmarks.Add(newBookmark);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Finds overlapping forward bookmarks to combine.
+        /// </summary>
+        private void HandleOverlappingRSVideoForwardBookmarks()
+        {
+            // Check this bookmark ...
+            foreach (Bookmark currentBookmark in RsvForwardBookmarks)
+            {
+                // ... against this bookmark.
+                foreach (Bookmark otherBookmark in RsvForwardBookmarks)
+                {
+                    // Skip comparing the bookmark to itself.
+                    if (currentBookmark == otherBookmark)
+                    {
+                        continue;
+                    }
+
+                    // OOOOOOOOOOOOOOOOOOOOOOO
+                    //   CCCCCCCCCCCCCCCCCCC
+                    // Is the current bookmark fully contained in the other bookmark?
+                    if (currentBookmark.SampleStart >= otherBookmark.SampleStart &&
+                        currentBookmark.SampleEnd <= otherBookmark.SampleEnd)
+                    {
+                        CombineBookmarks(currentBookmark, otherBookmark);
+                    }
+
+                    //   OOOOOOOOOOOOOOOOOOOOOOO
+                    // CCCCCCCCCCCCCCCCCCCCCCC
+                    // Is the start of the other inside the current?
+                    else if (otherBookmark.SampleStart >= currentBookmark.SampleStart &&
+                        otherBookmark.SampleStart <= currentBookmark.SampleEnd)
+                    {
+                        // Is the overlap is greater than MinBookmarkOverlap?
+                        if (currentBookmark.SampleEnd - otherBookmark.SampleStart >=
+                            (currentBookmark.SampleEnd - otherBookmark.SampleStart) * MinBookmarkOverlap)
+                        {
+                            CombineBookmarks(currentBookmark, otherBookmark);
+                        }
+                    }
+
+                    // OOOOOOOOOOOOOOOOOOOOOOO
+                    //   CCCCCCCCCCCCCCCCCCCCCCC
+                    // Is the end of the other inside the current?
+                    else if (otherBookmark.SampleEnd >= currentBookmark.SampleStart &&
+                        otherBookmark.SampleEnd <= currentBookmark.SampleEnd)
+                    {
+                        if (otherBookmark.SampleEnd - currentBookmark.SampleStart >=
+                            (otherBookmark.SampleEnd - currentBookmark.SampleStart) * MinBookmarkOverlap)
+                        {
+                            CombineBookmarks(currentBookmark, otherBookmark);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Combines forward bookmarks in .RSVideo file data.
+        /// </summary>
+        /// <remarks>If .Text strings (minus any square brackets) are not identical in length, 
+        /// chooses the bookmark with the longest .Text string, and deletes <param name="otherBookmark"></param>.
+        /// 
+        /// If .Text strings are identical (minus any square brackets), combines the square
+        /// brackets from <param name="otherBookmark"></param> to <param name="currentBookmark"></param>,
+        /// then deletes <param name="currentBookmark"></param>.</remarks>
+        /// <param name="currentBookmark"></param>
+        /// <param name="otherBookmark"></param>
+        private void CombineBookmarks(Bookmark currentBookmark, Bookmark otherBookmark)
+        {
+            // Create strings without square brackets for comparison purposes.
+            string current = Regex.Replace(currentBookmark.Text, @"[\[\]]", String.Empty);
+            string other = Regex.Replace(otherBookmark.Text, @"[\[\]]", String.Empty);
+
+            // If current text is longer, remove other.
+            if (current.Length > other.Length)
+            {
+                RsvForwardBookmarks.Remove(otherBookmark);
+                return;
+            }
+
+            // If current text is shorter, remove current.
+            if (current.Length < other.Length)
+            {
+                RsvForwardBookmarks.Remove(currentBookmark);
+                return;
+            }
+
+            // Text lengths are identical. Combine square brackets.
+            // this [is a si]mple string with [square] brackets
+            // this is a si[mple string] with [square] brackets
+
+            // If otherBookmark.Text has no opening square bracket, there is nothing to add.
+            if (otherBookmark.Text.IndexOf('[') == -1)
+            {
+                RsvForwardBookmarks.Remove(otherBookmark);
+                return;
+            }
+
+            int currentBacketCount = 0;
+            int otherBracketCount = 0;
+
+            // Loop through the strings looking for square brackets.
+            for (int i = 0; i < currentBookmark.Text.Length; ++i)
+            {
+                // If a square bracket is found in current, adjust for it.
+                if (currentBookmark.Text[i + currentBacketCount] == '[' ||
+                    currentBookmark.Text[i + currentBacketCount] == ']')
+                {
+                    ++currentBacketCount;
+
+                    // If an identical opening square bracket is found in other, skip over it.
+                    if (otherBookmark.Text[i + otherBracketCount] == '[' ||
+                        otherBookmark.Text[i + otherBracketCount] == ']')
+                    {
+                        ++otherBracketCount;
+                    }
+                }
+
+                // If a square bracket is found in other, add it to current.
+                else if (otherBookmark.Text[i + otherBracketCount] == '[' ||
+                    otherBookmark.Text[i + otherBracketCount] == ']')
+                {
+                    currentBookmark.Text = currentBookmark.Text.Substring(0, i + currentBacketCount -1) +
+                        otherBookmark.Text[i + otherBracketCount] +
+                        currentBookmark.Text.Substring(i + currentBacketCount);
+                }
+            }
+
+            RsvForwardBookmarks.Remove(otherBookmark);
+            return;
+        }
+
+        private void AssembleRSVideoBookmarks()
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
