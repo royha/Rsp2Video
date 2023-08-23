@@ -71,6 +71,7 @@ namespace RSPro2Video
             //textBoxSourceVideoFile.Text = settings.SourceVideoFile;
             //textBoxSoundFile.Text = settings.RspSoundFile;
             //textBoxTranscriptFile.Text = settings.RspTranscriptFile;
+            textBoxBookmarkFile.Text = settings.BookmarkFile;
             textBoxOutputFile.Text = settings.OutputVideoFile;
 
             // If the stored video offset is zero, clear the text box.

@@ -351,7 +351,10 @@ namespace RSPro2Video
                 return false;
             }
 
-            AssembleRSVideoBookmarks();
+            HandleOverlappingRSVideoForwardBookmarks();
+
+            // AssembleRSVideoBookmarks();
+            AssembleBokBookmarks();
 
             return true;
         }
@@ -470,11 +473,23 @@ namespace RSPro2Video
             // Check this bookmark ...
             foreach (Bookmark currentBookmark in RsvForwardBookmarks)
             {
+                // Skip if the bookmark is already marked for removal.
+                if (currentBookmark.Name == "Remove")
+                {
+                    continue;
+                }
+
                 // ... against this bookmark.
                 foreach (Bookmark otherBookmark in RsvForwardBookmarks)
                 {
                     // Skip comparing the bookmark to itself.
-                    if (currentBookmark == otherBookmark)
+                    if (otherBookmark == currentBookmark)
+                    {
+                        continue;
+                    }
+
+                    // Skip if the bookmark is already marked for removal.
+                    if (otherBookmark.Name == "Remove")
                     {
                         continue;
                     }
@@ -516,6 +531,9 @@ namespace RSPro2Video
                     }
                 }
             }
+
+            // Remove all bookmarks that are marked for removeal.
+            RsvForwardBookmarks.RemoveAll(x => x.Name == "Remove");
         }
 
         /// <summary>
@@ -527,6 +545,7 @@ namespace RSPro2Video
         /// If .Text strings are identical (minus any square brackets), combines the square
         /// brackets from <param name="otherBookmark"></param> to <param name="currentBookmark"></param>,
         /// then deletes <param name="currentBookmark"></param>.</remarks>
+        /// <param name="bookmarksToDelete">The list of bookmarks to delete.</param>
         /// <param name="currentBookmark"></param>
         /// <param name="otherBookmark"></param>
         private void CombineBookmarks(Bookmark currentBookmark, Bookmark otherBookmark)
@@ -538,14 +557,14 @@ namespace RSPro2Video
             // If current text is longer, remove other.
             if (current.Length > other.Length)
             {
-                RsvForwardBookmarks.Remove(otherBookmark);
+                otherBookmark.Name = "Remove";
                 return;
             }
 
             // If current text is shorter, remove current.
             if (current.Length < other.Length)
             {
-                RsvForwardBookmarks.Remove(currentBookmark);
+                otherBookmark.Name = "Remove";
                 return;
             }
 
@@ -556,7 +575,7 @@ namespace RSPro2Video
             // If otherBookmark.Text has no opening square bracket, there is nothing to add.
             if (otherBookmark.Text.IndexOf('[') == -1)
             {
-                RsvForwardBookmarks.Remove(otherBookmark);
+                otherBookmark.Name = "Remove";
                 return;
             }
 
@@ -564,7 +583,10 @@ namespace RSPro2Video
             int otherBracketCount = 0;
 
             // Loop through the strings looking for square brackets.
-            for (int i = 0; i < currentBookmark.Text.Length; ++i)
+            for (int i = 0; 
+                i < currentBookmark.Text.Length - currentBacketCount &&
+                i < currentBookmark.Text.Length - otherBracketCount;
+                ++i)
             {
                 // If a square bracket is found in current, adjust for it.
                 if (currentBookmark.Text[i + currentBacketCount] == '[' ||
@@ -584,13 +606,17 @@ namespace RSPro2Video
                 else if (otherBookmark.Text[i + otherBracketCount] == '[' ||
                     otherBookmark.Text[i + otherBracketCount] == ']')
                 {
-                    currentBookmark.Text = currentBookmark.Text.Substring(0, i + currentBacketCount -1) +
+                    String s1 = currentBookmark.Text.Substring(0, i + currentBacketCount);
+                    String s2 = otherBookmark.Text[i + otherBracketCount].ToString();
+                    String s3 = currentBookmark.Text.Substring(i + currentBacketCount);
+
+                    currentBookmark.Text = currentBookmark.Text.Substring(0, i + currentBacketCount) +
                         otherBookmark.Text[i + otherBracketCount] +
                         currentBookmark.Text.Substring(i + currentBacketCount);
                 }
             }
 
-            RsvForwardBookmarks.Remove(otherBookmark);
+            otherBookmark.Name = "Remove";
             return;
         }
 
