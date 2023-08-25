@@ -1233,9 +1233,11 @@ namespace RSPro2Video
             String filename = String.Format("Black.{0:0.######}", duration);
 
             // Create the inner commands for ffmpeg. 
-            String command = String.Format("-i \"{0}\" -vf eq=brightness=-1.0 -af volume=0.0 -t {1:0.######}",
+            String command = String.Format("-i \"{0}\" -f lavfi -i color=size={2}x{3}:c=black -loop 1 -t {1:0.######} -filter_complex \"[0:a]volume = 0.0[a];[0:v][1:v]overlay[v]\" -map [v] -map [a] -t {1:0.######}",
                 RelativePathToWorkingInputVideoFile,
-                duration);
+                duration,
+                HorizontalResolution,
+                VerticalResolution);
 
             // Call ffmpeg.
             return RunFfmpeg(filename, command);
