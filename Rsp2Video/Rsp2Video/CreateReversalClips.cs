@@ -663,16 +663,19 @@ namespace RSPro2Video
         private bool CreateOpeningAndClosingCards()
         {
             // Get the opening and closing card text from the right source.
-            if (settings.BookmarkFileType == BookmarkFileType.bok || settings.BookmarkFileType == BookmarkFileType.FmBok)
-            {
-                OpeningCard = BokOpeningCard;
-                ClosingCard = BokClosingCard;
-            }
-            if (settings.SourceTranscriptFile)
-            {
-                OpeningCard = TxtOpeningCard;
-                ClosingCard = TxtClosingCard;
-            }
+            //if (settings.BookmarkFileType == BookmarkFileType.bok || settings.BookmarkFileType == BookmarkFileType.FmBok)
+            //{
+            //    OpeningCard = BokOpeningCard;
+            //    ClosingCard = BokClosingCard;
+            //}
+            //if (settings.SourceTranscriptFile)
+            //{
+            //    OpeningCard = TxtOpeningCard;
+            //    ClosingCard = TxtClosingCard;
+            //}
+
+            OpeningCard = BokOpeningCard;
+            ClosingCard = BokClosingCard;
 
             if (String.IsNullOrWhiteSpace(OpeningCard) == false)
             {

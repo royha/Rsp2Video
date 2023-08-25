@@ -53,6 +53,11 @@
             this.labelPercent1 = new System.Windows.Forms.Label();
             this.checkBoxReversal1 = new System.Windows.Forms.CheckBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.groupBoxInputFiles = new System.Windows.Forms.GroupBox();
+            this.labelBookmarkFileError = new System.Windows.Forms.Label();
+            this.browseButtonBookmarkFile = new System.Windows.Forms.Button();
+            this.textBoxBookmarkFile = new System.Windows.Forms.TextBox();
+            this.labelBookmarkFile = new System.Windows.Forms.Label();
             this.labelVideoOffsetError = new System.Windows.Forms.Label();
             this.labelOutputVideoFileError = new System.Windows.Forms.Label();
             this.textBoxVideoOffset = new System.Windows.Forms.TextBox();
@@ -94,13 +99,9 @@
             this.labelVideoRenderingTime = new System.Windows.Forms.Label();
             this.labelVideoComplete = new System.Windows.Forms.Label();
             this.buttonViewVideo = new System.Windows.Forms.Button();
-            this.labelBookmarkFile = new System.Windows.Forms.Label();
-            this.textBoxBookmarkFile = new System.Windows.Forms.TextBox();
-            this.browseButtonBookmarkFile = new System.Windows.Forms.Button();
-            this.labelBookmarkFileError = new System.Windows.Forms.Label();
-            this.groupBoxInputFiles = new System.Windows.Forms.GroupBox();
             this.groupBoxReversalRates.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.groupBoxInputFiles.SuspendLayout();
             this.panel2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarVideoQuality)).BeginInit();
@@ -112,7 +113,6 @@
             this.panel3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxAnimation)).BeginInit();
             this.panel4.SuspendLayout();
-            this.groupBoxInputFiles.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBoxReversalRates
@@ -363,6 +363,55 @@
             this.panel1.DragDrop += new System.Windows.Forms.DragEventHandler(this.panel1_DragDrop);
             this.panel1.DragEnter += new System.Windows.Forms.DragEventHandler(this.panel1_DragEnter);
             // 
+            // groupBoxInputFiles
+            // 
+            this.groupBoxInputFiles.Controls.Add(this.labelBookmarkFileError);
+            this.groupBoxInputFiles.Controls.Add(this.browseButtonBookmarkFile);
+            this.groupBoxInputFiles.Controls.Add(this.textBoxBookmarkFile);
+            this.groupBoxInputFiles.Controls.Add(this.labelBookmarkFile);
+            this.groupBoxInputFiles.Location = new System.Drawing.Point(7, 181);
+            this.groupBoxInputFiles.Name = "groupBoxInputFiles";
+            this.groupBoxInputFiles.Size = new System.Drawing.Size(710, 79);
+            this.groupBoxInputFiles.TabIndex = 1;
+            this.groupBoxInputFiles.TabStop = false;
+            this.groupBoxInputFiles.Text = "Input files: Drag and drop your Bookmark file or Rsp2Video Project file here";
+            // 
+            // labelBookmarkFileError
+            // 
+            this.labelBookmarkFileError.AutoSize = true;
+            this.labelBookmarkFileError.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.labelBookmarkFileError.Location = new System.Drawing.Point(177, 53);
+            this.labelBookmarkFileError.Name = "labelBookmarkFileError";
+            this.labelBookmarkFileError.Size = new System.Drawing.Size(189, 13);
+            this.labelBookmarkFileError.TabIndex = 114;
+            this.labelBookmarkFileError.Text = "* This Source video file was not found.";
+            this.labelBookmarkFileError.Visible = false;
+            // 
+            // browseButtonBookmarkFile
+            // 
+            this.browseButtonBookmarkFile.Location = new System.Drawing.Point(648, 28);
+            this.browseButtonBookmarkFile.Name = "browseButtonBookmarkFile";
+            this.browseButtonBookmarkFile.Size = new System.Drawing.Size(59, 23);
+            this.browseButtonBookmarkFile.TabIndex = 113;
+            this.browseButtonBookmarkFile.Text = "Browse...";
+            this.browseButtonBookmarkFile.UseVisualStyleBackColor = true;
+            // 
+            // textBoxBookmarkFile
+            // 
+            this.textBoxBookmarkFile.Location = new System.Drawing.Point(173, 30);
+            this.textBoxBookmarkFile.Name = "textBoxBookmarkFile";
+            this.textBoxBookmarkFile.Size = new System.Drawing.Size(469, 20);
+            this.textBoxBookmarkFile.TabIndex = 112;
+            // 
+            // labelBookmarkFile
+            // 
+            this.labelBookmarkFile.AutoSize = true;
+            this.labelBookmarkFile.Location = new System.Drawing.Point(13, 33);
+            this.labelBookmarkFile.Name = "labelBookmarkFile";
+            this.labelBookmarkFile.Size = new System.Drawing.Size(71, 13);
+            this.labelBookmarkFile.TabIndex = 111;
+            this.labelBookmarkFile.Text = "Bookmark file";
+            // 
             // labelVideoOffsetError
             // 
             this.labelVideoOffsetError.AutoSize = true;
@@ -551,6 +600,7 @@
             // radioButtonBookmarkTypeQuickCheck
             // 
             this.radioButtonBookmarkTypeQuickCheck.AutoSize = true;
+            this.radioButtonBookmarkTypeQuickCheck.Enabled = false;
             this.radioButtonBookmarkTypeQuickCheck.Location = new System.Drawing.Point(7, 66);
             this.radioButtonBookmarkTypeQuickCheck.Name = "radioButtonBookmarkTypeQuickCheck";
             this.radioButtonBookmarkTypeQuickCheck.Size = new System.Drawing.Size(86, 17);
@@ -558,6 +608,7 @@
             this.radioButtonBookmarkTypeQuickCheck.TabStop = true;
             this.radioButtonBookmarkTypeQuickCheck.Text = "Quick check";
             this.radioButtonBookmarkTypeQuickCheck.UseVisualStyleBackColor = true;
+            this.radioButtonBookmarkTypeQuickCheck.Visible = false;
             this.radioButtonBookmarkTypeQuickCheck.CheckedChanged += new System.EventHandler(this.radioButtonQuickCheck_CheckedChanged);
             // 
             // radioButtonBookmarkTypeFnR
@@ -593,6 +644,7 @@
             this.labelProgressing.Size = new System.Drawing.Size(61, 13);
             this.labelProgressing.TabIndex = 2;
             this.labelProgressing.Text = "progressing";
+            this.labelProgressing.Visible = false;
             // 
             // checkBoxReplayForwardVideo
             // 
@@ -603,6 +655,7 @@
             this.checkBoxReplayForwardVideo.TabIndex = 1;
             this.checkBoxReplayForwardVideo.Text = "Replay forward video before";
             this.checkBoxReplayForwardVideo.UseVisualStyleBackColor = true;
+            this.checkBoxReplayForwardVideo.Visible = false;
             // 
             // checkBoxIncludeBackAndForth
             // 
@@ -805,61 +858,11 @@
             this.buttonViewVideo.UseVisualStyleBackColor = true;
             this.buttonViewVideo.Click += new System.EventHandler(this.buttonViewVideo_Click);
             // 
-            // labelBookmarkFile
-            // 
-            this.labelBookmarkFile.AutoSize = true;
-            this.labelBookmarkFile.Location = new System.Drawing.Point(13, 33);
-            this.labelBookmarkFile.Name = "labelBookmarkFile";
-            this.labelBookmarkFile.Size = new System.Drawing.Size(71, 13);
-            this.labelBookmarkFile.TabIndex = 111;
-            this.labelBookmarkFile.Text = "Bookmark file";
-            // 
-            // textBoxBookmarkFile
-            // 
-            this.textBoxBookmarkFile.Location = new System.Drawing.Point(173, 30);
-            this.textBoxBookmarkFile.Name = "textBoxBookmarkFile";
-            this.textBoxBookmarkFile.Size = new System.Drawing.Size(469, 20);
-            this.textBoxBookmarkFile.TabIndex = 112;
-            // 
-            // browseButtonBookmarkFile
-            // 
-            this.browseButtonBookmarkFile.Location = new System.Drawing.Point(648, 28);
-            this.browseButtonBookmarkFile.Name = "browseButtonBookmarkFile";
-            this.browseButtonBookmarkFile.Size = new System.Drawing.Size(59, 23);
-            this.browseButtonBookmarkFile.TabIndex = 113;
-            this.browseButtonBookmarkFile.Text = "Browse...";
-            this.browseButtonBookmarkFile.UseVisualStyleBackColor = true;
-            // 
-            // labelBookmarkFileError
-            // 
-            this.labelBookmarkFileError.AutoSize = true;
-            this.labelBookmarkFileError.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.labelBookmarkFileError.Location = new System.Drawing.Point(177, 53);
-            this.labelBookmarkFileError.Name = "labelBookmarkFileError";
-            this.labelBookmarkFileError.Size = new System.Drawing.Size(189, 13);
-            this.labelBookmarkFileError.TabIndex = 114;
-            this.labelBookmarkFileError.Text = "* This Source video file was not found.";
-            this.labelBookmarkFileError.Visible = false;
-            // 
-            // groupBoxInputFiles
-            // 
-            this.groupBoxInputFiles.Controls.Add(this.labelBookmarkFileError);
-            this.groupBoxInputFiles.Controls.Add(this.browseButtonBookmarkFile);
-            this.groupBoxInputFiles.Controls.Add(this.textBoxBookmarkFile);
-            this.groupBoxInputFiles.Controls.Add(this.labelBookmarkFile);
-            this.groupBoxInputFiles.Location = new System.Drawing.Point(7, 181);
-            this.groupBoxInputFiles.Name = "groupBoxInputFiles";
-            this.groupBoxInputFiles.Size = new System.Drawing.Size(710, 79);
-            this.groupBoxInputFiles.TabIndex = 1;
-            this.groupBoxInputFiles.TabStop = false;
-            this.groupBoxInputFiles.Text = "Input files: Drag and drop your Bookmark file or Rsp2Video Project file here";
-            // 
             // RSPro2VideoForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(744, 499);
-            this.Controls.Add(this.panel1);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel4);
             this.Controls.Add(this.panel3);
@@ -867,6 +870,7 @@
             this.Controls.Add(this.buttonNext);
             this.Controls.Add(this.buttonBack);
             this.Controls.Add(this.labelStatus);
+            this.Controls.Add(this.panel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "RSPro2VideoForm";
             this.Text = "Revese Speech Pro to Video";
@@ -874,6 +878,8 @@
             this.groupBoxReversalRates.ResumeLayout(false);
             this.groupBoxReversalRates.PerformLayout();
             this.panel1.ResumeLayout(false);
+            this.groupBoxInputFiles.ResumeLayout(false);
+            this.groupBoxInputFiles.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -891,8 +897,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxAnimation)).EndInit();
             this.panel4.ResumeLayout(false);
             this.panel4.PerformLayout();
-            this.groupBoxInputFiles.ResumeLayout(false);
-            this.groupBoxInputFiles.PerformLayout();
             this.ResumeLayout(false);
 
         }

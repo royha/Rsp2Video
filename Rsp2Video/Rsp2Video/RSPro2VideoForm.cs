@@ -828,6 +828,16 @@ namespace RSPro2Video
                     case ".bok":
                         // If the extension is a bookmark file, set the textbox to the filename.
                         textBoxBookmarkFile.Text = file;
+
+                        // Create the output video file textbox.
+                        if (radioButtonSeparateVideos.Checked)
+                        {
+                            textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(file) + "-";
+                        }
+                        else
+                        {
+                            textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(file);
+                        }
                         break;
 
                     case ".rsp2video":
