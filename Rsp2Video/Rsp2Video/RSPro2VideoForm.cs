@@ -824,9 +824,7 @@ namespace RSPro2Video
                     //    break;
 
                     case ".rsvideo":
-                    case ".fmbok":
-                    case ".bok":
-                        // If the extension is a bookmark file, set the textbox to the filename.
+                        // If the extension is an RSVideo bookmark file, set the textbox to the filename.
                         textBoxBookmarkFile.Text = file;
 
                         // Create the output video file textbox.
@@ -836,7 +834,25 @@ namespace RSPro2Video
                         }
                         else
                         {
-                            textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(file);
+                            // Remove the .RSVideo extension from the bookmark filename to obtain the video filename.
+                            textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileNameWithoutExtension(file);
+                        }
+                        break;
+
+                    case ".fmbok":
+                    case ".bok":
+                        // If the extension is an .FmBok or .bok bookmark file, set the textbox to the filename.
+                        textBoxBookmarkFile.Text = file;
+
+                        // Create the output video file textbox.
+                        if (radioButtonSeparateVideos.Checked)
+                        {
+                            textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(file) + "-";
+                        }
+                        else
+                        {
+                            // Create the output filename with the hardcoded extension.
+                            textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileNameWithoutExtension(file) + ".mp4";
                         }
                         break;
 
