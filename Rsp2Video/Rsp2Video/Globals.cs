@@ -26,6 +26,8 @@ namespace RSPro2Video
         int HorizontalResolution;                                       // The horizontal resolution of the video.
         int VerticalResolution;                                         // The vertical resolution of the video.
         double SourceVideoDuration;                                     // The duration of the source video in seconds.
+        String SampleAspectRatio;                                       // The Sample Aspect Ratio.
+        String DisplayAspectRatio;                                      // The Display Aspect Ratio.
         double VideoOffset;                                             // The video offset to align the video with the audio.
         double ClosingFrameTime;
         String Transcript;                                              // The text of the transcript file.
