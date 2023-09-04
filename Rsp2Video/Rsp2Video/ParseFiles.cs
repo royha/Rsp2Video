@@ -9,6 +9,7 @@ using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace RSPro2Video
 {
@@ -48,10 +49,10 @@ namespace RSPro2Video
             }
 
             // Validate and parse the audio.
-            if (ValidateAndParseAudio() == false)
-            {
-                return false;
-            }
+            //if (ValidateAndParseAudio() == false)
+            //{
+            //    return false;
+            //}
 
             // Validate and parse the bookmark file.
             if (ValidateAndParseBookmarks() == false)
@@ -1291,123 +1292,107 @@ namespace RSPro2Video
         }
 
         /// <summary>
-        /// Parses the video file to determine the frames per second and resolution.
+        /// Parses the video file to extract the necessary data.
         /// </summary>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool ValidateAndParseVideo()
         {
-            // if (ValidateVideo() == false) { return false; }
-
-            Process process = new Process();
-
-            // Configure the process using the StartInfo properties.
-            process.StartInfo = new ProcessStartInfo
-            {
-                FileName = FfmprobeApp,
-                Arguments = "-hide_banner \"" + settings.SourceVideoFile + "\"",
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Maximized
-            };
-
-            // Log the ffprobe command line options.
-            File.AppendAllText(LogFile, String.Format("\r\n\r\n***Command line: \"{0}\" {1}\r\n\r\n", 
-                process.StartInfo.FileName, process.StartInfo.Arguments));
-
-            // Start ffprobe to get the video file information.
-            process.Start();
-
-            // Read the output of ffmpeg.
-            String FfprobeOutput = process.StandardError.ReadToEnd();
-
-            // Log the ffprobe output.
-            File.AppendAllText(LogFile, FfprobeOutput);
-
-            // Wait here for the process to exit.
-            process.WaitForExit();
-            int ExitCode = process.ExitCode;
-            process.Close();
-
-            if (!(ExitCode == 0))
-            {
-                MessageBox.Show("There was an error reading " + settings.SourceVideoFile + ":" + Environment.NewLine + Environment.NewLine + "Error message: " + FfprobeOutput,
-                    "Error reading Source video file");
-                return false;
-            }
-
-            // Parse for the frame rate using regular expressions.
-            Match match = Regex.Match(FfprobeOutput, @"(\d+|\d+\.\d+) fps,");
-            if (!match.Success)
+            // Get the XML data from ffprobe.
+            String data = RunFfprobeXml(settings.SourceVideoFile);
+            if (String.IsNullOrEmpty(data))
             {
                 labelBookmarkFileError.Text = "There was an error reading the video file.";
                 labelBookmarkFileError.Visible = true;
                 return false;
             }
 
-            if (double.TryParse(match.Groups[1].Value, out double rate))
+            // Get the XML data into an XML document.
+            XmlDocument xmlVideoDocument = new XmlDocument();
+            xmlVideoDocument.LoadXml(data);
+            XmlElement root = xmlVideoDocument.DocumentElement;
+
+            // Get the first video stream and the first audio stream.
+            XmlNode videoStream = root.SelectSingleNode("/ffprobe/streams/stream[@codec_type='video']");
+            XmlNode audioStream = root.SelectSingleNode("/ffprobe/streams/stream[@codec_type='audio']");
+            XmlNode format = root.SelectSingleNode("/ffprobe/format");
+
+            if (audioStream == null)
             {
-                FramesPerSecond = rate;
+                labelBookmarkFileError.Text = "The video file does not contain an audio stream.";
+                labelBookmarkFileError.Visible = true;
+                return false;
+            }
+
+            // Get the frame rate.
+            if (String.IsNullOrEmpty(videoStream.Attributes["r_frame_rate"].InnerText))
+            {
+                labelBookmarkFileError.Text = "There was an error reading the video file.";
+                labelBookmarkFileError.Visible = true;
+                return false;
             }
             else
             {
-                labelBookmarkFileError.Text = "There was an error reading the video file.";
-                labelBookmarkFileError.Visible = true;
-                return false;
+                // Extract the numerator and denominator from the frame rate string.
+                String[]s = videoStream.Attributes["r_frame_rate"].InnerText.Split('/');
+                if (s.Length != 2)
+                {
+                    labelBookmarkFileError.Text = "There was an error reading the video file.";
+                    labelBookmarkFileError.Visible = true;
+                    return false;
+                }
+                
+                Double.TryParse(s[0], out Double numerator);
+                Double.TryParse(s[1], out Double denominator);
+
+                // Set the frame rate.
+                FramesPerSecond = numerator / denominator;
             }
 
-            // Parse for the resolution using regular expressions.
-            match = Regex.Match(FfprobeOutput, @" (\d\d\d+)x(\d\d+)[, ]");
-            if (!match.Success)
+            // Get the video resolution.
+            if (Int32.TryParse(videoStream.Attributes["width"].InnerText, out HorizontalResolution) == false ||
+                Int32.TryParse(videoStream.Attributes["height"].InnerText, out VerticalResolution) == false)
             {
                 labelBookmarkFileError.Text = "There was an error reading the video file.";
                 labelBookmarkFileError.Visible = true;
                 return false;
             }
 
-            if (Int32.TryParse(match.Groups[1].Value, out int horizontal))
+            // Get the SAR and DAR ratios.
+            if (videoStream.Attributes["sample_aspect_ratio"] == null)
             {
-                HorizontalResolution = horizontal;
+                SampleAspectRatio = "1/1";
             }
             else
             {
-                labelBookmarkFileError.Text = "There was an error reading the video file.";
-                labelBookmarkFileError.Visible = true;
-                return false;
+                SampleAspectRatio = videoStream.Attributes["sample_aspect_ratio"].InnerText.Replace(':', '/');
             }
 
-            if (Int32.TryParse(match.Groups[2].Value, out int vertical))
+            if (videoStream.Attributes["display_aspect_ratio"] == null)
             {
-                VerticalResolution = vertical;
+                DisplayAspectRatio = String.Format("{0}/{1}", HorizontalResolution, VerticalResolution);
             }
             else
             {
-                labelBookmarkFileError.Text = "There was an error reading the video file.";
-                labelBookmarkFileError.Visible = true;
-                return false;
+                DisplayAspectRatio = videoStream.Attributes["display_aspect_ratio"].InnerText.Replace(':', '/');
             }
 
-            // Parse for the video duration.
-            match = Regex.Match(FfprobeOutput, @"\r\n\s+Duration: (\d\d):(\d\d):(\d\d)\.(\d\d)[, ]");
-            if (!match.Success)
-            {
-                labelBookmarkFileError.Text = "There was an error reading the video file.";
-                labelBookmarkFileError.Visible = true;
-                return false;
-            }
-            if (!Int32.TryParse(match.Groups[1].Value, out int hours) ||
-                !Int32.TryParse(match.Groups[2].Value, out int minutes) ||
-                !Int32.TryParse(match.Groups[3].Value, out int seconds) ||
-                !Int32.TryParse(match.Groups[4].Value, out int hundredths))
+            // Get the video duration.
+            if (Double.TryParse(format.Attributes["duration"].InnerText, out SourceVideoDuration) == false)
             {
                 labelBookmarkFileError.Text = "There was an error reading the video file.";
                 labelBookmarkFileError.Visible = true;
                 return false;
             }
 
-            SourceVideoDuration = (double)(hours * 3600 + minutes * 60 + seconds) + (double)hundredths / 100d;
+            // Get the audio sample rate.
+            if (Int32.TryParse(audioStream.Attributes["sample_rate"].InnerText, out SampleRate) == false)
+            {
+                labelBookmarkFileError.Text = "There was an error reading the video file.";
+                labelBookmarkFileError.Visible = true;
+                return false;
+            }
 
-            // Set the text height to be equal to 24 lines on the screen.
+            // Set the text height to be equal to 20 lines on the screen.
 
             // Prepare the font information
             LeftMarginSpaces = (int)Math.Round((decimal)HorizontalResolution / (decimal)VerticalResolution * 8.0m);
@@ -1433,6 +1418,58 @@ namespace RSPro2Video
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Extracts the ffprobe.exe data for the given file as an XML string.
+        /// </summary>
+        /// <param name="filename">The name of the file to examine.</param>
+        /// <returns>An XML string of data about the media file.</returns>
+        String RunFfprobeXml(String filename)
+        {
+            // Create the Process to call the external program.
+            Process process = new Process();
+
+            // Create the arguments string.
+            String arguments = String.Format("-v error -print_format xml -show_format -show_streams \"{0}\"",
+                filename);
+
+            // Configure the process using the StartInfo properties.
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = FfmprobeApp,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Maximized
+            };
+
+            // Log the ffprobe command line options.
+            File.AppendAllText(LogFile, String.Format("\r\n\r\n***Command line: \"{0}\" {1}\r\n\r\n",
+                process.StartInfo.FileName, process.StartInfo.Arguments));
+
+            // Start ffmpeg to extract the frames.
+            process.Start();
+
+            // Read the output of ffmpeg.
+            String FfprobeOutput = process.StandardOutput.ReadToEnd();
+
+            // Log the ffprobe output.
+            File.AppendAllText(LogFile, FfprobeOutput);
+
+            // Wait here for the process to exit.
+            process.WaitForExit();
+            int ExitCode = process.ExitCode;
+            process.Close();
+
+            // Return success or failure.
+            if (!(ExitCode == 0))
+            {
+                return null;
+            }
+
+            return FfprobeOutput;
         }
 
         //private bool ValidateVideo()
