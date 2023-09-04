@@ -192,7 +192,7 @@ namespace RSPro2Video
                     // No matching video file was found.
                     return false;
 
-                // RSVideo bookmark file.
+                // .RSVideo bookmark file.
                 case ".rsvideo":
                     // Verify the bookmark file exists.
                     if (File.Exists(mainFile) == false)
@@ -227,6 +227,19 @@ namespace RSPro2Video
                         labelMainFileError.Visible = true;
                         return false;
                     }
+                    break;
+
+                // .RSPro2Video project file.
+                case ".rspro2video":
+                    // Verify the project file exists.
+                    if (File.Exists(mainFile) == false)
+                    {
+                        return false;
+                    }
+
+                    // Set the project file and file type.
+                    ProgramSettings.ProjectFile = mainFile;
+                    
                     break;
 
                 default:
