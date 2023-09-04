@@ -24,10 +24,10 @@ namespace RSPro2Video
         private void SaveVideo()
         {
             // If Forward and Reverse selected.
-            if (settings.BookmarkTypeFnR)
+            if (ProjectSettings.BookmarkTypeFnR)
             {
                 // Select the video contents for the output video.
-                switch (settings.VideoContents)
+                switch (ProjectSettings.VideoContents)
                 {
                     case VideoContents.FullVideo:
 
@@ -50,10 +50,10 @@ namespace RSPro2Video
             }
 
             // If Orphaned Reversals is selected.
-            if (settings.BookmarkTypeOrphanedReversals)
+            if (ProjectSettings.BookmarkTypeOrphanedReversals)
             {
                 // Select the video contents for the output video.
-                switch (settings.VideoContents)
+                switch (ProjectSettings.VideoContents)
                 {
                     case VideoContents.FullVideo:
 
@@ -76,7 +76,7 @@ namespace RSPro2Video
             }
 
             // If Quick Check is selected.
-            if (settings.BookmarkTypeQuickCheck)
+            if (ProjectSettings.BookmarkTypeQuickCheck)
             {
                 // Create the video from forward and reverse bookmarks only.
                 AssembleClipListOrphanedReversalBookmarksOnly();
@@ -178,72 +178,72 @@ namespace RSPro2Video
         /// Assembles the final video from the list of video clips by using qmelt.exe.
         /// </summary>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool AssembleMeltVideo()
-        {
-            foreach (VideoOutput videoOutput in VideoOutputs)
-            {
-                // Update the user.
-                Progress.Report("Working: Assembling " + videoOutput.Filename);
+        //private bool AssembleMeltVideo()
+        //{
+        //    foreach (VideoOutput videoOutput in VideoOutputs)
+        //    {
+        //        // Update the user.
+        //        Progress.Report("Working: Assembling " + videoOutput.Filename);
 
-                // Create the file list for this video.
-                StringBuilder fileList = new StringBuilder();
+        //        // Create the file list for this video.
+        //        StringBuilder fileList = new StringBuilder();
 
-                // Add all clip files.
-                foreach (String clip in videoOutput.Clips)
-                {
-                    // Add the clip to the list.
-                    fileList.Append("file '");
-                    fileList.Append(clip);
-                    fileList.Append("'");
-                    fileList.Append(Environment.NewLine);
-                }
+        //        // Add all clip files.
+        //        foreach (String clip in videoOutput.Clips)
+        //        {
+        //            // Add the clip to the list.
+        //            fileList.Append("file '");
+        //            fileList.Append(clip);
+        //            fileList.Append("'");
+        //            fileList.Append(Environment.NewLine);
+        //        }
 
-                // Create the Process to call the external program.
-                Process process = new Process();
+        //        // Create the Process to call the external program.
+        //        Process process = new Process();
 
-                // Create the arguments string.
-                String arguments = String.Format("-consumer avformat:\"..\\{0}\" {1}{2}",
-                    videoOutput.Filename,
-                    OutputFinalSettingsQmelt,
-                    fileList.ToString());
+        //        // Create the arguments string.
+        //        String arguments = String.Format("-consumer avformat:\"..\\{0}\" {1}{2}",
+        //            videoOutput.Filename,
+        //            OutputFinalSettingsQmelt,
+        //            fileList.ToString());
 
-                // Configure the process using the StartInfo properties.
-                process.StartInfo = new ProcessStartInfo
-                {
-                    FileName = QmeltApp,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Maximized
-                };
+        //        // Configure the process using the StartInfo properties.
+        //        process.StartInfo = new ProcessStartInfo
+        //        {
+        //            FileName = QmeltApp,
+        //            Arguments = arguments,
+        //            UseShellExecute = false,
+        //            RedirectStandardError = true,
+        //            CreateNoWindow = true,
+        //            WindowStyle = ProcessWindowStyle.Maximized
+        //        };
 
-                // Log the ffmpeg command line options.
-                File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+        //        // Log the ffmpeg command line options.
+        //        File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
-                // Start ffmpeg to extract the frames.
-                process.Start();
+        //        // Start ffmpeg to extract the frames.
+        //        process.Start();
 
-                // Read the output of ffmpeg.
-                String FfmpegOutput = process.StandardError.ReadToEnd();
+        //        // Read the output of ffmpeg.
+        //        String FfmpegOutput = process.StandardError.ReadToEnd();
 
-                // Log the ffmpeg output.
-                File.AppendAllText(LogFile, FfmpegOutput);
+        //        // Log the ffmpeg output.
+        //        File.AppendAllText(LogFile, FfmpegOutput);
 
-                // Wait here for the process to exit.
-                process.WaitForExit();
-                int ExitCode = process.ExitCode;
-                process.Close();
+        //        // Wait here for the process to exit.
+        //        process.WaitForExit();
+        //        int ExitCode = process.ExitCode;
+        //        process.Close();
 
-                // Return success or failure.
-                if (!(ExitCode == 0))
-                {
-                    return false;
-                }
-            }
+        //        // Return success or failure.
+        //        if (!(ExitCode == 0))
+        //        {
+        //            return false;
+        //        }
+        //    }
 
-            return true;
-        }
+        //    return true;
+        //}
 
         /// <summary>
         /// Assembles the final video from the list of video clips by using ffmpeg.exe.
@@ -446,56 +446,56 @@ namespace RSPro2Video
                     foreach (Bookmark reverseBookmark in forwardBookmark.ReferencedBookmarks)
                     {
                         // Add the four reversal rates.
-                        if (settings.ReversalRate1.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 1, settings.ReversalRate1);
+                            AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate2.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 2, settings.ReversalRate2);
+                            AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate3.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 3, settings.ReversalRate3);
+                            AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate4.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 4, settings.ReversalRate4);
+                            AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
                         // If a back and forth was requested, add it.
-                        if (settings.IncludeBackAndForth)
+                        if (ProjectSettings.IncludeBackAndForth)
                         {
                             // Add the transition to the back and forth.
                             AddBackAndForthTransition(reverseBookmark);
@@ -523,7 +523,7 @@ namespace RSPro2Video
                 }
 
                 // If the forward replay was requested, play it.
-                if (settings.ReplayForwardVideo)
+                if (ProjectSettings.ReplayForwardVideo)
                 {
                     // Transition to the first frame of this forward bookmark.
                     AddTransitionFromFrameToForwardTransition(forwardBookmark);
@@ -540,7 +540,7 @@ namespace RSPro2Video
                 //
 
                 // Transition to normal video, unless replaying the forward video.
-                if (settings.ReplayForwardVideo == false)
+                if (ProjectSettings.ReplayForwardVideo == false)
                 {
                     AddTransitionToNormalVideo(forwardBookmark.Name + ".Last");
                 }
@@ -617,56 +617,56 @@ namespace RSPro2Video
                     foreach (Bookmark reverseBookmark in forwardBookmark.ReferencedBookmarks)
                     {
                         // Add the four reversal rates.
-                        if (settings.ReversalRate1.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 1, settings.ReversalRate1);
+                            AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate2.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 2, settings.ReversalRate2);
+                            AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate3.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 3, settings.ReversalRate3);
+                            AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate4.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 4, settings.ReversalRate4);
+                            AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
                         // If a back and forth was requested, add it.
-                        if (settings.IncludeBackAndForth)
+                        if (ProjectSettings.IncludeBackAndForth)
                         {
                             // Add the transition to the back and forth.
                             AddBackAndForthTransition(reverseBookmark);
@@ -694,7 +694,7 @@ namespace RSPro2Video
                 }
 
                 // If the forward replay was requested, play it.
-                if (settings.ReplayForwardVideo)
+                if (ProjectSettings.ReplayForwardVideo)
                 {
                     // Transition to the first frame of this forward bookmark.
                     AddTransitionFromFrameToForwardTransition(forwardBookmark);
@@ -785,56 +785,56 @@ namespace RSPro2Video
                         TransitionFromFrame = forwardBookmark.Name + ".Last";
 
                         // Add the four reversal rates.
-                        if (settings.ReversalRate1.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 1, settings.ReversalRate1);
+                            AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate2.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 2, settings.ReversalRate2);
+                            AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate3.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 3, settings.ReversalRate3);
+                            AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate4.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 4, settings.ReversalRate4);
+                            AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
                         // If a back and forth was requested, add it.
-                        if (settings.IncludeBackAndForth)
+                        if (ProjectSettings.IncludeBackAndForth)
                         {
                             // Add the transition to the back and forth.
                             AddBackAndForthTransition(reverseBookmark);
@@ -907,56 +907,56 @@ namespace RSPro2Video
                     foreach (Bookmark reverseBookmark in forwardBookmark.ReferencedBookmarks)
                     {
                         // Add the four reversal rates.
-                        if (settings.ReversalRate1.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 1, settings.ReversalRate1);
+                            AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate2.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 2, settings.ReversalRate2);
+                            AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate3.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 3, settings.ReversalRate3);
+                            AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate4.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 4, settings.ReversalRate4);
+                            AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
                         // If a back and forth was requested, add it.
-                        if (settings.IncludeBackAndForth)
+                        if (ProjectSettings.IncludeBackAndForth)
                         {
                             // Add the transition to the back and forth.
                             AddBackAndForthTransition(reverseBookmark);
@@ -1017,56 +1017,56 @@ namespace RSPro2Video
                     foreach (Bookmark reverseBookmark in forwardBookmark.ReferencedBookmarks)
                     {
                         // Add the four reversal rates.
-                        if (settings.ReversalRate1.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 1, settings.ReversalRate1);
+                            AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate2.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 2, settings.ReversalRate2);
+                            AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate3.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 3, settings.ReversalRate3);
+                            AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate4.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 4, settings.ReversalRate4);
+                            AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
                         // If a back and forth was requested, add it.
-                        if (settings.IncludeBackAndForth)
+                        if (ProjectSettings.IncludeBackAndForth)
                         {
                             // Add the transition to the back and forth.
                             AddBackAndForthTransition(reverseBookmark);
@@ -1144,49 +1144,49 @@ namespace RSPro2Video
                         TransitionFromFrame = forwardBookmark.Name + ".Last";
 
                         // Add the four reversal rates.
-                        if (settings.ReversalRate1.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 1, settings.ReversalRate1);
+                            AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate2.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 2, settings.ReversalRate2);
+                            AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate3.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 3, settings.ReversalRate3);
+                            AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
 
-                        if (settings.ReversalRate4.UseThisRate == true)
+                        if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
                             AddTransitionFromFrameToReverseTransition(reverseBookmark);
 
                             // Play the reverse bookmark.
-                            AddReverseVideo(reverseBookmark, 4, settings.ReversalRate4);
+                            AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
@@ -1326,7 +1326,7 @@ namespace RSPro2Video
             double duration = ((double)ForwardBookmarks[0].SampleStart / (double)SampleRate);
 
             // Adjust for the audio delay.
-            startTime += (double)settings.AudioDelay / 1000d;
+            startTime += (double)ProjectSettings.VideoDelay / 1000d;
             if (startTime < 0)
             {
                 // If the audio delay is negative, reduce the duration by the audio delay.
@@ -1465,7 +1465,7 @@ namespace RSPro2Video
             double duration = ((double)forwardBookmark.SampleEnd / (double)SampleRate) - startTime;
 
             // Adjust for the audio delay.
-            startTime += (double)settings.AudioDelay / 1000d;
+            startTime += (double)ProjectSettings.VideoDelay / 1000d;
             startTime = startTime < 0 ? 0 : startTime;
 
             // Create the filename for this clip.
@@ -1774,24 +1774,24 @@ namespace RSPro2Video
             // Find the first selected reverse video.
             ReversalRate reversalRate;
             int reversalNumber;
-            if (settings.ReversalRate1.UseThisRate)
+            if (ProjectSettings.ReversalRate1.UseThisRate)
             {
-                reversalRate = settings.ReversalRate1;
+                reversalRate = ProjectSettings.ReversalRate1;
                 reversalNumber = 1;
             }
-            else if (settings.ReversalRate2.UseThisRate)
+            else if (ProjectSettings.ReversalRate2.UseThisRate)
             {
-                reversalRate = settings.ReversalRate2;
+                reversalRate = ProjectSettings.ReversalRate2;
                 reversalNumber = 2;
             }
-            else if (settings.ReversalRate3.UseThisRate)
+            else if (ProjectSettings.ReversalRate3.UseThisRate)
             {
-                reversalRate = settings.ReversalRate3;
+                reversalRate = ProjectSettings.ReversalRate3;
                 reversalNumber = 3;
             }
-            else if (settings.ReversalRate4.UseThisRate)
+            else if (ProjectSettings.ReversalRate4.UseThisRate)
             {
-                reversalRate = settings.ReversalRate4;
+                reversalRate = ProjectSettings.ReversalRate4;
                 reversalNumber = 4;
             }
             else
@@ -1810,7 +1810,7 @@ namespace RSPro2Video
             double duration = ((double)reverseBookmark.SampleEnd / (double)SampleRate) - startTime;
 
             // Adjust for the audio delay.
-            startTime += (double)settings.AudioDelay / 1000d;
+            startTime += (double)ProjectSettings.VideoDelay / 1000d;
             startTime = startTime < 0 ? 0 : startTime;
 
             // Create the filename for this clip.
@@ -1977,7 +1977,7 @@ namespace RSPro2Video
             double startTimeOfNextBookmark = 864000.0d;
 
             // Adjust for the audio delay.
-            endTime += (double)settings.AudioDelay / 1000d;
+            endTime += (double)ProjectSettings.VideoDelay / 1000d;
             endTime = endTime < 0 ? 0 : endTime;
 
             // If this is not the last forward bookmark.
@@ -1987,7 +1987,7 @@ namespace RSPro2Video
                 startTimeOfNextBookmark = ForwardBookmarks[index + 1].SampleStart / (double)SampleRate;
 
                 // Adjust for the audio delay.
-                startTimeOfNextBookmark += (double)settings.AudioDelay / 1000d;
+                startTimeOfNextBookmark += (double)ProjectSettings.VideoDelay / 1000d;
                 startTimeOfNextBookmark = startTimeOfNextBookmark < 0 ? 0 : startTimeOfNextBookmark;
 
                 // If the end time of this bookmark is beyond the start time of the next bookmark, this clip is not necessary.
@@ -1997,7 +1997,7 @@ namespace RSPro2Video
                 }
 
                 // Calculate the duration.
-                double duration = startTimeOfNextBookmark - (((double)ForwardBookmarks[index].SampleEnd / (double)SampleRate) + (double)settings.AudioDelay / 1000d);
+                double duration = startTimeOfNextBookmark - (((double)ForwardBookmarks[index].SampleEnd / (double)SampleRate) + (double)ProjectSettings.VideoDelay / 1000d);
 
                 // Create the inner commands for ffmpeg.
                 command = String.Format("-ss {0:0.######} -i \"{1}\" -t {2:0.######}",

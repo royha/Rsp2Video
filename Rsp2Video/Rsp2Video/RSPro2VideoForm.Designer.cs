@@ -54,14 +54,14 @@
             this.checkBoxReversal1 = new System.Windows.Forms.CheckBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBoxInputFiles = new System.Windows.Forms.GroupBox();
-            this.labelBookmarkFileError = new System.Windows.Forms.Label();
+            this.labelMainFileError = new System.Windows.Forms.Label();
             this.browseButtonBookmarkFile = new System.Windows.Forms.Button();
-            this.textBoxBookmarkFile = new System.Windows.Forms.TextBox();
-            this.labelBookmarkFile = new System.Windows.Forms.Label();
+            this.textBoxMainFile = new System.Windows.Forms.TextBox();
+            this.labelMainFile = new System.Windows.Forms.Label();
             this.labelVideoOffsetError = new System.Windows.Forms.Label();
             this.labelOutputVideoFileError = new System.Windows.Forms.Label();
             this.textBoxVideoOffset = new System.Windows.Forms.TextBox();
-            this.labelAudioDelay = new System.Windows.Forms.Label();
+            this.labelVideoDelay = new System.Windows.Forms.Label();
             this.labelOutputVideoFile = new System.Windows.Forms.Label();
             this.textBoxOutputFile = new System.Windows.Forms.TextBox();
             this.buttonBrowseOutputVideoFile = new System.Windows.Forms.Button();
@@ -365,10 +365,10 @@
             // 
             // groupBoxInputFiles
             // 
-            this.groupBoxInputFiles.Controls.Add(this.labelBookmarkFileError);
+            this.groupBoxInputFiles.Controls.Add(this.labelMainFileError);
             this.groupBoxInputFiles.Controls.Add(this.browseButtonBookmarkFile);
-            this.groupBoxInputFiles.Controls.Add(this.textBoxBookmarkFile);
-            this.groupBoxInputFiles.Controls.Add(this.labelBookmarkFile);
+            this.groupBoxInputFiles.Controls.Add(this.textBoxMainFile);
+            this.groupBoxInputFiles.Controls.Add(this.labelMainFile);
             this.groupBoxInputFiles.Location = new System.Drawing.Point(7, 181);
             this.groupBoxInputFiles.Name = "groupBoxInputFiles";
             this.groupBoxInputFiles.Size = new System.Drawing.Size(710, 79);
@@ -376,16 +376,16 @@
             this.groupBoxInputFiles.TabStop = false;
             this.groupBoxInputFiles.Text = "Input files: Drag and drop your Bookmark file or Rsp2Video Project file here";
             // 
-            // labelBookmarkFileError
+            // labelMainFileError
             // 
-            this.labelBookmarkFileError.AutoSize = true;
-            this.labelBookmarkFileError.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.labelBookmarkFileError.Location = new System.Drawing.Point(177, 53);
-            this.labelBookmarkFileError.Name = "labelBookmarkFileError";
-            this.labelBookmarkFileError.Size = new System.Drawing.Size(189, 13);
-            this.labelBookmarkFileError.TabIndex = 114;
-            this.labelBookmarkFileError.Text = "* This Source video file was not found.";
-            this.labelBookmarkFileError.Visible = false;
+            this.labelMainFileError.AutoSize = true;
+            this.labelMainFileError.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.labelMainFileError.Location = new System.Drawing.Point(177, 53);
+            this.labelMainFileError.Name = "labelMainFileError";
+            this.labelMainFileError.Size = new System.Drawing.Size(189, 13);
+            this.labelMainFileError.TabIndex = 114;
+            this.labelMainFileError.Text = "* This Source video file was not found.";
+            this.labelMainFileError.Visible = false;
             // 
             // browseButtonBookmarkFile
             // 
@@ -396,21 +396,21 @@
             this.browseButtonBookmarkFile.Text = "Browse...";
             this.browseButtonBookmarkFile.UseVisualStyleBackColor = true;
             // 
-            // textBoxBookmarkFile
+            // textBoxMainFile
             // 
-            this.textBoxBookmarkFile.Location = new System.Drawing.Point(173, 30);
-            this.textBoxBookmarkFile.Name = "textBoxBookmarkFile";
-            this.textBoxBookmarkFile.Size = new System.Drawing.Size(469, 20);
-            this.textBoxBookmarkFile.TabIndex = 112;
+            this.textBoxMainFile.Location = new System.Drawing.Point(173, 30);
+            this.textBoxMainFile.Name = "textBoxMainFile";
+            this.textBoxMainFile.Size = new System.Drawing.Size(469, 20);
+            this.textBoxMainFile.TabIndex = 112;
             // 
-            // labelBookmarkFile
+            // labelMainFile
             // 
-            this.labelBookmarkFile.AutoSize = true;
-            this.labelBookmarkFile.Location = new System.Drawing.Point(13, 33);
-            this.labelBookmarkFile.Name = "labelBookmarkFile";
-            this.labelBookmarkFile.Size = new System.Drawing.Size(71, 13);
-            this.labelBookmarkFile.TabIndex = 111;
-            this.labelBookmarkFile.Text = "Bookmark file";
+            this.labelMainFile.AutoSize = true;
+            this.labelMainFile.Location = new System.Drawing.Point(13, 33);
+            this.labelMainFile.Name = "labelMainFile";
+            this.labelMainFile.Size = new System.Drawing.Size(119, 13);
+            this.labelMainFile.TabIndex = 111;
+            this.labelMainFile.Text = "Bookmark or Project file";
             // 
             // labelVideoOffsetError
             // 
@@ -436,21 +436,19 @@
             // 
             // textBoxVideoOffset
             // 
-            this.textBoxVideoOffset.Location = new System.Drawing.Point(74, 295);
+            this.textBoxVideoOffset.Location = new System.Drawing.Point(114, 295);
             this.textBoxVideoOffset.Name = "textBoxVideoOffset";
-            this.textBoxVideoOffset.Size = new System.Drawing.Size(78, 20);
+            this.textBoxVideoOffset.Size = new System.Drawing.Size(43, 20);
             this.textBoxVideoOffset.TabIndex = 7;
-            this.textBoxVideoOffset.Visible = false;
             // 
-            // labelAudioDelay
+            // labelVideoDelay
             // 
-            this.labelAudioDelay.AutoSize = true;
-            this.labelAudioDelay.Location = new System.Drawing.Point(6, 298);
-            this.labelAudioDelay.Name = "labelAudioDelay";
-            this.labelAudioDelay.Size = new System.Drawing.Size(62, 13);
-            this.labelAudioDelay.TabIndex = 24;
-            this.labelAudioDelay.Text = "Audio delay";
-            this.labelAudioDelay.Visible = false;
+            this.labelVideoDelay.AutoSize = true;
+            this.labelVideoDelay.Location = new System.Drawing.Point(6, 298);
+            this.labelVideoDelay.Name = "labelVideoDelay";
+            this.labelVideoDelay.Size = new System.Drawing.Size(102, 13);
+            this.labelVideoDelay.TabIndex = 24;
+            this.labelVideoDelay.Text = "Video delay (frames)";
             // 
             // labelOutputVideoFile
             // 
@@ -532,7 +530,7 @@
             this.groupBox1.Controls.Add(this.groupBoxVideoContents);
             this.groupBox1.Controls.Add(this.labelOutputVideoFile);
             this.groupBox1.Controls.Add(this.buttonDeselectAll);
-            this.groupBox1.Controls.Add(this.labelAudioDelay);
+            this.groupBox1.Controls.Add(this.labelVideoDelay);
             this.groupBox1.Controls.Add(this.buttonSelectAll);
             this.groupBox1.Controls.Add(this.groupBoxSelectBookmarks);
             this.groupBox1.Controls.Add(this.groupBoxReversalRates);
@@ -932,7 +930,7 @@
         private System.Windows.Forms.TextBox textBoxSpeed2;
         private System.Windows.Forms.TextBox textBoxSpeed1;
         private System.Windows.Forms.TextBox textBoxVideoOffset;
-        private System.Windows.Forms.Label labelAudioDelay;
+        private System.Windows.Forms.Label labelVideoDelay;
         private System.Windows.Forms.Label labelOutputVideoFile;
         private System.Windows.Forms.TextBox textBoxOutputFile;
         private System.Windows.Forms.Button buttonBrowseOutputVideoFile;
@@ -968,10 +966,10 @@
         private System.Windows.Forms.Label labelVideoQuality;
         private System.Windows.Forms.Label labelVideoRenderingTime;
         private System.Windows.Forms.GroupBox groupBoxInputFiles;
-        private System.Windows.Forms.Label labelBookmarkFileError;
+        private System.Windows.Forms.Label labelMainFileError;
         private System.Windows.Forms.Button browseButtonBookmarkFile;
-        private System.Windows.Forms.TextBox textBoxBookmarkFile;
-        private System.Windows.Forms.Label labelBookmarkFile;
+        private System.Windows.Forms.TextBox textBoxMainFile;
+        private System.Windows.Forms.Label labelMainFile;
     }
 }
 
