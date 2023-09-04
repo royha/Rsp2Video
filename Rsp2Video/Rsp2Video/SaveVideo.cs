@@ -400,7 +400,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.5d);
 
             // Add the video offset.
             AddVideoOffset();
@@ -556,7 +556,7 @@ namespace RSPro2Video
             AddClosingCard();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.5d);
         }
 
         /// <summary>
@@ -567,7 +567,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.5d);
 
             // Add the video offset.
             AddVideoOffset();
@@ -717,7 +717,7 @@ namespace RSPro2Video
             AddClosingCard();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.5d);
         }
 
         /// <summary>
@@ -763,7 +763,7 @@ namespace RSPro2Video
                         Progress.Report(String.Format("Working: Creating {0}", outputVideoFilename));
 
                         // Add 1/2 second of black.
-                        AddBlack(0.5f);
+                        AddBlack(0.5d);
 
                         // Add the video offset.
                         AddVideoOffset();
@@ -866,7 +866,7 @@ namespace RSPro2Video
                         }
 
                         // Add 1/2 second of black.
-                        AddBlack(0.5f);
+                        AddBlack(0.5d);
                     }
                 }
             }
@@ -880,7 +880,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.5d);
 
             // Add the video offset.
             AddVideoOffset();
@@ -982,7 +982,7 @@ namespace RSPro2Video
             }
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.5d);
         }
 
         /// <summary>
@@ -1085,7 +1085,7 @@ namespace RSPro2Video
             }
 
             // Add 1/2 second of black.
-            AddBlack(0.5f);
+            AddBlack(0.5d);
         }
 
         /// <summary>
@@ -1132,7 +1132,7 @@ namespace RSPro2Video
                         Progress.Report(String.Format("Working: Creating {0}", outputVideoFilename));
 
                         // Add 1/2 second of black.
-                        AddBlack(0.5f);
+                        AddBlack(0.5d);
 
                         // Add the video offset.
                         AddVideoOffset();
@@ -1193,7 +1193,7 @@ namespace RSPro2Video
                         }
 
                         // Add 1/2 second of black.
-                        AddBlack(0.5f);
+                        AddBlack(0.5d);
                     }
                 }
             }
@@ -1227,7 +1227,7 @@ namespace RSPro2Video
         /// </remarks>
         /// <param name="duration">The length of time for the video of black.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool AddBlack(float duration)
+        private bool AddBlack(double duration)
         {
             // Create the filename for this video clip.
             String filename = String.Format("Black.{0:0.######}", duration);
@@ -1268,7 +1268,7 @@ namespace RSPro2Video
                 String filename = "OpeningCard";
 
                 // Calculate the length of time to display the card.
-                float displayLength = (float)OpeningCard.Length / (float)ReadingCharactersPerSecond;
+                double displayLength = (double)OpeningCard.Length / (double)ReadingCharactersPerSecond;
 
                 // Create the inner commands for ffmpeg. 
                 String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
@@ -1299,7 +1299,7 @@ namespace RSPro2Video
                 String filename = "ClosingCard";
 
                 // Calculate the length of time to display the card.
-                float displayLength = (float)ClosingCard.Length / (float)ReadingCharactersPerSecond;
+                double displayLength = (double)ClosingCard.Length / (double)ReadingCharactersPerSecond;
 
                 // Create the inner commands for ffmpeg. 
                 String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
@@ -1322,11 +1322,11 @@ namespace RSPro2Video
         private bool AddStartingVideoClip()
         {
             // Calculate the start time and duration.
-            float startTime = 0.0f;
-            float duration = ((float)ForwardBookmarks[0].SampleStart / (float)SampleRate);
+            double startTime = 0.0d;
+            double duration = ((double)ForwardBookmarks[0].SampleStart / (double)SampleRate);
 
             // Adjust for the audio delay.
-            startTime += (float)settings.AudioDelay / 1000f;
+            startTime += (double)settings.AudioDelay / 1000d;
             if (startTime < 0)
             {
                 // If the audio delay is negative, reduce the duration by the audio delay.
@@ -1358,7 +1358,7 @@ namespace RSPro2Video
             String filename = bookmark.Name + ".Explanation";
 
             // Calculate the length of time to display the card.
-            float displayLength = (float)bookmark.Explanation.Length / (float)ReadingCharactersPerSecond;
+            double displayLength = (double)bookmark.Explanation.Length / (double)ReadingCharactersPerSecond;
 
             // Create the inner commands for ffmpeg. 
             String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
@@ -1382,7 +1382,7 @@ namespace RSPro2Video
             String filename = "Black-" + ImageName;
 
             // Calculate the length of time to display the card.
-            float fadeLength = 1.0f;
+            double fadeLength = 1.0d;
 
             // Create the inner commands for ffmpeg.
             // -r {0}                       # Frame rate.
@@ -1421,7 +1421,7 @@ namespace RSPro2Video
             String filename = ImageName + "-Black";
 
             // Calculate the length of time to display the card.
-            float fadeLength = 1.0f;
+            double fadeLength = 1.0d;
 
             // Create the inner commands for ffmpeg.
             // -r {0}                       # Frame rate.
@@ -1461,11 +1461,11 @@ namespace RSPro2Video
             //
 
             // Calculate the start time and duration.
-            float startTime = (float)forwardBookmark.SampleStart / (float)SampleRate;
-            float duration = ((float)forwardBookmark.SampleEnd / (float)SampleRate) - startTime;
+            double startTime = (double)forwardBookmark.SampleStart / (double)SampleRate;
+            double duration = ((double)forwardBookmark.SampleEnd / (double)SampleRate) - startTime;
 
             // Adjust for the audio delay.
-            startTime += (float)settings.AudioDelay / 1000f;
+            startTime += (double)settings.AudioDelay / 1000d;
             startTime = startTime < 0 ? 0 : startTime;
 
             // Create the filename for this clip.
@@ -1537,7 +1537,7 @@ namespace RSPro2Video
             String filename1 = TransitionFromFrame + "-" + TransitionToFrame;
 
             // Calculate the length of time to display the card.
-            float transitionLength = 1.0f;
+            double transitionLength = 1.0d;
 
             // Create the inner commands for ffmpeg.
             // -r {0}                                   # Frame rate.
@@ -1623,7 +1623,7 @@ namespace RSPro2Video
             String filename1 = TransitionFromFrame + "-" + TransitionToFrame;
 
             // Calculate the length of time to display the card.
-            float transitionLength = 1.0f;
+            double transitionLength = 1.0d;
 
             // Create the inner commands for ffmpeg.
             // -r {0}                                   # Frame rate.
@@ -1734,7 +1734,7 @@ namespace RSPro2Video
             String filename1 = TransitionFromFrame;
 
             // Calculate the length of time to display the card.
-            float displayLength = 1.0f;
+            double displayLength = 1.0d;
 
             // Create the inner commands for ffmpeg. 
             String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######} ",
@@ -1806,11 +1806,11 @@ namespace RSPro2Video
             //
 
             // Calculate the start time and duration.
-            float startTime = (float)reverseBookmark.SampleStart / (float)SampleRate;
-            float duration = ((float)reverseBookmark.SampleEnd / (float)SampleRate) - startTime;
+            double startTime = (double)reverseBookmark.SampleStart / (double)SampleRate;
+            double duration = ((double)reverseBookmark.SampleEnd / (double)SampleRate) - startTime;
 
             // Adjust for the audio delay.
-            startTime += (float)settings.AudioDelay / 1000f;
+            startTime += (double)settings.AudioDelay / 1000d;
             startTime = startTime < 0 ? 0 : startTime;
 
             // Create the filename for this clip.
@@ -1869,7 +1869,7 @@ namespace RSPro2Video
             String filename = TransitionFromFrame + "-" + transitionToFrame;
 
             // Calculate the length of time to display the card.
-            float transitionLength = 1.0f;
+            double transitionLength = 1.0d;
 
             // Create the inner commands for ffmpeg.
             // -r {0}                                   # Frame rate.
@@ -1927,7 +1927,7 @@ namespace RSPro2Video
                 String filename = TransitionFromFrame + "-" + TransitionToFrame;
 
                 // Calculate the length of time to display the card.
-                float transitionLength = 1.0f;
+                double transitionLength = 1.0d;
 
                 // Create the inner commands for ffmpeg.
                 // -r {0}                                   # Frame rate.
@@ -1973,21 +1973,21 @@ namespace RSPro2Video
             String filename;
 
             // Calculate the end time.
-            float endTime = (float)ForwardBookmarks[index].SampleEnd / (float)SampleRate;
-            float startTimeOfNextBookmark = 864000.0f;
+            double endTime = (double)ForwardBookmarks[index].SampleEnd / (double)SampleRate;
+            double startTimeOfNextBookmark = 864000.0d;
 
             // Adjust for the audio delay.
-            endTime += (float)settings.AudioDelay / 1000f;
+            endTime += (double)settings.AudioDelay / 1000d;
             endTime = endTime < 0 ? 0 : endTime;
 
             // If this is not the last forward bookmark.
             if (index < ForwardBookmarks.Count - 1)
             {
                 // Calculate the next start time.
-                startTimeOfNextBookmark = ForwardBookmarks[index + 1].SampleStart / (float)SampleRate;
+                startTimeOfNextBookmark = ForwardBookmarks[index + 1].SampleStart / (double)SampleRate;
 
                 // Adjust for the audio delay.
-                startTimeOfNextBookmark += (float)settings.AudioDelay / 1000f;
+                startTimeOfNextBookmark += (double)settings.AudioDelay / 1000d;
                 startTimeOfNextBookmark = startTimeOfNextBookmark < 0 ? 0 : startTimeOfNextBookmark;
 
                 // If the end time of this bookmark is beyond the start time of the next bookmark, this clip is not necessary.
@@ -1997,7 +1997,7 @@ namespace RSPro2Video
                 }
 
                 // Calculate the duration.
-                float duration = startTimeOfNextBookmark - (((float)ForwardBookmarks[index].SampleEnd / (float)SampleRate) + (float)settings.AudioDelay / 1000f);
+                double duration = startTimeOfNextBookmark - (((double)ForwardBookmarks[index].SampleEnd / (double)SampleRate) + (double)settings.AudioDelay / 1000d);
 
                 // Create the inner commands for ffmpeg.
                 command = String.Format("-ss {0:0.######} -i \"{1}\" -t {2:0.######}",
