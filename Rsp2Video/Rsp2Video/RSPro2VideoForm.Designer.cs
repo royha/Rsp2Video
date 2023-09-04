@@ -863,6 +863,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(744, 499);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel4);
             this.Controls.Add(this.panel3);
@@ -870,7 +871,6 @@
             this.Controls.Add(this.buttonNext);
             this.Controls.Add(this.buttonBack);
             this.Controls.Add(this.labelStatus);
-            this.Controls.Add(this.panel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "RSPro2VideoForm";
             this.Text = "Revese Speech Pro to Video";

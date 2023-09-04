@@ -51,8 +51,8 @@ namespace RSPro2Video
         IProgress<string> Progress;                                     // Allows the long-running process to update the UI.
 
         String SoxApp = @"C:\Program Files (x86)\sox-14-4-2\sox.exe";
-        String FfmpegApp = @"C:\Program Files\Shotcut\ffmpeg.exe";
-        String FfmprobeApp = @"C:\Program Files\Shotcut\ffprobe.exe";
+        String FfmpegApp = @"C:\Program Files\ffmpeg\bin\ffmpeg.exe";
+        String FfmprobeApp = @"C:\Program Files\ffmpeg\bin\ffprobe.exe";
         String QmeltApp = @"C:\Program Files\Shotcut\qmelt.exe";
 
         String TEMP_DIR = "_tmp";                                       // The temp working directory to store intermediate files.

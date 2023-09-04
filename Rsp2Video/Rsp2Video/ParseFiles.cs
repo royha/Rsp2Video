@@ -198,6 +198,8 @@ namespace RSPro2Video
                     else
                     {
                         // The video file was not found.
+                        labelBookmarkFileError.Text = String.Format("The video file was not found: {0}", Path.GetFileName(rsvideoVideoFilepath));
+                        labelBookmarkFileError.Visible = true;
                         return false;
                     }
                     break;
