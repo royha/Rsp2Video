@@ -66,8 +66,8 @@ namespace RSPro2Video
             if (reversalRate.UseThisRate == false) { return true; }
 
             // Calculate start and length in seconds.
-            float startSeconds = (float)reverseBookmark.SampleStart / (float)SampleRate;
-            float lengthSeconds = ((float)reverseBookmark.SampleEnd / (float)SampleRate) - (float)startSeconds;
+            double startSeconds = (double)reverseBookmark.SampleStart / (double)SampleRate;
+            double lengthSeconds = ((double)reverseBookmark.SampleEnd / (double)SampleRate) - (double)startSeconds;
 
             // If speed and tone are the same, only one step is needed.
             if (reversalRate.ReversalSpeed == reversalRate.ReversalTone)
@@ -85,7 +85,7 @@ namespace RSPro2Video
             return true;
         }
 
-        private bool CallFfmpegSpeed(string reversalName, int reversalNumber, float startSeconds, float lengthSeconds, int reversalSpeed)
+        private bool CallFfmpegSpeed(string reversalName, int reversalNumber, double startSeconds, double lengthSeconds, int reversalSpeed)
         {
             Process process = new Process();
 
@@ -96,7 +96,7 @@ namespace RSPro2Video
             {
                 FileName = FfmpegApp,
                 Arguments = string.Format("-y -hide_banner -ss {0:0.######} -t {1:0.######} -i \"{2}\" -vn -filter:a \"areverse, asetrate={3}*{4:0.######}, aresample={3}\" \"{5}\"",
-                    startSeconds, lengthSeconds, WorkingInputVideoFile, SampleRate, reversalSpeed / (float)100.0, audioFilename),
+                    startSeconds, lengthSeconds, WorkingInputVideoFile, SampleRate, reversalSpeed / (double)100.0, audioFilename),
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
@@ -128,7 +128,7 @@ namespace RSPro2Video
             return true;
         }
 
-        private bool CallFfmpegStretch(string reversalName, int reversalNumber, float startSeconds, float lengthSeconds, int reversalSpeed, int reversalTone)
+        private bool CallFfmpegStretch(string reversalName, int reversalNumber, double startSeconds, double lengthSeconds, int reversalSpeed, int reversalTone)
         {
             Process process = new Process();
 
@@ -139,7 +139,7 @@ namespace RSPro2Video
             {
                 FileName = FfmpegApp,
                 Arguments = string.Format("-y -hide_banner -ss {0:0.######} -t {1:0.######} -i \"{2}\" -vn -filter:a \"areverse, rubberband=pitch={3:0.######}, rubberband=tempo={4:0.######}, rubberband=pitchq=quality\" \"{5}\"",
-                    startSeconds, lengthSeconds, WorkingInputVideoFile, reversalTone / (float)100.0, reversalSpeed / (float)100.0, audioFilename),
+                    startSeconds, lengthSeconds, WorkingInputVideoFile, reversalTone / (double)100.0, reversalSpeed / (double)100.0, audioFilename),
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
@@ -199,11 +199,11 @@ namespace RSPro2Video
         private bool CreateReverseVideo(Bookmark reversal)
         {
             // Calculate start and length in seconds in the source video.
-            float startSeconds = (float)reversal.SampleStart / (float)SampleRate;
-            float lengthSeconds = ((float)reversal.SampleEnd / (float)SampleRate) - (float)startSeconds;
+            double startSeconds = (double)reversal.SampleStart / (double)SampleRate;
+            double lengthSeconds = ((double)reversal.SampleEnd / (double)SampleRate) - (double)startSeconds;
 
             // Adjust for the audio delay.
-            startSeconds += (float)settings.AudioDelay / 1000f;
+            startSeconds += (double)settings.AudioDelay / 1000d;
             startSeconds = startSeconds < 0 ? 0 : startSeconds;
 
             // Extract the individual frames in the source video.
@@ -230,7 +230,7 @@ namespace RSPro2Video
         /// <param name="startSeconds">The start location of the clip in seconds in SourceVideoFile.</param>
         /// <param name="lengthSeconds">The length of the clip in seconds at 100%.</param>
         /// <returns></returns>
-        private bool ExtractReverseVideoFrames(string name, float startSeconds, float lengthSeconds)
+        private bool ExtractReverseVideoFrames(string name, double startSeconds, double lengthSeconds)
         {
             Process process = new Process();
 
@@ -336,11 +336,11 @@ namespace RSPro2Video
             }
 
             // Calculate the frames per second for this reversal.
-            float reversalFps = FramesPerSecond * ((float)reversalRate.ReversalSpeed / (float)100);
+            double reversalFps = FramesPerSecond * ((double)reversalRate.ReversalSpeed / (double)100);
 
             // Create the ffmpeg argument string.
             String arguments = String.Format("-y -hide_banner -framerate {0:0.######} -i \"{1}\\r{2}.%05d.png\" -i \"{3}{4}\" {6} -filter:v \"fps=fps={7:0.######}:eof_action=pass\" \"{3}{5}\"",
-                    FramesPerSecond * ((float)reversalRate.ReversalSpeed / 100f),
+                    FramesPerSecond * ((double)reversalRate.ReversalSpeed / 100d),
                     FRAMES_DIR,
                     reversal.Name,
                     videoFilename,
@@ -386,9 +386,9 @@ namespace RSPro2Video
             // output video, can leave a fractional number of frames. This fractional amount will be counted as a full frame in the output video. 
             // Ie., 30 frames at 29fps for the reversal = 1.03448 seconds. 1.03448 * 30fps for the output video = 31.0344 frames, which then 
             // will generate 32 frames in the output video. 32 frames / 30fps = 1.066667 seconds.
-            // float seconds = frameCount / reversalFps;
-            // float outputFrameCount = seconds * FramesPerSecond;
-            // if (outputFrameCount > Math.Floor(outputFrameCount)) { outputFrameCount = (float)Math.Floor(outputFrameCount + (float)1); }
+            // double seconds = frameCount / reversalFps;
+            // double outputFrameCount = seconds * FramesPerSecond;
+            // if (outputFrameCount > Math.Floor(outputFrameCount)) { outputFrameCount = (double)Math.Floor(outputFrameCount + (double)1); }
 
             // Add the video clip to the list of clips.
             CreatedClipList.Add(videoFilename + OutputVideoInterimExtension);
@@ -438,11 +438,11 @@ namespace RSPro2Video
         private bool CreateStillImage(Bookmark bookmark, int sample, string suffix)
         {
             Process process = new Process();
-            float timeInSeconds = (float)sample / (float)SampleRate;
-            float lengthInSeconds = (1f / FramesPerSecond) - (1f / 8192f);      // I subtract a small amount to make sure I get only one frame.
+            double timeInSeconds = (double)sample / (double)SampleRate;
+            double lengthInSeconds = (1d / FramesPerSecond) - (1d / 8192d);      // I subtract a small amount to make sure I get only one frame.
 
             // Adjust for the audio delay.
-            timeInSeconds += (float)settings.AudioDelay / 1000f;
+            timeInSeconds += (double)settings.AudioDelay / 1000d;
             timeInSeconds = timeInSeconds < 0 ? 0 : timeInSeconds;
 
             // Configure the process using the StartInfo properties.
@@ -495,7 +495,7 @@ namespace RSPro2Video
         private bool CreateOpeningImage()
         {
             Process process = new Process();
-            float lengthInSeconds = (1f / FramesPerSecond) - (1f / 8192f);      // I subtract a small amount to make sure I get only one frame.
+            double lengthInSeconds = (1d / FramesPerSecond) - (1d / 8192d);      // I subtract a small amount to make sure I get only one frame.
 
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo
@@ -537,7 +537,7 @@ namespace RSPro2Video
         private bool CreateClosingImage()
         {
             Process process = new Process();
-            float lengthInSeconds = (1f / FramesPerSecond) - (1f / 8192f);      // I subtract a small amount to make sure I get only one frame.
+            double lengthInSeconds = (1d / FramesPerSecond) - (1d / 8192d);      // I subtract a small amount to make sure I get only one frame.
             int ExitCode = 0;
             bool frameCreated = false;
 
@@ -697,7 +697,7 @@ namespace RSPro2Video
         /// <returns>The word wrapped string.</returns>
         String WordWrap(String sourceString)
         {
-            return WordWrap(sourceString, (int)(HorizontalResolution * 0.8f), FontForward);
+            return WordWrap(sourceString, (int)(HorizontalResolution * 0.8d), FontForward);
         }
 
         /// <summary>
@@ -708,7 +708,7 @@ namespace RSPro2Video
         /// <returns>The word wrapped string.</returns>
         String WordWrap(String sourceString, Font textOverlayFont)
         {
-            return WordWrap(sourceString, (int)(HorizontalResolution * 0.8f), textOverlayFont);
+            return WordWrap(sourceString, (int)(HorizontalResolution * 0.8d), textOverlayFont);
         }
 
         /// <summary>
@@ -897,7 +897,7 @@ namespace RSPro2Video
             };
 
             // Measure the text sizes.
-            SizeF textForwardSize = g.MeasureString(wwForwardText, FontForward, (int)(overlayBmp.Width * 0.8f), formatForward);
+            SizeF textForwardSize = g.MeasureString(wwForwardText, FontForward, (int)(overlayBmp.Width * 0.8d), formatForward);
             Size textReverseSize = new Size(0, 0);
             if (String.IsNullOrWhiteSpace(reverseText) == false) { textReverseSize = TextRenderer.MeasureText(wwReverseText, FontReverse); }
 
@@ -913,14 +913,14 @@ namespace RSPro2Video
             }
 
             // Create a rectangle for the background.
-            Rectangle rectBackground = new Rectangle(0, (int)(overlayBmp.Height * 0.9f - textHeight), overlayBmp.Width, textHeight + (int)((float)overlayBmp.Height / 80.0f));
+            Rectangle rectBackground = new Rectangle(0, (int)(overlayBmp.Height * 0.9d - textHeight), overlayBmp.Width, textHeight + (int)((double)overlayBmp.Height / 80.0d));
 
             // Create a rectangle for the forward and reverse text.
             RectangleF rectForward = new RectangleF(0.0f, (float)overlayBmp.Height * 0.9f - textForwardSize.Height, (float)overlayBmp.Width + 32f, textForwardSize.Height);
             Rectangle rectReverse = new Rectangle(0, 0, 0, 0);
             if (String.IsNullOrWhiteSpace(reverseText) == false)
             {
-                rectReverse = new Rectangle(0, (int)(overlayBmp.Height * 0.9f - textHeight), overlayBmp.Width + 32, textReverseSize.Height);
+                rectReverse = new Rectangle(0, (int)(overlayBmp.Height * 0.9d - textHeight), overlayBmp.Width + 32, textReverseSize.Height);
             }
 
             // Draw the text background (a transparent black rectangle).
@@ -1268,7 +1268,7 @@ namespace RSPro2Video
             Size textSize = TextRenderer.MeasureText(wordWrapped, FontForward);
 
             // Create a rectangle for the text display.
-            Rectangle rect = new Rectangle((int)((float)cardBmp.Width * 0.1f), (int)((float)cardBmp.Height * 0.1f), (int)(cardBmp.Width * 0.8f), (int)(cardBmp.Height * 0.8f));
+            Rectangle rect = new Rectangle((int)((double)cardBmp.Width * 0.1d), (int)((double)cardBmp.Height * 0.1d), (int)(cardBmp.Width * 0.8d), (int)(cardBmp.Height * 0.8d));
 
             // ------------------------------------------
             // Ensure the best possible quality rendering

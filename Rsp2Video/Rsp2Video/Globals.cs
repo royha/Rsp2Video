@@ -22,12 +22,12 @@ namespace RSPro2Video
     {
         Settings settings;                                              // The settings object stores the settings chosen by the user (filenames, options, etc).
         int SampleRate;                                                 // The sample rate of the sound file.
-        float FramesPerSecond;                                          // The frames per second of the source and output video.
+        double FramesPerSecond;                                         // The frames per second of the source and output video.
         int HorizontalResolution;                                       // The horizontal resolution of the video.
         int VerticalResolution;                                         // The vertical resolution of the video.
-        float SourceVideoDuration;                                      // The duration of the source video in seconds.
-        float VideoOffset;                                              // The video offset to align the video with the audio.
-        float ClosingFrameTime;
+        double SourceVideoDuration;                                     // The duration of the source video in seconds.
+        double VideoOffset;                                             // The video offset to align the video with the audio.
+        double ClosingFrameTime;
         String Transcript;                                              // The text of the transcript file.
         List<Bookmark> ForwardBookmarks = new List<Bookmark>();         // The list of bookmarks for forward speech.
         List<Bookmark> ReverseBookmarks = new List<Bookmark>();         // The list of bookmarks for reverse speech
@@ -41,7 +41,7 @@ namespace RSPro2Video
         ReversalDefinition RSVideoReversalDefinition;                   // The deserialized RSVideo file.
         List<Bookmark> RsvForwardBookmarks = new List<Bookmark>();      // The list of forward bookmarks from the .RSVideo file.
         List<Bookmark> RsvReverseBookmarks = new List<Bookmark>();      // The list of reverse bookmarks from the .RSVideo file.
-        float MinBookmarkOverlap = 0.6f;                                // The minimum overlap for a reverse bookmark to be autoconnected to a forward bookmark (60% overlap).
+        double MinBookmarkOverlap = 0.6d;                               // The minimum overlap for a reverse bookmark to be autoconnected to a forward bookmark (60% overlap).
         String StoredCurrentDirectory;                                  // The current directory before this program starts changing current directories.
         String WorkingDirectory;                                        // The directory of the _tmp directory under the output video file (settings.OutputFile).
         String FramesDirectory;                                         // The directory of the _frames directory under the WorkingDirectory.
@@ -78,7 +78,7 @@ namespace RSPro2Video
         int LeftMarginSpaces;
         String TextBackgroundColor = "#9f000000";
         String TextForegroundColor = "#ffffffff";
-        float ReadingCharactersPerSecond = 19;                          // How long to display explanation cards in characters per second.
+        double ReadingCharactersPerSecond = 19;                         // How long to display explanation cards in characters per second.
 
         List<String> CreatedClipList = new List<String>();              // The list of video clips that have already been created.
         List<VideoOutput> VideoOutputs = new List<VideoOutput>();       // The list of videos to output, and the clips needed to assemble them.

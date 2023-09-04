@@ -754,13 +754,13 @@ namespace RSPro2Video
             // Get the video offset.
             if (textBoxVideoOffset.Text == String.Empty)
             {
-                VideoOffset = 0.0f;
+                VideoOffset = 0.0d;
             }
             else
             {
                 if (Double.TryParse(textBoxVideoOffset.Text, out double offset))
                 {
-                    VideoOffset = (float)offset;
+                    VideoOffset = (double)offset;
                 }
                 else
                 {
@@ -894,7 +894,7 @@ namespace RSPro2Video
                 }
 
                 // Advance to the next 32 bit boundary.
-                while ((float)x / 4f != x / 4)
+                while ((double)x / 4d != x / 4)
                 {
                     ++x;
                 }
@@ -957,7 +957,7 @@ namespace RSPro2Video
                 }
 
                 // Advance to the next 32 bit boundary.
-                while ((float)x / 4f != x / 4)
+                while ((double)x / 4d != x / 4)
                 {
                     ++x;
                 }
@@ -1345,7 +1345,7 @@ namespace RSPro2Video
                 return false;
             }
 
-            if (float.TryParse(match.Groups[1].Value, out float rate))
+            if (double.TryParse(match.Groups[1].Value, out double rate))
             {
                 FramesPerSecond = rate;
             }
@@ -1405,7 +1405,7 @@ namespace RSPro2Video
                 return false;
             }
 
-            SourceVideoDuration = (float)(hours * 3600 + minutes * 60 + seconds) + (float)hundredths / 100f;
+            SourceVideoDuration = (double)(hours * 3600 + minutes * 60 + seconds) + (double)hundredths / 100d;
 
             // Set the text height to be equal to 24 lines on the screen.
 
