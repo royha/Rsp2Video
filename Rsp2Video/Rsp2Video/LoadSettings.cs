@@ -31,18 +31,7 @@ namespace RSPro2Video
             }
 
             // Set the main file.
-            if (String.IsNullOrEmpty(ProgramSettings.ProjectFile) != true)
-            {
-                textBoxMainFile.Text = ProgramSettings.ProjectFile;
-            }
-            else if (String.IsNullOrEmpty(ProgramSettings.BookmarkFile) != true)
-            {
-                textBoxMainFile.Text = ProgramSettings.BookmarkFile;
-            }
-            else
-            {
-                textBoxMainFile.Text = String.Empty;
-            }
+            textBoxMainFile.Text = ProgramSettings.LastUsedFile;
 
             // Set the values to show the first panel.
             ShowPanel1();
@@ -148,6 +137,21 @@ namespace RSPro2Video
         /// </summary>
         private void SaveProgramSettings()
         {
+            String backupFile = ProgramSettingsFile + ".bak";
+
+            // Delete the old backup file.
+            if (File.Exists(backupFile))
+            {
+                File.Delete(backupFile);
+            }
+
+            // Rename the existing settings file to the backup file.
+            if (File.Exists(ProgramSettingsFile))
+            {
+                File.Move(ProgramSettingsFile, backupFile);
+            }
+
+            // Save the Settings file.
             SerializeObject<ProgramSettings>(ProgramSettings, ProgramSettingsFile);
         }
 
@@ -200,7 +204,22 @@ namespace RSPro2Video
             OutputVideoFinalExtension = OutputOptionsVideoFinalExtension[(int)ProjectSettings.VideoQuality];
             OutputAudioInterimExtension = OutputOptionsAudioInterimExtension[(int)ProjectSettings.VideoQuality];
 
-            SerializeObject<ProjectSettings>(ProjectSettings, ProgramSettings.ProjectFile);
+            String backupFile = ProjectSettings.ProjectFile + ".bak";
+
+            // Delete the old backup file.
+            if (File.Exists(backupFile))
+            {
+                File.Delete(backupFile);
+            }
+
+            // Rename the existing settings file to the backup file.
+            if (File.Exists(ProjectSettings.ProjectFile))
+            {
+                File.Move(ProjectSettings.ProjectFile, backupFile);
+            }
+
+            // Save the Settings file.
+            SerializeObject<ProjectSettings>(ProjectSettings, ProjectSettings.ProjectFile);
         }
 
 

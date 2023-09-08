@@ -141,6 +141,9 @@ namespace RSPro2Video
                 return false; 
             }
 
+            // Store this as the last used file.
+            ProgramSettings.LastUsedFile = mainFile;
+
             // Get the file extension of the bookmark file.
             String mainFileExtension = Path.GetExtension(mainFile).Trim().ToLower();
 
@@ -155,24 +158,10 @@ namespace RSPro2Video
                         return false;
                     }
 
-                    // Set the bookmark file.
-                    ProgramSettings.BookmarkFile = mainFile;
-
-                    // Set the bookmark file type.
-                    if (mainFileExtension == ".fmbok")
-                    {
-                        ProgramSettings.BookmarkFileType = BookmarkFileType.FmBok;
-                    }
-                    else if (mainFileExtension == ".bok")
-                    {
-                        ProgramSettings.BookmarkFileType = BookmarkFileType.bok;
-                    }
-
-
                     // Find the first video file to match.
                     foreach (String extension in new String[] { ".mp4", ".webm", ".avi", ".mov", ".mkv", ".mpg", ".mpeg", ".wmv" })
                     {
-                        String videoFilepath = Path.ChangeExtension(ProgramSettings.BookmarkFile, extension);
+                        String videoFilepath = Path.ChangeExtension(mainFile, extension);
                         if (File.Exists(videoFilepath) == true)
                         {
                             // Load the project file or create it if it doesn't exist.
@@ -180,11 +169,24 @@ namespace RSPro2Video
                             LoadProjectSettings(projectFilepath);
 
                             // Store the project file.
-                            ProgramSettings.ProjectFile = projectFilepath;
+                            ProjectSettings.ProjectFile = projectFilepath;
 
                             // Store the video file in the project settings.
                             ProjectSettings.SourceVideoFile = videoFilepath;
 
+                            // Store the bookmark file.
+                            ProjectSettings.BookmarkFile = mainFile;
+
+                            // Set the bookmark file type.
+                            if (mainFileExtension == ".fmbok")
+                            {
+                                ProjectSettings.BookmarkFileType = BookmarkFileType.FmBok;
+                            }
+                            else if (mainFileExtension == ".bok")
+                            {
+                                ProjectSettings.BookmarkFileType = BookmarkFileType.bok;
+                            }
+                            
                             return true;
                         }
                     }
@@ -200,10 +202,6 @@ namespace RSPro2Video
                         return false;
                     }
 
-                    // Set the bookmark file and file type.
-                    ProgramSettings.BookmarkFile = mainFile;
-                    ProgramSettings.BookmarkFileType = BookmarkFileType.RSVideo;
-
                     // RSVideo bookmark file. Remove ".rsvideo" from the end of the filepath to get the video file path.
                     String rsVideoFilepath = mainFile.Substring(0, mainFile.Length - 8);
 
@@ -215,10 +213,14 @@ namespace RSPro2Video
                         LoadProjectSettings(projectFilepath);
 
                         // Store the project file.
-                        ProgramSettings.ProjectFile = projectFilepath;
+                        ProjectSettings.ProjectFile = projectFilepath;
 
                         // Store the video file in the project settings.
                         ProjectSettings.SourceVideoFile = rsVideoFilepath;
+                    
+                        // Store the bookmark file and file type.
+                        ProjectSettings.BookmarkFile = mainFile;
+                        ProjectSettings.BookmarkFileType = BookmarkFileType.RSVideo;
                     }
                     else
                     {
@@ -237,8 +239,11 @@ namespace RSPro2Video
                         return false;
                     }
 
+                    // Load the project file or create it if it doesn't exist.
+                    LoadProjectSettings(mainFile);
+
                     // Set the project file and file type.
-                    ProgramSettings.ProjectFile = mainFile;
+                    ProjectSettings.ProjectFile = mainFile;
                     
                     break;
 
@@ -342,11 +347,11 @@ namespace RSPro2Video
         {
             Boolean returnValue = true;
 
-            if (ProgramSettings.BookmarkFileType == BookmarkFileType.bok || ProgramSettings.BookmarkFileType == BookmarkFileType.FmBok)
+            if (ProjectSettings.BookmarkFileType == BookmarkFileType.bok || ProjectSettings.BookmarkFileType == BookmarkFileType.FmBok)
             {
                 returnValue = ValidateAndParseBokBookmarks();
             }
-            else if (ProgramSettings.BookmarkFileType == BookmarkFileType.RSVideo)
+            else if (ProjectSettings.BookmarkFileType == BookmarkFileType.RSVideo)
             {
                 returnValue = ValidateAndParseRSVideoBookmarks();
             }
@@ -409,7 +414,7 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private bool ReadRSVideoBookmarkFile()
         {
-            RSVideoReversalDefinition = DeSerializeObject<ReversalDefinition>(ProgramSettings.BookmarkFile);
+            RSVideoReversalDefinition = DeSerializeObject<ReversalDefinition>(ProjectSettings.BookmarkFile);
 
             return true;
         }
@@ -858,7 +863,7 @@ namespace RSPro2Video
         private bool ReadBokBookmarkFile()
         {
             // Read the bookmark data.
-            bookmarkFileBytes = File.ReadAllBytes(ProgramSettings.BookmarkFile);
+            bookmarkFileBytes = File.ReadAllBytes(ProjectSettings.BookmarkFile);
 
             return true;
         }

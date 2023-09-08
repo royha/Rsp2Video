@@ -7,6 +7,21 @@ namespace RSPro2Video
     public class ProjectSettings
     {
         /// <summary>
+        /// The .RSPro2Video file for the current project.
+        /// </summary>
+        public String ProjectFile { get; set; }
+
+        /// <summary>
+        /// The .FmBok/.bok/.RSVideo bookmark file for the current project.
+        /// </summary>
+        public String BookmarkFile { get; set; }
+
+        /// <summary>
+        /// Identifies the bookmark file type, such as FmBok or RSVideo.
+        /// </summary>
+        public BookmarkFileType BookmarkFileType { get; set; }
+        
+        /// <summary>
         /// Original video file, typically downloaded from YouTube.
         /// </summary>
         public String SourceVideoFile { get; set; }
@@ -78,8 +93,6 @@ namespace RSPro2Video
         /// listener of their context in the overall video.
         /// </summary>
         public Boolean ReplayForwardVideo { get; set; }
-
-        // The strings to process the video for the selected quality setting.
 
         /// <summary>
         /// Constructor creates needed field values.
