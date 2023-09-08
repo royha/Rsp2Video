@@ -31,6 +31,11 @@ namespace RSPro2Video
         public int SampleEnd { get; set; }
 
         /// <summary>
+        /// Stored as true if the bookmark is selected for use in the video.
+        /// </summary>
+        public Boolean Selected { get; set; }
+
+        /// <summary>
         /// The list of bookmarks that reference this bookmark. For example, "F1" references "R1", and "R1" references "F1".
         /// </summary>
         public List<Bookmark> ReferencedBookmarks { get; set; }

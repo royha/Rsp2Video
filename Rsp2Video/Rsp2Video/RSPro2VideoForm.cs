@@ -404,6 +404,7 @@ namespace RSPro2Video
                 Explanation = sourceBookmark.Explanation,
                 SampleStart = sourceBookmark.SampleStart,
                 SampleEnd = sourceBookmark.SampleEnd,
+                Selected = sourceBookmark.Selected,
                 ReferencedBookmarks = sourceBookmark.ReferencedBookmarks
             };
 
@@ -423,7 +424,7 @@ namespace RSPro2Video
 
                 TreeNode treeNode = new TreeNode(bookmark.Name + ": " + bookmark.Text);
                 treeNode.Tag = bookmark;
-                treeNode.Checked = true;
+                treeNode.Checked = bookmark.Selected;
                 treeView1.Nodes.Add(treeNode);
 
                 if (sb.Length > 0) { sb.Append("\r\n"); }
@@ -439,7 +440,7 @@ namespace RSPro2Video
 
                     TreeNode childTreeNode = new TreeNode(referencedbookmark.Name + ": " + referencedbookmark.Text);
                     childTreeNode.Tag = referencedbookmark;
-                    childTreeNode.Checked = true;
+                    childTreeNode.Checked = referencedbookmark.Selected;
                     treeView1.Nodes[i].Nodes.Add(childTreeNode);
 
                     sb.Append(referencedbookmark.Name + ": " + referencedbookmark.Text + "\r\n");
@@ -454,6 +455,7 @@ namespace RSPro2Video
             treeView1.EndUpdate();
             if (treeView1.Nodes.Count > 0) { treeView1.SelectedNode = treeView1.Nodes[0]; }
 
+            // Copy the list of bookmarks onto the clipboard.
             if (sb.Length > 0) { Clipboard.SetText(sb.ToString()); }
         }
 

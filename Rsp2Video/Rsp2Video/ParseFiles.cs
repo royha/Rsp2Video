@@ -437,6 +437,12 @@ namespace RSPro2Video
                 reverseFormatString = "R{0:000}";
             }
 
+            if (RSVideoReversalDefinition.Forward.Count >= 1000)
+            {
+                forwardFormatString = "F{0:0000}";
+                reverseFormatString = "R{0:0000}";
+            }
+
             // Clear out the bookmark lists.
             RsvForwardBookmarks = new List<Bookmark>();
             RsvReverseBookmarks = new List<Bookmark>();
@@ -495,6 +501,7 @@ namespace RSPro2Video
 
                 newBookmark.SampleStart = RSVideoReversalDefinition.Forward[i].ForwardStartSampleNo;
                 newBookmark.SampleEnd = RSVideoReversalDefinition.Forward[i].ForwardEndSampleNo;
+                newBookmark.Selected = true;
 
                 RsvForwardBookmarks.Add(newBookmark);
             }
@@ -553,6 +560,7 @@ namespace RSPro2Video
 
                 newBookmark.SampleStart = RSVideoReversalDefinition.Reversal[i].ReverseStartSampleNo;
                 newBookmark.SampleEnd = RSVideoReversalDefinition.Reversal[i].ReverseEndSampleNo;
+                newBookmark.Selected = true;
 
                 RsvReverseBookmarks.Add(newBookmark);
             }
@@ -1063,6 +1071,8 @@ namespace RSPro2Video
                     ShowBokError(newBookmark, BokBookmarks, "Sample end is less than SampleStart.");
                     return false;
                 }
+
+                newBookmark.Selected = true;
 
                 x += 4;
 
