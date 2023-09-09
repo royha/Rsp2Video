@@ -20,7 +20,10 @@ namespace RSPro2Video
 {
     public partial class RSPro2VideoForm : Form
     {
-        Settings settings;                                              // The settings object stores the settings chosen by the user (filenames, options, etc).
+        ProgramSettings ProgramSettings;                                // The settings object that stores the settings for the program.
+        ProjectSettings ProjectSettings;                                // The settings object that stores the settings for the video project.
+        String ProjectFile;                                             // The .RSPro2Video file for the current project.
+        String BookmarkFile;                                            // The .FmBok/.bok/.RSVideo file for the current project.
         int SampleRate;                                                 // The sample rate of the sound file.
         double FramesPerSecond;                                         // The frames per second of the source and output video.
         int HorizontalResolution;                                       // The horizontal resolution of the video.
@@ -61,7 +64,7 @@ namespace RSPro2Video
         String FRAMES_DIR = "_frames";                                  // The temp directory to store .png frames.
 
         // The fully-qualified path to the settings file.
-        String SettingsFile = Path.Combine(Application.StartupPath, "RSPro2Video.settings");
+        String ProgramSettingsFile = Path.Combine(Application.StartupPath, "RSPro2Video.settings");
         String AnimationFile = Path.Combine(Application.StartupPath, "animation.gif");
         String LogFile;
 
@@ -85,8 +88,14 @@ namespace RSPro2Video
         List<String> CreatedClipList = new List<String>();              // The list of video clips that have already been created.
         List<VideoOutput> VideoOutputs = new List<VideoOutput>();       // The list of videos to output, and the clips needed to assemble them.
         int VideoOutputIndex = 0;                                       // The index to VideoOutputs specifying which video clip list is being accessed.
+        List<String> OutputOptionsInterimSettings;
+        List<String> OutputOptionsImageSequenceSettings;
+        List<String> OutputOptionsFinalSettings;
+        List<String> OutputOptionsVideoInterimExtension;
+        List<String> OutputOptionsVideoFinalExtension;
+        List<String> OutputOptionsAudioInterimExtension;
+
         String OutputInterimSettings = String.Empty;
-        String OutputInterimSettingsQmelt = String.Empty;
         String OutputImageSequenceSettings = String.Empty;
         String OutputFinalSettings = String.Empty;
         String OutputFinalSettingsQmelt = String.Empty;

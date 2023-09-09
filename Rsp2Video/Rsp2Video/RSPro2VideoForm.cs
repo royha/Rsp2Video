@@ -21,8 +21,34 @@ namespace RSPro2Video
         public RSPro2VideoForm()
         {
             InitializeComponent();
+            InitializeValues();
             SetTooltips();
             LoadSettings();
+        }
+
+        /// <summary>
+        /// Sets the initial values for variables.
+        /// </summary>
+        private void InitializeValues()
+        {
+            OutputOptionsInterimSettings = new List<String>(new String[] {
+                    "-qscale:v 2",
+                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart -reset_timestamps 1",
+                    // "-c:v h264_nvenc -preset p2 -profile:v high -b:v 5M -bufsize 5M -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1",
+                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart -reset_timestamps 1" });
+            OutputOptionsImageSequenceSettings = new List<String>(new String[] {
+                    "-qscale:v 2",
+                    "-c:v libx264 -preset ultrafast -crf 18 -threads 0 -c:a aac -q:a 1 -movflags +faststart",
+                    // "-c:v h264_nvenc -preset p2 -profile:v high -b:v 5M -bufsize 5M -c:a aac -b:a 384k -movflags +faststart",
+                    "-c:v libx264 -preset slow -crf 16 -threads 0 -c:a aac -q:a 1 -movflags +faststart" });
+            OutputOptionsFinalSettings = new List<String>(new String[] {
+                    "-qscale:v 2",
+                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart",
+                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart" });
+            OutputOptionsVideoInterimExtension = new List<String>(new String[] { ".ts", ".mp4", ".mp4" });
+            OutputOptionsVideoFinalExtension = new List<String>(new String[] { ".ts", ".mp4", ".mp4" });
+            OutputOptionsAudioInterimExtension = new List<String>(new String[] { ".wav", ".wav", ".wav" });
+
         }
 
         /// <summary>
@@ -287,7 +313,7 @@ namespace RSPro2Video
             buttonNext.Enabled = false;
             buttonExit.Text = "Exit";
 
-            if (settings.VideoContents == VideoContents.SeparateVideos)
+            if (ProjectSettings.VideoContents == VideoContents.SeparateVideos)
             {
                 buttonViewVideo.Enabled = false;
             }
@@ -378,6 +404,7 @@ namespace RSPro2Video
                 Explanation = sourceBookmark.Explanation,
                 SampleStart = sourceBookmark.SampleStart,
                 SampleEnd = sourceBookmark.SampleEnd,
+                Selected = sourceBookmark.Selected,
                 ReferencedBookmarks = sourceBookmark.ReferencedBookmarks
             };
 
@@ -397,7 +424,7 @@ namespace RSPro2Video
 
                 TreeNode treeNode = new TreeNode(bookmark.Name + ": " + bookmark.Text);
                 treeNode.Tag = bookmark;
-                treeNode.Checked = true;
+                treeNode.Checked = bookmark.Selected;
                 treeView1.Nodes.Add(treeNode);
 
                 if (sb.Length > 0) { sb.Append("\r\n"); }
@@ -413,7 +440,7 @@ namespace RSPro2Video
 
                     TreeNode childTreeNode = new TreeNode(referencedbookmark.Name + ": " + referencedbookmark.Text);
                     childTreeNode.Tag = referencedbookmark;
-                    childTreeNode.Checked = true;
+                    childTreeNode.Checked = referencedbookmark.Selected;
                     treeView1.Nodes[i].Nodes.Add(childTreeNode);
 
                     sb.Append(referencedbookmark.Name + ": " + referencedbookmark.Text + "\r\n");
@@ -428,6 +455,7 @@ namespace RSPro2Video
             treeView1.EndUpdate();
             if (treeView1.Nodes.Count > 0) { treeView1.SelectedNode = treeView1.Nodes[0]; }
 
+            // Copy the list of bookmarks onto the clipboard.
             if (sb.Length > 0) { Clipboard.SetText(sb.ToString()); }
         }
 
@@ -442,7 +470,7 @@ namespace RSPro2Video
             CreateDirectories();
 
             // Copies the source video to the working directory.
-            CopySourceVideoToWorkingDirectory();
+            if (CopySourceVideoToWorkingDirectory() == false) { return; }
 
             // Create text files from the bookmark data.
             CreateTextImageFiles();
@@ -477,11 +505,11 @@ namespace RSPro2Video
             try
             {
                 // Delete the destination file if it exists.
-                File.Delete(settings.OutputVideoFile);
+                File.Delete(ProjectSettings.OutputVideoFile);
 
                 // Move the file to the destination.
-                File.Move(Path.Combine(Path.GetDirectoryName(WorkingInputVideoFile), Path.GetFileName(settings.OutputVideoFile)), 
-                    settings.OutputVideoFile);
+                File.Move(Path.Combine(Path.GetDirectoryName(WorkingInputVideoFile), Path.GetFileName(ProjectSettings.OutputVideoFile)), 
+                    ProjectSettings.OutputVideoFile);
             }
             catch (IOException e)
             {
@@ -526,7 +554,7 @@ namespace RSPro2Video
             StoredCurrentDirectory = Directory.GetCurrentDirectory();
 
             // Set the working directory to _tmp under the output video directory.
-            WorkingDirectory = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(settings.SourceVideoFile)), TEMP_DIR);
+            WorkingDirectory = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(ProjectSettings.SourceVideoFile)), TEMP_DIR);
 
             // Create the working directory.
             try
@@ -537,7 +565,7 @@ namespace RSPro2Video
             catch { return false; }
 
             // Set the frames directory.
-            FramesDirectory = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(settings.SourceVideoFile)), TEMP_DIR, FRAMES_DIR);
+            FramesDirectory = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(ProjectSettings.SourceVideoFile)), TEMP_DIR, FRAMES_DIR);
 
             // Create the frames directory.
             try
@@ -556,14 +584,64 @@ namespace RSPro2Video
         /// <summary>
         /// Copies the source video file to the working directory. 
         /// </summary>
-        private void CopySourceVideoToWorkingDirectory()
+        private Boolean CopySourceVideoToWorkingDirectory()
         {
             // Set the name of the working input file. Typically, "v.mp4".
-            WorkingInputVideoFile = Path.Combine(WorkingDirectory, "v" + Path.GetExtension(settings.SourceVideoFile));
+            WorkingInputVideoFile = Path.Combine(WorkingDirectory, "v" + Path.GetExtension(ProjectSettings.SourceVideoFile));
             RelativePathToWorkingInputVideoFile = Path.GetFileName(WorkingInputVideoFile);
 
-            // Copy the source video to the working directory.
-            File.Copy(settings.SourceVideoFile, WorkingInputVideoFile, true);
+            // If there is no video delay, copy the file and return.
+            if (ProjectSettings.VideoDelay == 0)
+            {
+                // Copy the source video to the working directory.
+                File.Copy(ProjectSettings.SourceVideoFile, WorkingInputVideoFile, true);
+                return true;
+            }
+
+            // Create the Process to call the external program.
+            Process process = new Process();
+
+            // Create the arguments string.
+            String arguments = String.Format("-y -hide_banner -i \"{0}\" -itsoffset {1:0.#######} -i \"{0}\" -map 1:v -map 0:a -c copy \"{2}\"",
+                ProjectSettings.SourceVideoFile,
+                ProjectSettings.VideoDelay / FramesPerSecond,
+                WorkingInputVideoFile);
+
+            // Configure the process using the StartInfo properties.
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = FfmpegApp,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Maximized
+            };
+
+            // Log the ffmpeg command line options.
+            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
+            // Start ffmpeg to extract the frames.
+            process.Start();
+
+            // Read the output of ffmpeg.
+            String FfmpegOutput = process.StandardError.ReadToEnd();
+
+            // Log the ffmpeg output.
+            File.AppendAllText(LogFile, FfmpegOutput);
+
+            // Wait here for the process to exit.
+            process.WaitForExit();
+            int ExitCode = process.ExitCode;
+            process.Close();
+
+            // Return success or failure.
+            if (!(ExitCode == 0))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -672,9 +750,9 @@ namespace RSPro2Video
             {
                 // Select initial search directory
                 String initialDirectory = String.Empty;
-                if (textBoxBookmarkFile.Text != String.Empty)
+                if (textBoxMainFile.Text != String.Empty)
                 { 
-                    initialDirectory = Path.GetDirectoryName(textBoxBookmarkFile.Text);
+                    initialDirectory = Path.GetDirectoryName(textBoxMainFile.Text);
                 }
 
                 openFileDialog.Title = "Bookmark file";
@@ -685,7 +763,7 @@ namespace RSPro2Video
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     //Get the path of specified file.
-                    textBoxBookmarkFile.Text = openFileDialog.FileName;
+                    textBoxMainFile.Text = openFileDialog.FileName;
                 }
             }
         }
@@ -825,7 +903,7 @@ namespace RSPro2Video
 
                     case ".rsvideo":
                         // If the extension is an RSVideo bookmark file, set the textbox to the filename.
-                        textBoxBookmarkFile.Text = file;
+                        textBoxMainFile.Text = file;
 
                         // Create the output video file textbox.
                         if (radioButtonSeparateVideos.Checked)
@@ -842,7 +920,7 @@ namespace RSPro2Video
                     case ".fmbok":
                     case ".bok":
                         // If the extension is an .FmBok or .bok bookmark file, set the textbox to the filename.
-                        textBoxBookmarkFile.Text = file;
+                        textBoxMainFile.Text = file;
 
                         // Create the output video file textbox.
                         if (radioButtonSeparateVideos.Checked)
@@ -1087,7 +1165,7 @@ namespace RSPro2Video
         {
             try
             {
-                System.Diagnostics.Process.Start(Path.Combine(Path.GetDirectoryName(settings.SourceVideoFile), settings.OutputVideoFile));
+                System.Diagnostics.Process.Start(Path.Combine(Path.GetDirectoryName(ProjectSettings.SourceVideoFile), ProjectSettings.OutputVideoFile));
             }
             catch { }
         }
@@ -1097,7 +1175,7 @@ namespace RSPro2Video
             if (radioButtonSeparateVideos.Checked == true)
             {
                 labelOutputVideoFile.Text = "Output video file prefix";
-                textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(settings.SourceVideoFile) + " - ";
+                textBoxOutputFile.Text = Path.GetFileNameWithoutExtension(ProjectSettings.SourceVideoFile) + " - ";
                 // checkBoxReplayForwardVideo.Checked = false;
                 // checkBoxReplayForwardVideo.Enabled = false;
                 labelProgressing.Enabled = false;
@@ -1105,7 +1183,7 @@ namespace RSPro2Video
             else
             {
                 labelOutputVideoFile.Text = "Output video filename";
-                textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(settings.SourceVideoFile);
+                textBoxOutputFile.Text = "Reverse Speech of " + Path.GetFileName(ProjectSettings.SourceVideoFile);
                 // checkBoxReplayForwardVideo.Enabled = true;
                 labelProgressing.Enabled = true;
             }
@@ -1138,15 +1216,15 @@ namespace RSPro2Video
             switch (trackBarVideoQuality.Value)
             {
                 case 0:
-                    settings.VideoQuality = VideoQuality.Fast;
+                    ProjectSettings.VideoQuality = VideoQuality.Fast;
                     break;
 
                 case 1:
-                    settings.VideoQuality = VideoQuality.Small;
+                    ProjectSettings.VideoQuality = VideoQuality.Small;
                     break;
 
                 case 2:
-                    settings.VideoQuality = VideoQuality.High;
+                    ProjectSettings.VideoQuality = VideoQuality.High;
                     break;
             }
 
@@ -1154,7 +1232,7 @@ namespace RSPro2Video
             if (radioButtonSeparateVideos.Checked == false)
             {
                 string filenameWithExtension = Path.GetFileNameWithoutExtension(textBoxOutputFile.Text) + 
-                    settings.OutputOptionsVideoFinalExtension[(int)settings.VideoQuality];
+                    OutputOptionsVideoFinalExtension[(int)ProjectSettings.VideoQuality];
 
                 textBoxOutputFile.Text = filenameWithExtension;
             }

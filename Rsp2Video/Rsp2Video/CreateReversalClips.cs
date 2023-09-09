@@ -46,10 +46,10 @@ namespace RSPro2Video
                     Progress.Report(String.Format("Working: Creating reverse audio for {0}: {1}", reverseBookmark.Name, reverseBookmark.Text));
 
                     // Create a .wav file for each selected reversal rate.
-                    if (CreateReverseWav(reverseBookmark, 1, settings.ReversalRate1) == false) { break; }
-                    if (CreateReverseWav(reverseBookmark, 2, settings.ReversalRate2) == false) { break; }
-                    if (CreateReverseWav(reverseBookmark, 3, settings.ReversalRate3) == false) { break; }
-                    if (CreateReverseWav(reverseBookmark, 4, settings.ReversalRate4) == false) { break; }
+                    if (CreateReverseWav(reverseBookmark, 1, ProjectSettings.ReversalRate1) == false) { break; }
+                    if (CreateReverseWav(reverseBookmark, 2, ProjectSettings.ReversalRate2) == false) { break; }
+                    if (CreateReverseWav(reverseBookmark, 3, ProjectSettings.ReversalRate3) == false) { break; }
+                    if (CreateReverseWav(reverseBookmark, 4, ProjectSettings.ReversalRate4) == false) { break; }
                 }
             }
         }
@@ -203,8 +203,8 @@ namespace RSPro2Video
             double lengthSeconds = ((double)reversal.SampleEnd / (double)SampleRate) - (double)startSeconds;
 
             // Adjust for the audio delay.
-            startSeconds += (double)settings.AudioDelay / 1000d;
-            startSeconds = startSeconds < 0 ? 0 : startSeconds;
+            //startSeconds += (double)ProjectSettings.VideoDelay / 1000d;
+            //startSeconds = startSeconds < 0 ? 0 : startSeconds;
 
             // Extract the individual frames in the source video.
             if (ExtractReverseVideoFrames(reversal.Name, startSeconds, lengthSeconds) == false) { return false; }
@@ -214,10 +214,10 @@ namespace RSPro2Video
             if (frameCount == -1) { return false; }
 
             // Assemble the frames into a new video file.
-            if (AssembleReverseVideoFrames(reversal, 1, settings.ReversalRate1, frameCount) == false) { return false; }
-            if (AssembleReverseVideoFrames(reversal, 2, settings.ReversalRate2, frameCount) == false) { return false; }
-            if (AssembleReverseVideoFrames(reversal, 3, settings.ReversalRate3, frameCount) == false) { return false; }
-            if (AssembleReverseVideoFrames(reversal, 4, settings.ReversalRate4, frameCount) == false) { return false; }
+            if (AssembleReverseVideoFrames(reversal, 1, ProjectSettings.ReversalRate1, frameCount) == false) { return false; }
+            if (AssembleReverseVideoFrames(reversal, 2, ProjectSettings.ReversalRate2, frameCount) == false) { return false; }
+            if (AssembleReverseVideoFrames(reversal, 3, ProjectSettings.ReversalRate3, frameCount) == false) { return false; }
+            if (AssembleReverseVideoFrames(reversal, 4, ProjectSettings.ReversalRate4, frameCount) == false) { return false; }
 
             return true;
         }
@@ -442,8 +442,8 @@ namespace RSPro2Video
             double lengthInSeconds = (1d / FramesPerSecond) - (1d / 8192d);      // I subtract a small amount to make sure I get only one frame.
 
             // Adjust for the audio delay.
-            timeInSeconds += (double)settings.AudioDelay / 1000d;
-            timeInSeconds = timeInSeconds < 0 ? 0 : timeInSeconds;
+            //timeInSeconds += (double)ProjectSettings.VideoDelay / 1000d;
+            //timeInSeconds = timeInSeconds < 0 ? 0 : timeInSeconds;
 
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo
@@ -609,14 +609,14 @@ namespace RSPro2Video
             foreach (Bookmark forwardBookmark in ForwardBookmarks)
             {
                 // For Forward and Reverse, create a text overly from the forward bookmark text.
-                if (settings.BookmarkTypeFnR)
+                if (ProjectSettings.BookmarkTypeFnR)
                 {
                     // Write the text of the forward speech to a .png file.
                     CreateForwardTextOverlay(forwardBookmark.Name + ".Text.png", forwardBookmark.Text);
                 }
 
                 // if Orphaned Reversals or Quick Check, display the reverse bookmark name and text.
-                if (settings.BookmarkTypeQuickCheck || settings.BookmarkTypeOrphanedReversals)
+                if (ProjectSettings.BookmarkTypeQuickCheck || ProjectSettings.BookmarkTypeOrphanedReversals)
                 {
                     // Get the first referenced bookmark.
                     Bookmark reverseBookmark = forwardBookmark.ReferencedBookmarks[0];
@@ -636,12 +636,12 @@ namespace RSPro2Video
                     Bookmark reverseBookmark = forwardBookmark.ReferencedBookmarks[i];
 
                     // Write the text of the reverse speech to a .png file.
-                    if (settings.BookmarkTypeFnR)
+                    if (ProjectSettings.BookmarkTypeFnR)
                     {
                         CreateReverseTextOverlay(reverseBookmark.Name + ".Text.png", forwardBookmark.Text, reverseBookmark.Text, i);
                     }
 
-                    if (settings.BookmarkTypeQuickCheck || settings.BookmarkTypeOrphanedReversals)
+                    if (ProjectSettings.BookmarkTypeQuickCheck || ProjectSettings.BookmarkTypeOrphanedReversals)
                     {
                         CreateForwardTextOverlay(reverseBookmark.Name + ".Text.png", reverseBookmark.Name + ": " + reverseBookmark.Text);
                     }

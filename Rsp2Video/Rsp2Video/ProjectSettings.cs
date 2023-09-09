@@ -4,25 +4,15 @@ using System.Collections.Generic;
 namespace RSPro2Video
 {
     // [Serializable]
-    public class Settings
+    public class ProjectSettings
     {
         /// <summary>
-        /// Original video file, typically downloaded from YouTube.
+        /// The .RSPro2Video file for the current project.
         /// </summary>
-        public String SourceVideoFile { get; set; }
+        public String ProjectFile { get; set; }
 
         /// <summary>
-        /// Sound file processed in Reverse Speech Pro.
-        /// </summary>
-        public String RspSoundFile { get; set; }
-
-        /// <summary>
-        /// Transcript file output by Reverse Speech Pro.
-        /// </summary>
-        public String RspTranscriptFile { get; set; }
-
-        /// <summary>
-        /// The bookmark file.
+        /// The .FmBok/.bok/.RSVideo bookmark file for the current project.
         /// </summary>
         public String BookmarkFile { get; set; }
 
@@ -30,6 +20,16 @@ namespace RSPro2Video
         /// Identifies the bookmark file type, such as FmBok or RSVideo.
         /// </summary>
         public BookmarkFileType BookmarkFileType { get; set; }
+        
+        /// <summary>
+        /// Original video file, typically downloaded from YouTube.
+        /// </summary>
+        public String SourceVideoFile { get; set; }
+
+        /// <summary>
+        /// Transcript file output by Reverse Speech Pro.
+        /// </summary>
+        // public String RspTranscriptFile { get; set; }
 
         /// <summary>
         /// Name of the output file. Either a video file, or a video project file as indicated by OutputType.
@@ -37,9 +37,9 @@ namespace RSPro2Video
         public String OutputVideoFile { get; set; }
 
         /// <summary>
-        /// The video offset amount, in milliseconds.
+        /// The video offset amount, in frames.
         /// </summary>
-        public int AudioDelay { get; set; }
+        public Double VideoDelay { get; set; }
 
         /// <summary>
         /// The audio delay to sync the audio with the video.
@@ -61,11 +61,6 @@ namespace RSPro2Video
         /// When true, the bookmkark types to use in creating this video are the orphaned reversals.
         /// </summary>
         public Boolean BookmarkTypeOrphanedReversals { get; set; }
-
-        /// <summary>
-        /// When true, the source to use for bookmark text is the .FmBok/.bok file.
-        /// </summary>
-        public String SourceBookmarkFile { get; set; }
 
         /// <summary>
         /// When true, the source to use for bookmark text is the transcript file (.txt/.bok).
@@ -99,34 +94,15 @@ namespace RSPro2Video
         /// </summary>
         public Boolean ReplayForwardVideo { get; set; }
 
-        // The strings to process the video for the selected quality setting.
-        public List<String> OutputOptionsInterimSettings { get; set; }
-        public List<String> OutputOptionsInterimSettingsQmelt { get; set; }
-        public List<String> OutputOptionsImageSequenceSettings { get; set; }
-        public List<String> OutputOptionsFinalSettings { get; set; }
-        public List<String> OutputOptionsFinalSettingsQmelt { get; set; }
-        public List<String> OutputOptionsVideoInterimExtension { get; set; }
-        public List<String> OutputOptionsVideoFinalExtension { get; set; }
-        public List<String> OutputOptionsAudioInterimExtension { get; set; }
-
         /// <summary>
         /// Constructor creates needed field values.
         /// </summary>
-        public Settings()
+        public ProjectSettings()
         {
             this.ReversalRate1 = new ReversalRate();
             this.ReversalRate2 = new ReversalRate();
             this.ReversalRate3 = new ReversalRate();
             this.ReversalRate4 = new ReversalRate();
-
-            OutputOptionsInterimSettings = new List<string>();
-            OutputOptionsInterimSettingsQmelt = new List<string>();
-            OutputOptionsImageSequenceSettings = new List<string>();
-            OutputOptionsFinalSettings = new List<string>();
-            OutputOptionsFinalSettingsQmelt = new List<string>();
-            OutputOptionsVideoInterimExtension = new List<string>();
-            OutputOptionsVideoFinalExtension = new List<string>();
-            OutputOptionsAudioInterimExtension = new List<string>();
         }
     }
 
@@ -151,7 +127,6 @@ namespace RSPro2Video
         public int ReversalTone { get; set; }
     }
 
-    public enum BookmarkFileType { None, FmBok, bok, RSVideo, Text, RTF }
     public enum VideoContents { None, FullVideo, BookmarksOnly, SeparateVideos }
     public enum OutputType { None, VideoFile, VideoProject }
     public enum VideoQuality { Fast, Small, High }
