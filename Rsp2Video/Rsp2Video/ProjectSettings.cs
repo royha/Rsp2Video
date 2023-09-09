@@ -37,9 +37,9 @@ namespace RSPro2Video
         public String OutputVideoFile { get; set; }
 
         /// <summary>
-        /// The video offset amount, in milliseconds.
+        /// The video offset amount, in frames.
         /// </summary>
-        public int VideoDelay { get; set; }
+        public Double VideoDelay { get; set; }
 
         /// <summary>
         /// The audio delay to sync the audio with the video.

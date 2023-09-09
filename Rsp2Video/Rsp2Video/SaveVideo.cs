@@ -1326,13 +1326,13 @@ namespace RSPro2Video
             double duration = ((double)ForwardBookmarks[0].SampleStart / (double)SampleRate);
 
             // Adjust for the audio delay.
-            startTime += (double)ProjectSettings.VideoDelay / 1000d;
-            if (startTime < 0)
-            {
-                // If the audio delay is negative, reduce the duration by the audio delay.
-                duration += startTime;
-                startTime = 0;
-            }
+            //startTime += (double)ProjectSettings.VideoDelay / 1000d;
+            //if (startTime < 0)
+            //{
+            //    // If the audio delay is negative, reduce the duration by the audio delay.
+            //    duration += startTime;
+            //    startTime = 0;
+            //}
 
             // Create the filename for this clip.
             String filename = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
@@ -1465,8 +1465,8 @@ namespace RSPro2Video
             double duration = ((double)forwardBookmark.SampleEnd / (double)SampleRate) - startTime;
 
             // Adjust for the audio delay.
-            startTime += (double)ProjectSettings.VideoDelay / 1000d;
-            startTime = startTime < 0 ? 0 : startTime;
+            //startTime += (double)ProjectSettings.VideoDelay / 1000d;
+            //startTime = startTime < 0 ? 0 : startTime;
 
             // Create the filename for this clip.
             String filename1 = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
@@ -1810,8 +1810,8 @@ namespace RSPro2Video
             double duration = ((double)reverseBookmark.SampleEnd / (double)SampleRate) - startTime;
 
             // Adjust for the audio delay.
-            startTime += (double)ProjectSettings.VideoDelay / 1000d;
-            startTime = startTime < 0 ? 0 : startTime;
+            //startTime += (double)ProjectSettings.VideoDelay / 1000d;
+            //startTime = startTime < 0 ? 0 : startTime;
 
             // Create the filename for this clip.
             String filename1 = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
@@ -1977,8 +1977,8 @@ namespace RSPro2Video
             double startTimeOfNextBookmark = 864000.0d;
 
             // Adjust for the audio delay.
-            endTime += (double)ProjectSettings.VideoDelay / 1000d;
-            endTime = endTime < 0 ? 0 : endTime;
+            //endTime += (double)ProjectSettings.VideoDelay / 1000d;
+            //endTime = endTime < 0 ? 0 : endTime;
 
             // If this is not the last forward bookmark.
             if (index < ForwardBookmarks.Count - 1)
@@ -1987,8 +1987,8 @@ namespace RSPro2Video
                 startTimeOfNextBookmark = ForwardBookmarks[index + 1].SampleStart / (double)SampleRate;
 
                 // Adjust for the audio delay.
-                startTimeOfNextBookmark += (double)ProjectSettings.VideoDelay / 1000d;
-                startTimeOfNextBookmark = startTimeOfNextBookmark < 0 ? 0 : startTimeOfNextBookmark;
+                //startTimeOfNextBookmark += (double)ProjectSettings.VideoDelay / 1000d;
+                //startTimeOfNextBookmark = startTimeOfNextBookmark < 0 ? 0 : startTimeOfNextBookmark;
 
                 // If the end time of this bookmark is beyond the start time of the next bookmark, this clip is not necessary.
                 if (endTime >= startTimeOfNextBookmark)
@@ -1997,7 +1997,8 @@ namespace RSPro2Video
                 }
 
                 // Calculate the duration.
-                double duration = startTimeOfNextBookmark - (((double)ForwardBookmarks[index].SampleEnd / (double)SampleRate) + (double)ProjectSettings.VideoDelay / 1000d);
+                //double duration = startTimeOfNextBookmark - (((double)ForwardBookmarks[index].SampleEnd / (double)SampleRate) + (double)ProjectSettings.VideoDelay / 1000d);
+                double duration = startTimeOfNextBookmark - ((double)ForwardBookmarks[index].SampleEnd / (double)SampleRate);
 
                 // Create the inner commands for ffmpeg.
                 command = String.Format("-ss {0:0.######} -i \"{1}\" -t {2:0.######}",

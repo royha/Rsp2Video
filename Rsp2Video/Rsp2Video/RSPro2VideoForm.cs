@@ -470,7 +470,7 @@ namespace RSPro2Video
             CreateDirectories();
 
             // Copies the source video to the working directory.
-            CopySourceVideoToWorkingDirectory();
+            if (CopySourceVideoToWorkingDirectory() == false) { return; }
 
             // Create text files from the bookmark data.
             CreateTextImageFiles();
@@ -584,14 +584,64 @@ namespace RSPro2Video
         /// <summary>
         /// Copies the source video file to the working directory. 
         /// </summary>
-        private void CopySourceVideoToWorkingDirectory()
+        private Boolean CopySourceVideoToWorkingDirectory()
         {
             // Set the name of the working input file. Typically, "v.mp4".
             WorkingInputVideoFile = Path.Combine(WorkingDirectory, "v" + Path.GetExtension(ProjectSettings.SourceVideoFile));
             RelativePathToWorkingInputVideoFile = Path.GetFileName(WorkingInputVideoFile);
 
-            // Copy the source video to the working directory.
-            File.Copy(ProjectSettings.SourceVideoFile, WorkingInputVideoFile, true);
+            // If there is no video delay, copy the file and return.
+            if (ProjectSettings.VideoDelay == 0)
+            {
+                // Copy the source video to the working directory.
+                File.Copy(ProjectSettings.SourceVideoFile, WorkingInputVideoFile, true);
+                return true;
+            }
+
+            // Create the Process to call the external program.
+            Process process = new Process();
+
+            // Create the arguments string.
+            String arguments = String.Format("-y -hide_banner -i \"{0}\" -itsoffset {1:0.#######} -i \"{0}\" -map 1:v -map 0:a -c copy \"{2}\"",
+                ProjectSettings.SourceVideoFile,
+                ProjectSettings.VideoDelay / FramesPerSecond,
+                WorkingInputVideoFile);
+
+            // Configure the process using the StartInfo properties.
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = FfmpegApp,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Maximized
+            };
+
+            // Log the ffmpeg command line options.
+            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+
+            // Start ffmpeg to extract the frames.
+            process.Start();
+
+            // Read the output of ffmpeg.
+            String FfmpegOutput = process.StandardError.ReadToEnd();
+
+            // Log the ffmpeg output.
+            File.AppendAllText(LogFile, FfmpegOutput);
+
+            // Wait here for the process to exit.
+            process.WaitForExit();
+            int ExitCode = process.ExitCode;
+            process.Close();
+
+            // Return success or failure.
+            if (!(ExitCode == 0))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>

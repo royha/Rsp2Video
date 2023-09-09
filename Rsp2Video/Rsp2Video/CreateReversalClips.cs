@@ -203,8 +203,8 @@ namespace RSPro2Video
             double lengthSeconds = ((double)reversal.SampleEnd / (double)SampleRate) - (double)startSeconds;
 
             // Adjust for the audio delay.
-            startSeconds += (double)ProjectSettings.VideoDelay / 1000d;
-            startSeconds = startSeconds < 0 ? 0 : startSeconds;
+            //startSeconds += (double)ProjectSettings.VideoDelay / 1000d;
+            //startSeconds = startSeconds < 0 ? 0 : startSeconds;
 
             // Extract the individual frames in the source video.
             if (ExtractReverseVideoFrames(reversal.Name, startSeconds, lengthSeconds) == false) { return false; }
@@ -442,8 +442,8 @@ namespace RSPro2Video
             double lengthInSeconds = (1d / FramesPerSecond) - (1d / 8192d);      // I subtract a small amount to make sure I get only one frame.
 
             // Adjust for the audio delay.
-            timeInSeconds += (double)ProjectSettings.VideoDelay / 1000d;
-            timeInSeconds = timeInSeconds < 0 ? 0 : timeInSeconds;
+            //timeInSeconds += (double)ProjectSettings.VideoDelay / 1000d;
+            //timeInSeconds = timeInSeconds < 0 ? 0 : timeInSeconds;
 
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo

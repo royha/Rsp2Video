@@ -66,7 +66,7 @@ namespace RSPro2Video
                 ProjectSettings.ReversalRate4.UseThisRate = false;
                 ProjectSettings.ReversalRate4.ReversalSpeed = 50;
                 ProjectSettings.ReversalRate4.ReversalTone = 60;
-                ProjectSettings.VideoDelay = 0;
+                ProjectSettings.VideoDelay = 0d;
             }
 
             // Set the UI elements to their corresponding values in the settings object.
@@ -164,7 +164,18 @@ namespace RSPro2Video
             // settings.RspSoundFile = textBoxSoundFile.Text;
             // settings.RspTranscriptFile = textBoxTranscriptFile.Text;
             ProjectSettings.OutputVideoFile = textBoxOutputFile.Text;
-            ProjectSettings.VideoDelay = String.IsNullOrWhiteSpace(textBoxVideoOffset.Text) ? 0 : Int32.Parse(textBoxVideoOffset.Text);
+
+            if (String.IsNullOrWhiteSpace(textBoxVideoOffset.Text))
+            {
+                ProjectSettings.VideoDelay = 0d;
+            } else if (Double.TryParse(textBoxVideoOffset.Text, out Double offset))
+            {
+                ProjectSettings.VideoDelay = offset;
+            }
+            else
+            {
+                ProjectSettings.VideoDelay = 0d;
+            }
 
             ProjectSettings.BookmarkTypeFnR = radioButtonBookmarkTypeFnR.Checked;
             ProjectSettings.BookmarkTypeQuickCheck = radioButtonBookmarkTypeQuickCheck.Checked;
