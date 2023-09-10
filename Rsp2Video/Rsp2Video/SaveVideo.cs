@@ -1464,10 +1464,6 @@ namespace RSPro2Video
             double startTime = (double)forwardBookmark.SampleStart / (double)SampleRate;
             double duration = ((double)forwardBookmark.SampleEnd / (double)SampleRate) - startTime;
 
-            // Adjust for the audio delay.
-            //startTime += (double)ProjectSettings.VideoDelay / 1000d;
-            //startTime = startTime < 0 ? 0 : startTime;
-
             // Create the filename for this clip.
             String filename1 = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
 
