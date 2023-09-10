@@ -20,7 +20,7 @@ namespace RSPro2Video
         /// Identifies the bookmark file type, such as FmBok or RSVideo.
         /// </summary>
         public BookmarkFileType BookmarkFileType { get; set; }
-        
+
         /// <summary>
         /// Original video file, typically downloaded from YouTube.
         /// </summary>
@@ -82,6 +82,20 @@ namespace RSPro2Video
         public ReversalRate ReversalRate3 { get; set; }
         public ReversalRate ReversalRate4 { get; set; }
 
+        public Double MajorTransitionLength { get; set; }
+        public Double MinorTransitionLength { get; set; }
+        public Boolean MotionInterpolation { get; set; }
+        public int TextBackgroundTransparency { get; set; }
+        public int TextLinesOnScreen { get; set; }
+        public Double ReadingCharactersPerSecond { get; set; }
+        public Boolean PlayForwardBookmarkCompletely { get; set; }
+        public Boolean IncludeBookmarkNameInTextOverlays { get; set; }
+        public TransitionType TransitionType { get; set; }
+        public Boolean IncludeOpeningCard { get; set; }
+        public Boolean IncludeClosingCard { get; set; }
+        public Boolean IncludeForwardExplanations { get; set; }
+        public Boolean IncludeReverseExplanations { get; set; }
+
         /// <summary>
         /// If true, a clip will be added to show the reversal at 100% forward speed, followed immediately
         /// by the reversal at 100% reverse.
@@ -130,4 +144,5 @@ namespace RSPro2Video
     public enum VideoContents { None, FullVideo, BookmarksOnly, SeparateVideos }
     public enum OutputType { None, VideoFile, VideoProject }
     public enum VideoQuality { Fast, Small, High }
+    public enum TransitionType { none, CrossDissolve, HoldLastFrame }
 }

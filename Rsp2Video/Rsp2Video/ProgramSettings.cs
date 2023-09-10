@@ -9,6 +9,17 @@ namespace RSPro2Video
         /// Stores the file path on panel1.
         /// </summary>
         public string LastUsedFile { get; set; }
+
+        /// <summary>
+        /// When true, starts the output filename with "Reverse Speech of ".
+        /// When false, starts the output filename with "Backward Voice Analysis of ".
+        /// </summary>
+        public Boolean ReverseSpeechTrademarkAuthorized { get; set; }
+
+        public ProgramSettings()
+        {
+            this.ReverseSpeechTrademarkAuthorized = false;
+        }
     }
 
     public enum BookmarkFileType { None, FmBok, bok, RSVideo, Text, RTF }

@@ -67,6 +67,19 @@ namespace RSPro2Video
                 ProjectSettings.ReversalRate4.ReversalSpeed = 50;
                 ProjectSettings.ReversalRate4.ReversalTone = 60;
                 ProjectSettings.VideoDelay = 0d;
+                ProjectSettings.MajorTransitionLength = 1.0d;
+                ProjectSettings.MinorTransitionLength = 0.5d;
+                ProjectSettings.MotionInterpolation = false;
+                ProjectSettings.TextBackgroundTransparency = 210;
+                ProjectSettings.TextLinesOnScreen = 20;
+                ProjectSettings.ReadingCharactersPerSecond = 19.0d;
+                ProjectSettings.PlayForwardBookmarkCompletely = true;
+                ProjectSettings.IncludeBookmarkNameInTextOverlays = true;
+                ProjectSettings.TransitionType = TransitionType.CrossDissolve;
+                ProjectSettings.IncludeOpeningCard = true;
+                ProjectSettings.IncludeClosingCard = true;
+                ProjectSettings.IncludeForwardExplanations = true;
+                ProjectSettings.IncludeReverseExplanations = true;
             }
 
             // Set the UI elements to their corresponding values in the settings object.

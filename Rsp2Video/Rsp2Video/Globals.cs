@@ -70,7 +70,7 @@ namespace RSPro2Video
 
         // Text settings.
         String FontName;                                                // The base font, such as "Calibri".
-        int BackgroundAlpha = 210;                                      // The alpha value for the text background box.
+        int TextBackgroundTransparency = 210;                           // The alpha value for the text background box.
         Font FontForward;                                               // The font to use for forward text.
         Font FontReverse;                                               // The font to use for reverse text.
         Font FontForwardUnderline;                                      // The font to use for forward text that is currently playing in reverse.
