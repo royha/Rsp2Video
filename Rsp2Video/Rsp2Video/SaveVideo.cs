@@ -1268,7 +1268,7 @@ namespace RSPro2Video
                 String filename = "OpeningCard";
 
                 // Calculate the length of time to display the card.
-                double displayLength = (double)OpeningCard.Length / (double)ReadingCharactersPerSecond;
+                double displayLength = (double)OpeningCard.Length / (double)ProjectSettings.ReadingCharactersPerSecond;
 
                 // Create the inner commands for ffmpeg. 
                 String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
@@ -1299,7 +1299,7 @@ namespace RSPro2Video
                 String filename = "ClosingCard";
 
                 // Calculate the length of time to display the card.
-                double displayLength = (double)ClosingCard.Length / (double)ReadingCharactersPerSecond;
+                double displayLength = (double)ClosingCard.Length / (double)ProjectSettings.ReadingCharactersPerSecond;
 
                 // Create the inner commands for ffmpeg. 
                 String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
@@ -1358,7 +1358,7 @@ namespace RSPro2Video
             String filename = bookmark.Name + ".Explanation";
 
             // Calculate the length of time to display the card.
-            double displayLength = (double)bookmark.Explanation.Length / (double)ReadingCharactersPerSecond;
+            double displayLength = (double)bookmark.Explanation.Length / (double)ProjectSettings.ReadingCharactersPerSecond;
 
             // Create the inner commands for ffmpeg. 
             String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",

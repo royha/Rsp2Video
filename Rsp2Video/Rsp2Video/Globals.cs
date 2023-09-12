@@ -22,8 +22,6 @@ namespace RSPro2Video
     {
         ProgramSettings ProgramSettings;                                // The settings object that stores the settings for the program.
         ProjectSettings ProjectSettings;                                // The settings object that stores the settings for the video project.
-        String ProjectFile;                                             // The .RSPro2Video file for the current project.
-        String BookmarkFile;                                            // The .FmBok/.bok/.RSVideo file for the current project.
         int SampleRate;                                                 // The sample rate of the sound file.
         double FramesPerSecond;                                         // The frames per second of the source and output video.
         int HorizontalResolution;                                       // The horizontal resolution of the video.
@@ -33,7 +31,7 @@ namespace RSPro2Video
         String DisplayAspectRatio;                                      // The Display Aspect Ratio.
         double VideoOffset;                                             // The video offset to align the video with the audio.
         double ClosingFrameTime;
-        String Transcript;                                              // The text of the transcript file.
+        // String Transcript;                                           // The text of the transcript file.
         List<Bookmark> ForwardBookmarks = new List<Bookmark>();         // The list of bookmarks for forward speech.
         List<Bookmark> ReverseBookmarks = new List<Bookmark>();         // The list of bookmarks for reverse speech
         List<Bookmark> BokBookmarks = new List<Bookmark>();             // The list of bookmarks from the .FmBok/.bok file.
@@ -70,20 +68,11 @@ namespace RSPro2Video
 
         // Text settings.
         String FontName;                                                // The base font, such as "Calibri".
-        int TextBackgroundTransparency = 210;                           // The alpha value for the text background box.
         Font FontForward;                                               // The font to use for forward text.
         Font FontReverse;                                               // The font to use for reverse text.
         Font FontForwardUnderline;                                      // The font to use for forward text that is currently playing in reverse.
 
-        enum TextTool { None, DynamicText, Watermark }                  // The text tool to use for overlay text.
-        TextTool textTool = TextTool.Watermark;
-        int FontHeight;
-        int LinesOnScreen = 20;                                         // The number of text lines that can appear on sceen (smaller numbers == larger text).
-        int TextPadSize;
-        int LeftMarginSpaces;
-        String TextBackgroundColor = "#9f000000";
-        String TextForegroundColor = "#ffffffff";
-        double ReadingCharactersPerSecond = 19;                         // How long to display explanation cards in characters per second.
+        int CalculatedFontHeight;
 
         List<String> CreatedClipList = new List<String>();              // The list of video clips that have already been created.
         List<VideoOutput> VideoOutputs = new List<VideoOutput>();       // The list of videos to output, and the clips needed to assemble them.
@@ -98,19 +87,10 @@ namespace RSPro2Video
         String OutputInterimSettings = String.Empty;
         String OutputImageSequenceSettings = String.Empty;
         String OutputFinalSettings = String.Empty;
-        String OutputFinalSettingsQmelt = String.Empty;
         String OutputVideoInterimExtension = String.Empty;
         String OutputVideoFinalExtension = String.Empty;
         String OutputAudioInterimExtension = String.Empty;
 
-        TimeSpan timeToRun;
-
-        // MELT related globals.
-        StringBuilder MeltStringClip;
-        List<StringBuilder> MeltStrings;
-        int MeltStringsIndex;
-        int MaxMeltString = 28500;
-        int CurrentFrame;
         String RelativePathToWorkingInputVideoFile;
         String TransitionFromFrame = String.Empty;
         String TransitionToFrame = String.Empty;
@@ -122,18 +102,9 @@ namespace RSPro2Video
         String TxtClosingCard = String.Empty;
         String OpeningCard = String.Empty;
         String ClosingCard = String.Empty;
-        CardTextAlignment OpeningCardAlignment = CardTextAlignment.Left;
-        CardTextAlignment ClosingCardAlignment = CardTextAlignment.Center;
 
-        bool AddMeltLineBreaks = true;
-
-        bool DeleteWorkingDirectories = true;
+        TimeSpan timeToRun;
 
         String[] VideoQualityString = { "Fast / Draft quality", "Slow / YouTube upload quality", "Slowest / High quality" };
-
-        // Debug related globals.
-#if (LOGSTRING)
-        StringBuilder LogString;
-#endif
     }
 }

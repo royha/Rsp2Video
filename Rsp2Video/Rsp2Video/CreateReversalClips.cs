@@ -920,7 +920,7 @@ namespace RSPro2Video
             }
 
             // Draw the text background (a transparent black rectangle).
-            using (SolidBrush brush = new SolidBrush(Color.FromArgb(TextBackgroundTransparency, 0, 0, 0)))
+            using (SolidBrush brush = new SolidBrush(Color.FromArgb(ProjectSettings.TextBackgroundTransparency, 0, 0, 0)))
             {
                 g.FillRectangle(brush, rectBackground);
             }

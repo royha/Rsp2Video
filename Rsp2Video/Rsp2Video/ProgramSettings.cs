@@ -21,6 +21,4 @@ namespace RSPro2Video
             this.ReverseSpeechTrademarkAuthorized = false;
         }
     }
-
-    public enum BookmarkFileType { None, FmBok, bok, RSVideo, Text, RTF }
 }

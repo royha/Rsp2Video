@@ -134,7 +134,7 @@ namespace RSPro2Video
                 }
                 else
                 {
-                    labelMainFileError.Text = "The path is not valid.";
+                    labelMainFileError.Text = "There was an error: " + e.ToString();
                     labelMainFileError.Visible = true;
                 }
 
@@ -1447,13 +1447,11 @@ namespace RSPro2Video
             // Set the text height to be equal to 20 lines on the screen.
 
             // Prepare the font information
-            LeftMarginSpaces = (int)Math.Round((decimal)HorizontalResolution / (decimal)VerticalResolution * 8.0m);
             FontName = "Calibri";
-            FontHeight = (int)VerticalResolution / LinesOnScreen;
-            TextPadSize = FontHeight / 6;
-            FontForward = new Font(FontName, FontHeight, FontStyle.Regular, GraphicsUnit.Pixel);
-            FontReverse = new Font(FontName, FontHeight, FontStyle.Italic | FontStyle.Bold, GraphicsUnit.Pixel);
-            FontForwardUnderline = new Font(FontName, FontHeight, FontStyle.Underline, GraphicsUnit.Pixel);
+            CalculatedFontHeight = (int)VerticalResolution / ProjectSettings.TextLinesOnScreen;
+            FontForward = new Font(FontName, CalculatedFontHeight, FontStyle.Regular, GraphicsUnit.Pixel);
+            FontReverse = new Font(FontName, CalculatedFontHeight, FontStyle.Italic | FontStyle.Bold, GraphicsUnit.Pixel);
+            FontForwardUnderline = new Font(FontName, CalculatedFontHeight, FontStyle.Underline, GraphicsUnit.Pixel);
 
             // If the output video file is empty, set it.
             if (String.IsNullOrEmpty(textBoxOutputFile.Text) == true)

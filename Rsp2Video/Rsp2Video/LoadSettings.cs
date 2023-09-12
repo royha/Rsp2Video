@@ -52,8 +52,8 @@ namespace RSPro2Video
                 // Default settings.
                 ProjectSettings.BookmarkTypeFnR = true;
                 ProjectSettings.VideoContents = VideoContents.BookmarksOnly;
-                ProjectSettings.VideoQuality = VideoQuality.Small;
-                ProjectSettings.IncludeBackAndForth = true;
+                ProjectSettings.VideoDelay = 0d;
+                ProjectSettings.VideoQuality = VideoQuality.YouTube;
                 ProjectSettings.ReversalRate1.UseThisRate = true;
                 ProjectSettings.ReversalRate1.ReversalSpeed = 100;
                 ProjectSettings.ReversalRate1.ReversalTone = 100;
@@ -66,20 +66,25 @@ namespace RSPro2Video
                 ProjectSettings.ReversalRate4.UseThisRate = false;
                 ProjectSettings.ReversalRate4.ReversalSpeed = 50;
                 ProjectSettings.ReversalRate4.ReversalTone = 60;
-                ProjectSettings.VideoDelay = 0d;
-                ProjectSettings.MajorTransitionLength = 1.0d;
-                ProjectSettings.MinorTransitionLength = 0.5d;
-                ProjectSettings.MotionInterpolation = false;
-                ProjectSettings.TextBackgroundTransparency = 210;
+                ProjectSettings.TextForegroundColor = "#9f000000";
+                ProjectSettings.TextBackgroundColor = "#ffffffff";
+                ProjectSettings.TextBackgroundTransparency = 192;
                 ProjectSettings.TextLinesOnScreen = 20;
                 ProjectSettings.ReadingCharactersPerSecond = 19.0d;
+                ProjectSettings.TransitionLengthCard = 1.0d;
+                ProjectSettings.TransitionLengthMajor = 1.0d;
+                ProjectSettings.TransitionLengthMinor = 0.5d;
+                ProjectSettings.MotionInterpolation = MotionInterpolation.None;
+                ProjectSettings.IncludeBackAndForth = true;
+                ProjectSettings.ReplayForwardVideo = false;
                 ProjectSettings.PlayForwardBookmarkCompletely = true;
-                ProjectSettings.IncludeBookmarkNameInTextOverlays = true;
+                ProjectSettings.IncludeBookmarkNameInTextOverlays = false;
                 ProjectSettings.TransitionType = TransitionType.CrossDissolve;
                 ProjectSettings.IncludeOpeningCard = true;
                 ProjectSettings.IncludeClosingCard = true;
                 ProjectSettings.IncludeForwardExplanations = true;
                 ProjectSettings.IncludeReverseExplanations = true;
+                ProjectSettings.DeleteWorkingDirectoriesAtEnd = true;
             }
 
             // Set the UI elements to their corresponding values in the settings object.
@@ -103,7 +108,7 @@ namespace RSPro2Video
             radioButtonBookmarkTypeQuickCheck.Checked = ProjectSettings.BookmarkTypeQuickCheck;
             radioButtonBookmarkTypeOrphanedReversals.Checked = ProjectSettings.BookmarkTypeOrphanedReversals;
             // radioButtonSourceBookmarkFile.Checked = settings.SourceBookmarkFile;
-            radioButtonSourceTranscriptFile.Checked = ProjectSettings.SourceTranscriptFile;
+            // radioButtonSourceTranscriptFile.Checked = ProjectSettings.SourceTranscriptFile;
             saveRadioButtonSourceBookmarkFile = radioButtonSourceBookmarkFile.Checked;
             saveRadioButtonSourceTranscriptFile = radioButtonSourceTranscriptFile.Checked;
 
@@ -194,7 +199,7 @@ namespace RSPro2Video
             ProjectSettings.BookmarkTypeQuickCheck = radioButtonBookmarkTypeQuickCheck.Checked;
             ProjectSettings.BookmarkTypeOrphanedReversals = radioButtonBookmarkTypeOrphanedReversals.Checked;
             // settings.SourceBookmarkFile = radioButtonSourceBookmarkFile.Checked;
-            ProjectSettings.SourceTranscriptFile = radioButtonSourceTranscriptFile.Checked;
+            // ProjectSettings.SourceTranscriptFile = radioButtonSourceTranscriptFile.Checked;
 
             // Set the values in the settings object corresponding to the values in the UI controls.
             if (radioButtonContentsEntireVideo.Checked) { ProjectSettings.VideoContents = VideoContents.FullVideo; }
