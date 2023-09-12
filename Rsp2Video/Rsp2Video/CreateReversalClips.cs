@@ -202,10 +202,6 @@ namespace RSPro2Video
             double startSeconds = (double)reversal.SampleStart / (double)SampleRate;
             double lengthSeconds = ((double)reversal.SampleEnd / (double)SampleRate) - (double)startSeconds;
 
-            // Adjust for the audio delay.
-            //startSeconds += (double)ProjectSettings.VideoDelay / 1000d;
-            //startSeconds = startSeconds < 0 ? 0 : startSeconds;
-
             // Extract the individual frames in the source video.
             if (ExtractReverseVideoFrames(reversal.Name, startSeconds, lengthSeconds) == false) { return false; }
 
@@ -924,7 +920,7 @@ namespace RSPro2Video
             }
 
             // Draw the text background (a transparent black rectangle).
-            using (SolidBrush brush = new SolidBrush(Color.FromArgb(BackgroundAlpha, 0, 0, 0)))
+            using (SolidBrush brush = new SolidBrush(Color.FromArgb(ProjectSettings.TextBackgroundTransparency, 0, 0, 0)))
             {
                 g.FillRectangle(brush, rectBackground);
             }

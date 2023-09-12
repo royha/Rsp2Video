@@ -652,7 +652,7 @@ namespace RSPro2Video
         {
             Directory.SetCurrentDirectory(StoredCurrentDirectory);
 
-            if (DeleteWorkingDirectories == true)
+            if (ProjectSettings.DeleteWorkingDirectoriesAtEnd == true)
             {
                 // Delete the working directory.
                 try
@@ -679,7 +679,7 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool RemoveFrames_DirDirectory()
         {
-            if (DeleteWorkingDirectories == true)
+            if (ProjectSettings.DeleteWorkingDirectoriesAtEnd == true)
             {
                 try
                 {
@@ -1220,7 +1220,7 @@ namespace RSPro2Video
                     break;
 
                 case 1:
-                    ProjectSettings.VideoQuality = VideoQuality.Small;
+                    ProjectSettings.VideoQuality = VideoQuality.YouTube;
                     break;
 
                 case 2:

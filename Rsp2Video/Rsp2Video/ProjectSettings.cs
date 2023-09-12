@@ -20,7 +20,7 @@ namespace RSPro2Video
         /// Identifies the bookmark file type, such as FmBok or RSVideo.
         /// </summary>
         public BookmarkFileType BookmarkFileType { get; set; }
-        
+
         /// <summary>
         /// Original video file, typically downloaded from YouTube.
         /// </summary>
@@ -65,7 +65,7 @@ namespace RSPro2Video
         /// <summary>
         /// When true, the source to use for bookmark text is the transcript file (.txt/.bok).
         /// </summary>
-        public Boolean SourceTranscriptFile { get; set; }
+        // public Boolean SourceTranscriptFile { get; set; }
 
 
         /// <summary>
@@ -83,6 +83,51 @@ namespace RSPro2Video
         public ReversalRate ReversalRate4 { get; set; }
 
         /// <summary>
+        /// The foreground color for text and captions.
+        /// </summary>
+        public String TextForegroundColor { get; set; }
+
+        /// <summary>
+        /// The color of the background for captions.
+        /// </summary>
+        public String TextBackgroundColor { get; set; }
+
+        /// <summary>
+        /// The alpha value for the text background box.
+        /// </summary>
+        public int TextBackgroundTransparency { get; set; }
+
+        /// <summary>
+        /// The maximum number of lines of text to be visible on screen.
+        /// </summary>
+        public int TextLinesOnScreen { get; set; }
+
+        /// <summary>
+        /// The assumed number of characters the reader can read in one second.
+        /// </summary>
+        public Double ReadingCharactersPerSecond { get; set; }
+
+        /// <summary>
+        /// The time, in seconds, for transitions to and from a card.
+        /// </summary>
+        public Double TransitionLengthCard { get; set; }
+
+        /// <summary>
+        /// The time, in seconds, for major transitions.
+        /// </summary>
+        public Double TransitionLengthMajor { get; set; }
+
+        /// <summary>
+        /// The time, in seconds, for minor transitions.
+        /// </summary>
+        public Double TransitionLengthMinor { get; set; }
+
+        /// <summary>
+        /// True if motion interpolated frames are to be created for non-100% reversal clips.
+        /// </summary>
+        public MotionInterpolation MotionInterpolation { get; set; }
+
+        /// <summary>
         /// If true, a clip will be added to show the reversal at 100% forward speed, followed immediately
         /// by the reversal at 100% reverse.
         /// </summary>
@@ -93,6 +138,22 @@ namespace RSPro2Video
         /// listener of their context in the overall video.
         /// </summary>
         public Boolean ReplayForwardVideo { get; set; }
+
+        /// <summary>
+        /// When true, the forward bookmark clip is played in its entirety before any reversal clips play.
+        /// 
+        /// When false, the forward bookmark clip is played up to the end of a reversal clip, which then plays,
+        /// then the forward clip resumes at the beginning of the reversal clip and plays to the end of the next
+        /// reversal clip, or the end of the forward clip.
+        /// </summary>
+        public Boolean PlayForwardBookmarkCompletely { get; set; }
+        public Boolean IncludeBookmarkNameInTextOverlays { get; set; }
+        public TransitionType TransitionType { get; set; }
+        public Boolean IncludeOpeningCard { get; set; }
+        public Boolean IncludeClosingCard { get; set; }
+        public Boolean IncludeForwardExplanations { get; set; }
+        public Boolean IncludeReverseExplanations { get; set; }
+        public Boolean DeleteWorkingDirectoriesAtEnd { get; set; }
 
         /// <summary>
         /// Constructor creates needed field values.
@@ -129,5 +190,8 @@ namespace RSPro2Video
 
     public enum VideoContents { None, FullVideo, BookmarksOnly, SeparateVideos }
     public enum OutputType { None, VideoFile, VideoProject }
-    public enum VideoQuality { Fast, Small, High }
+    public enum BookmarkFileType { None, FmBok, bok, RSVideo, Text, RTF }
+    public enum VideoQuality { Fast, YouTube, High }
+    public enum TransitionType { None, CrossDissolve, HoldLastFrame }
+    public enum MotionInterpolation { None, Good, Better, Best }
 }
