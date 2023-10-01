@@ -181,6 +181,9 @@ namespace RSPro2Video
             {
                 foreach (Bookmark reverseBookmark in forwardBookmark.ReferencedBookmarks)
                 {
+                    // Check to see if this bookmark is not selected for output.
+                    if (reverseBookmark.Selected == false) { continue; }
+
                     // Update the user.
                     Progress.Report(String.Format("Working: Creating video for {0}: {1}", reverseBookmark.Name, reverseBookmark.Text));
 
