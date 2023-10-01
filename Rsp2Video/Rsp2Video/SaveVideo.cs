@@ -1386,7 +1386,7 @@ namespace RSPro2Video
 
             // Create the inner commands for ffmpeg.
             // -r {0}                       # Frame rate.
-            // -loop 1 - i \"{1}.png\"      # Loop this input stream.
+            // -loop 1 - i \"{1}.png\"      # Make a video input stream from a loop of the specified image.
             // -i \"{3}\"                   # Use this input stream (will be used to create silent audio channel).
             // -filter_complex              # Pass the following string to the ffmpeg filter_complex.
             // [2:a]                        # From the third input, select the audio channel.
@@ -1425,7 +1425,7 @@ namespace RSPro2Video
 
             // Create the inner commands for ffmpeg.
             // -r {0}                       # Frame rate.
-            // -loop 1 - i \"{1}.png\"      # Loop this input stream.
+            // -loop 1 - i \"{1}.png\"      # Make a video input stream from a loop of the specified image.
             // -i \"{3}\"                   # Use this input stream (will be used to create silent audio channel).
             // -filter_complex              # Pass the following string to the ffmpeg filter_complex.
             // [2:a]                        # From the third input, select the audio channel.

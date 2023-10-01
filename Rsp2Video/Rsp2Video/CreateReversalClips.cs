@@ -181,6 +181,9 @@ namespace RSPro2Video
             {
                 foreach (Bookmark reverseBookmark in forwardBookmark.ReferencedBookmarks)
                 {
+                    // Check to see if this bookmark is not selected for output.
+                    if (reverseBookmark.Selected == false) { continue; }
+
                     // Update the user.
                     Progress.Report(String.Format("Working: Creating video for {0}: {1}", reverseBookmark.Name, reverseBookmark.Text));
 
@@ -234,7 +237,7 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmpegApp,
-                Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -q:v 1 -t {2:0.######} \"{3}\\{4}.%05d.png\"",
+                Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -pix_fmt rgb48 -an -q:v 1 -t {2:0.######} \"{3}\\{4}.%05d.png\"",
                     startSeconds, RelativePathToWorkingInputVideoFile, lengthSeconds, FRAMES_DIR, name),
                 UseShellExecute = false,
                 RedirectStandardError = true,
@@ -445,7 +448,7 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmpegApp,
-                Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -q:v 1 -t {2:0.######} -f image2 \"{3}.{4}.png\"",
+                Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -pix_fmt rgb48 -an -q:v 1 -t {2:0.######} -f image2 \"{3}.{4}.png\"",
                     timeInSeconds, RelativePathToWorkingInputVideoFile, lengthInSeconds, bookmark.Name, suffix),
                 UseShellExecute = false,
                 RedirectStandardError = true,
@@ -497,7 +500,7 @@ namespace RSPro2Video
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmpegApp,
-                Arguments = String.Format("-y -hide_banner -ss 0.0 -i \"{0}\" -an -q:v 1 -t {1:0.######} -f image2 \"OpeningFrame.png\"",
+                Arguments = String.Format("-y -hide_banner -ss 0.0 -i \"{0}\" -pix_fmt rgb48 -an -q:v 1 -t {1:0.######} -f image2 \"OpeningFrame.png\"",
                     RelativePathToWorkingInputVideoFile, lengthInSeconds),
                 UseShellExecute = false,
                 RedirectStandardError = true,
@@ -546,7 +549,7 @@ namespace RSPro2Video
                 process.StartInfo = new ProcessStartInfo
                 {
                     FileName = FfmpegApp,
-                    Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -an -q:v 1 -t {2:0.######} -f image2 \"ClosingFrame.png\"",
+                    Arguments = String.Format("-y -hide_banner -ss {0:0.######} -i \"{1}\" -pix_fmt rgb48 -an -q:v 1 -t {2:0.######} -f image2 \"ClosingFrame.png\"",
                         ClosingFrameTime, RelativePathToWorkingInputVideoFile, lengthInSeconds),
                     UseShellExecute = false,
                     RedirectStandardError = true,
@@ -602,7 +605,8 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool CreateOverlayPngFiles()
         {
-            foreach (Bookmark forwardBookmark in ForwardBookmarks)
+            //foreach (Bookmark forwardBookmark in ForwardBookmarks)
+            Parallel.ForEach(ForwardBookmarks, forwardBookmark =>
             {
                 // For Forward and Reverse, create a text overly from the forward bookmark text.
                 if (ProjectSettings.BookmarkTypeFnR)
@@ -641,14 +645,15 @@ namespace RSPro2Video
                     {
                         CreateForwardTextOverlay(reverseBookmark.Name + ".Text.png", reverseBookmark.Name + ": " + reverseBookmark.Text);
                     }
-                    
+
                     // Write the reverse explanation to a .png file.
                     if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
                     {
                         CreateCard(reverseBookmark.Name + ".Explanation.png", reverseBookmark.Explanation);
                     }
                 }
-            }
+            //}
+            });
 
             return true;
         }
