@@ -401,6 +401,7 @@ namespace RSPro2Video
             if (reversalRate.UseThisRate == false) { return true; }
 
             double reversalSpeed = (double)reversalRate.ReversalSpeed / 100.0d;
+            double reversalTone = (double)reversalRate.ReversalTone / 100.0d;
 
             // Calculate start, end, and length.
             double sampleBasedStartSeconds = (double)reversal.SampleStart / (double)SampleRate;
@@ -451,7 +452,7 @@ namespace RSPro2Video
                 audioFiltergraph = $"[0:a]atrim={calculatedFrameBasedStartSeconds:0.############}:duration={calculatedInitialSilence:0.############}," +
                     $"volume=volume=0,areverse[SilentA];" +
                     $"[0:a]atrim={sampleBasedStartSeconds:0.############}:{sampleBasedEndSeconds:0.############}," +
-                    $"asetpts=PTS-STARTPTS,asetrate={SampleRate}*{reversalSpeed:0.###},aresample={SampleRate},areverse[SlowReverseA];" +
+                    $"asetpts=PTS-STARTPTS,rubberband=pitch={reversalTone:0.######}:tempo={reversalSpeed:0.######}:pitchq=quality,areverse[SlowReverseA];" +
                     $"[SilentA][SlowReverseA]concat=n=2:v=0:a=1,asetpts=PTS-STARTPTS[a]";
             }
 
