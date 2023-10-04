@@ -192,6 +192,6 @@ namespace RSPro2Video
     public enum OutputType { None, VideoFile, VideoProject }
     public enum BookmarkFileType { None, FmBok, bok, RSVideo, Text, RTF }
     public enum VideoQuality { Fast, YouTube, High }
-    public enum TransitionType { None, CrossDissolve, HoldLastFrame }
-    public enum MotionInterpolation { None, Good, Better, Best }
+    public enum TransitionType { None, CrossFade, HoldLastFrame }
+    public enum MotionInterpolation { None, BlendFrames, MotionGood, MotionBest }
 }
