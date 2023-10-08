@@ -1,5 +1,6 @@
 ﻿#define LOGSTRING
 
+using Rsp2Video;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -74,6 +75,7 @@ namespace RSPro2Video
 
         int CalculatedFontHeight;
 
+        List<FFmpegTask> FFmpegTasks = new List<FFmpegTask>();          // The list of ffmpeg tasks to run to create the video clips.
         List<String> CreatedClipList = new List<String>();              // The list of video clips that have already been created.
         List<VideoOutput> VideoOutputs = new List<VideoOutput>();       // The list of videos to output, and the clips needed to assemble them.
         int VideoOutputIndex = 0;                                       // The index to VideoOutputs specifying which video clip list is being accessed.

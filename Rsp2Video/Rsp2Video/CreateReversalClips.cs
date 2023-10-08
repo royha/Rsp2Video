@@ -26,10 +26,10 @@ namespace RSPro2Video
         private void CreateReversalClips()
         {
             // Create all of the reversal audio files.
-            CreateReversalAudioFiles();
+            // CreateReversalAudioFiles();
 
             // Create all of the reversal video files.
-            CreateReversalVideoFiles();
+            CreateAllReverseVideoTasks();
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace RSPro2Video
         /// <summary>
         /// Creates the reversal .wav files.
         /// </summary>
-        private void CreateReversalVideoFiles()
+        private void CreateAllReverseVideoTasks()
         {
             // Create the various reversals for each bookmarked reversal.
             foreach (Bookmark forwardBookmark in ForwardBookmarks)
@@ -188,7 +188,7 @@ namespace RSPro2Video
                     Progress.Report(String.Format("Working: Creating video for {0}: {1}", reverseBookmark.Name, reverseBookmark.Text));
 
                     // Create a video file for each selected reversal rate.
-                    if (CreateReverseVideo(reverseBookmark) == false) { break; }
+                    if (CreateReverseVideoTasks(reverseBookmark) == false) { break; }
                 }
             }
         }
@@ -199,24 +199,13 @@ namespace RSPro2Video
         /// <param name="reversal"></param>
         /// <param name="reversalRate"></param>
         /// <returns></returns>
-        private bool CreateReverseVideo(Bookmark reversal)
+        private bool CreateReverseVideoTasks(Bookmark reversal)
         {
-            // Calculate start and length in seconds in the source video.
-            double startSeconds = (double)reversal.SampleStart / (double)SampleRate;
-            double lengthSeconds = ((double)reversal.SampleEnd / (double)SampleRate) - (double)startSeconds;
-
-            // Extract the individual frames in the source video.
-            if (ExtractReverseVideoFrames(reversal.Name, startSeconds, lengthSeconds) == false) { return false; }
-
-            // Rename the frames to be in reverse order.
-            int frameCount = ReorderFrames(reversal.Name);
-            if (frameCount == -1) { return false; }
-
-            // Assemble the frames into a new video file.
-            if (AssembleReverseVideoFrames(reversal, 1, ProjectSettings.ReversalRate1, frameCount) == false) { return false; }
-            if (AssembleReverseVideoFrames(reversal, 2, ProjectSettings.ReversalRate2, frameCount) == false) { return false; }
-            if (AssembleReverseVideoFrames(reversal, 3, ProjectSettings.ReversalRate3, frameCount) == false) { return false; }
-            if (AssembleReverseVideoFrames(reversal, 4, ProjectSettings.ReversalRate4, frameCount) == false) { return false; }
+            // Create a task for each reversal rate.
+            if (CreateReverseVideoTask(reversal, 1, ProjectSettings.ReversalRate1) == false) { return false; }
+            if (CreateReverseVideoTask(reversal, 2, ProjectSettings.ReversalRate2) == false) { return false; }
+            if (CreateReverseVideoTask(reversal, 3, ProjectSettings.ReversalRate3) == false) { return false; }
+            if (CreateReverseVideoTask(reversal, 4, ProjectSettings.ReversalRate4) == false) { return false; }
 
             return true;
         }
@@ -395,30 +384,30 @@ namespace RSPro2Video
             return true;
         }
 
-        private bool CreateReversalVideoClip(Bookmark reversal, int reversalNumber, ReversalRate reversalRate)
+        private bool CreateReverseVideoTask(Bookmark reversal, int reversalNumber, ReversalRate reversalRate)
         {
             // If this rate isn't selected, return.
             if (reversalRate.UseThisRate == false) { return true; }
 
-            double reversalSpeed = (double)reversalRate.ReversalSpeed / 100.0d;
-            double reversalTone = (double)reversalRate.ReversalTone / 100.0d;
+            double reversalSpeed = Math.Round((double)reversalRate.ReversalSpeed / 100.0d, 15);
+            double reversalTone = Math.Round((double)reversalRate.ReversalTone / 100.0d, 15);
 
             // Calculate start, end, and length.
             double sampleBasedStartSeconds = (double)reversal.SampleStart / (double)SampleRate;
             double sampleBasedEndSeconds = (double)reversal.SampleEnd / (double)SampleRate;
-            double sampleBasedDuration = sampleBasedEndSeconds - sampleBasedStartSeconds;
+            double sampleBasedDuration = Math.Round(sampleBasedEndSeconds - sampleBasedStartSeconds, 15);
 
-            double originalFrameBasedStartSeconds = Math.Floor(sampleBasedStartSeconds * FramesPerSecond);
-            double originalFrameBasedEndSeconds = Math.Ceiling(sampleBasedEndSeconds * FramesPerSecond);
-            double originalFrameBasedDuration = originalFrameBasedEndSeconds - originalFrameBasedStartSeconds;
+            double originalFrameBasedStartSeconds = Math.Round(Math.Floor(sampleBasedStartSeconds * FramesPerSecond) / FramesPerSecond, 15);
+            double originalFrameBasedEndSeconds = Math.Round(Math.Ceiling(sampleBasedEndSeconds * FramesPerSecond) / FramesPerSecond, 15);
+            double originalFrameBasedDuration = Math.Round(originalFrameBasedEndSeconds - originalFrameBasedStartSeconds, 15);
 
             // The initial silence is the fraction of a frame (in seconds) from the frame end to the sample end
             // (because the audio will be reversed), extended by the reversal speed.
-            double originalInitialSilenceDuration = originalFrameBasedEndSeconds - sampleBasedEndSeconds;
+            double originalInitialSilenceDuration = Math.Round(originalFrameBasedEndSeconds - sampleBasedEndSeconds, 15);
 
-            double calculatedInitialSilenceDuration = originalInitialSilenceDuration / reversalSpeed;
+            double calculatedInitialSilenceDuration = Math.Round(originalInitialSilenceDuration / reversalSpeed, 15);
 
-            // The extended duration is start time of the reversal clip, taking into account the gap between the end sample and
+            // The extended duration is end time of the reversal clip, taking into account the gap between the end sample and
             // end frame, the extended time of the audio at the reversal rate (100, 85, 70%), and the gap to the start frame.
             // It is calculated as the original (100% rate) duration in seconds of the reversal bookmark (0.84s), plus the
             // fraction of a second between the end of the reversal and the last frame of the reversal (0.02s), extended by the
@@ -426,17 +415,30 @@ namespace RSPro2Video
             // (1.228571428571429s * 29.97 = 36.82028571428571, Math.Ceilng = 37). That frame count is then applied at the
             // output frame rate (37 frames / 29.97 fps = 1.234567901234568s). That number is subtracted from the frame based
             // end seconds to arrive at the calculated frame based start in seconds.
-            double calculatedFrameBasedStartSeconds = 
-                Math.Ceiling((originalFrameBasedEndSeconds + originalInitialSilenceDuration) / reversalSpeed * FramesPerSecond) / FramesPerSecond;
+            double calculatedFrameBasedEndSeconds = Math.Round(Math.Ceiling((originalFrameBasedEndSeconds + originalInitialSilenceDuration)
+                * FramesPerSecond) / FramesPerSecond, 15);
+            double calculatedFrameBasedDuration = Math.Round(Math.Ceiling(Math.Round((calculatedFrameBasedEndSeconds - originalFrameBasedStartSeconds)
+                / reversalSpeed * FramesPerSecond, 11)) / FramesPerSecond, 15);
 
+            // To walk it through ...
+            // double temp = calculatedFrameBasedEndSeconds - originalFrameBasedStartSeconds;
+            // temp = temp / reversalSpeed;
+            // temp = temp * FramesPerSecond;
+            // temp = Math.Round(temp, 11);
+            // temp = Math.Ceiling(temp);
+            // temp = temp / FramesPerSecond;
+            // temp = Math.Round(temp, 15);
+            // calculatedFrameBasedEndSeconds = temp;
+
+
+            // The list of FFMpeg commands to add to the task.
+            List<String> ffmpegCommandList = new List<String>();
 
             // Create the filter_complex filtergraphs.
             String videoFilename;
             String audioFiltergraph;
             String interpolationFiltergraph = String.Empty;
             String reverseFiltergraph = "[OverlayedV]reverse[v]";
-            String ffmpegArgumentString1;
-            String ffmpegArgumentString2;
 
             //
             // Audio filtergraphs.
@@ -447,8 +449,8 @@ namespace RSPro2Video
 
                 videoFilename = $"{reversal.Name}.{reversalNumber}.{reversalRate.ReversalSpeed}.Text";
 
-                audioFiltergraph = $"[0:a]atrim={calculatedFrameBasedStartSeconds:0.############}:duration={calculatedInitialSilenceDuration:0.############}," +
-                    $"volume=volume=0,areverse[SilentA];" +
+                audioFiltergraph = $"[0:a]atrim={calculatedFrameBasedEndSeconds:0.############}:duration={calculatedInitialSilenceDuration:0.############}," +
+                    $"asetpts=PTS-STARTPTS,volume=volume=0,areverse[SilentA];" +
                     $"[0:a]atrim={sampleBasedStartSeconds:0.############}:{sampleBasedEndSeconds:0.############}," +
                     $"asetpts=PTS-STARTPTS,asetrate={SampleRate}*{reversalSpeed:0.###},aresample={SampleRate},areverse[SlowReverseA];" +
                     $"[SilentA][SlowReverseA]concat=n=2:v=0:a=1,asetpts=PTS-STARTPTS[a]";
@@ -460,8 +462,8 @@ namespace RSPro2Video
                 videoFilename = $"{reversal.Name}.{reversalNumber}.{reversalRate.ReversalSpeed}-{reversalRate.ReversalTone}.Text";
 
                 // TODO: Add rubberband commands.
-                audioFiltergraph = $"[0:a]atrim={calculatedFrameBasedStartSeconds:0.############}:duration={calculatedInitialSilenceDuration:0.############}," +
-                    $"volume=volume=0,areverse[SilentA];" +
+                audioFiltergraph = $"[0:a]atrim={calculatedFrameBasedEndSeconds:0.############}:duration={calculatedInitialSilenceDuration:0.############}," +
+                    $"asetpts=PTS-STARTPTS,volume=volume=0,areverse[SilentA];" +
                     $"[0:a]atrim={sampleBasedStartSeconds:0.############}:{sampleBasedEndSeconds:0.############}," +
                     $"asetpts=PTS-STARTPTS,rubberband=pitch={reversalTone:0.######}:tempo={reversalSpeed:0.######}:pitchq=quality,areverse[SlowReverseA];" +
                     $"[SilentA][SlowReverseA]concat=n=2:v=0:a=1,asetpts=PTS-STARTPTS[a]";
@@ -474,10 +476,10 @@ namespace RSPro2Video
             {
                 // No motion interpolation requested (MotionInterpolation.None) or required (reversalRate.ReversalSpeed == 100).
 
-                interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedStartSeconds}:{originalFrameBasedEndSeconds}," +
+                interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedEndSeconds}:{originalFrameBasedEndSeconds}," +
                     $"setpts=PTS-STARTPTS," +
                     $"setpts=PTS/{reversalSpeed:0.###}," +
-                    "fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];" +
+                    $"fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];" +
                     $"[1:v]overlay[OverlayedV]";
             }
             else
@@ -485,14 +487,14 @@ namespace RSPro2Video
                 switch (ProjectSettings.MotionInterpolation)
                 {
                     case MotionInterpolation.BlendFrames:
-                        interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedStartSeconds}:{originalFrameBasedEndSeconds}," +
+                        interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedEndSeconds}:{originalFrameBasedEndSeconds}," +
                             $"setpts=PTS-STARTPTS,setpts=PTS/{reversalSpeed:0.###}," +
                             $"tblend=all_mode=average,fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];" +
                             $"[1:v]overlay[OverlayedV]";
                         break;
 
                     case MotionInterpolation.MotionGood:
-                        interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedStartSeconds}:{originalFrameBasedEndSeconds}," +
+                        interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedEndSeconds}:{originalFrameBasedEndSeconds}," +
                             $"setpts=PTS-STARTPTS," +
                             $"minterpolate=me=hexbs:fps={FramesPerSecond:0.############}/{reversalSpeed:0.###}," +
                             $"setpts=PTS/{reversalSpeed:0.###},fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];" +
@@ -500,7 +502,7 @@ namespace RSPro2Video
                         break;
 
                     case MotionInterpolation.MotionBest:
-                        interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedStartSeconds}:{originalFrameBasedEndSeconds}," +
+                        interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedEndSeconds}:{originalFrameBasedEndSeconds}," +
                             $"setpts=PTS-STARTPTS," +
                             $"minterpolate=mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1:fps={FramesPerSecond:0.############}/{reversalSpeed:0.###}," +
                             $"setpts=PTS/{reversalSpeed:0.###},fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];" +
@@ -509,105 +511,42 @@ namespace RSPro2Video
                 }
             }
 
-            // This, naturally, needs to be calculated.
-            Boolean sufficientMemoryForFfmpegReverse = false;
+            // The command to use when memory requirements allow the reverseFiltergraph method.
+            ffmpegCommandList.Add($"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" " +
+                $"-filter_complex \"{interpolationFiltergraph};{reverseFiltergraph}; {audioFiltergraph}\" " +
+                $"-map [v] -map [a] -progress \"{videoFilename}.progress\"");
 
-            if (sufficientMemoryForFfmpegReverse == false)
-            {
-                // If the memory requirements for this reversal video are too great to use reverseFiltergraph method, output a
-                // series of .png files for the video.
+            // After this, extract the first and last frames of the output video, naming the first file
+            // "{videoFilename}.First.png" and the last "{videoFilename}.Last.png".
 
-                // Prior to this, create a directory named {videoFilename}
-
-                ffmpegArgumentString1 = $"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" -pix_fmt rgb48 -an " + 
-                    $"-filter:v \"{interpolationFiltergraph}\" " +
-                    $"-progress \"{videoFilename}\\{videoFilename}.progress\" -threads 0 \"{videoFilename}\\r%05d.png\"";
-
-                // After this, reorder the .png files in the directory named {videoFilename} by renaming them.
-
-                ffmpegArgumentString2 = $"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{videoFilename}\\rr%05d.png\" " +
-                    $"-filter:a \"{audioFiltergraph}\" " +
-                    $"-progress \"{videoFilename}.progress\" -threads 0 \"{videoFilename}{OutputOptionsVideoInterimExtension}\"";
-
-                // After this, move the first and last .png files from the directory named {videoFilename} to the current
-                // directory, naming the first "{videoFilename}.First.png" and the last "{videoFilename}.Last.png".
-                // Then delete the directory.
-            }
-            else
-            {
-                // The memory requirements allow the reverseFiltergraph method.
-
-                ffmpegArgumentString1 = $"-i \"{RelativePathToWorkingInputVideoFile}\" " +
-                    $"-filter_complex \"{interpolationFiltergraph};{reverseFiltergraph}; {audioFiltergraph}\" " +
-                    $"{OutputInterimSettings} -map [v] -map [a] -progress \"{videoFilename}.progress\" -threads 0 \"{videoFilename}{OutputOptionsVideoInterimExtension}\"";
-
-                // After this, extract the first and last frames of the output video, naming the first file
-                // "{videoFilename}.First.png" and the last "{videoFilename}.Last.png".
-
-                String getFirst = $"-i \"{videoFilename}{OutputOptionsVideoInterimExtension}\" "
-                    + $"-pix_fmt rgb48 -an -filter:v \"select=eq(n\\,0)\" -f image2 -update 1 \"{videoFilename}.First.png\"";
-                int lastFrame = 43 - 1;
-                String getLast = $"-i \"{videoFilename}{OutputOptionsVideoInterimExtension}\" "
-                    + $"-pix_fmt rgb48 -an -filter:v \"select=eq(n\\,{lastFrame})\" -f image2 -update 1 \"{videoFilename}.Last.png\"";
-            }
-
-            // Calculate the frames per second for this reversal.
-            double reversalFps = FramesPerSecond * ((double)reversalRate.ReversalSpeed / (double)100);
-
-            // Create the ffmpeg argument string.
-            String arguments = String.Format("-y -hide_banner -framerate {0:0.######} -i \"{1}\\r{2}.%05d.png\" -i \"{3}{4}\" {6} -filter:v \"fps=fps={7:0.######}:eof_action=pass\" \"{3}{5}\"",
-                    FramesPerSecond * ((double)reversalRate.ReversalSpeed / 100d),
-                    FRAMES_DIR,
-                    reversal.Name,
-                    videoFilename,
-                    OutputAudioInterimExtension,
-                    OutputVideoInterimExtension,
-                    OutputImageSequenceSettings,
-                    FramesPerSecond);
+            // String getFirst = $"-i \"{videoFilename}{OutputOptionsVideoInterimExtension}\" "
+            //     + $"-pix_fmt rgb48 -an -filter:v \"select=eq(n\\,0)\" -f image2 -update 1 \"{videoFilename}.First.png\"";
+            // int lastFrame = 43 - 1;
+            // String getLast = $"-i \"{videoFilename}{OutputOptionsVideoInterimExtension}\" "
+            //     + $"-pix_fmt rgb48 -an -filter:v \"select=eq(n\\,{lastFrame})\" -f image2 -update 1 \"{videoFilename}.Last.png\"";
 
 
-            Process process = new Process();
+            // If the memory requirements for this reversal video are too great to use reverseFiltergraph method, output a
+            // series of .png files for the video.
 
-            // Configure the process using the StartInfo properties.
-            process.StartInfo = new ProcessStartInfo
-            {
-                FileName = FfmpegApp,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Maximized
-            };
+            // Prior to this, create a directory named {videoFilename}
 
-            // Log the ffmpeg command line options.
-            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            ffmpegCommandList.Add($"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" -pix_fmt rgb48 -an " + 
+                $"-filter:v \"{interpolationFiltergraph}\" " +
+                $"-progress \"{videoFilename}\\{videoFilename}.progress\" \"{videoFilename}\\r%05d.png\"");
 
-            // Start ffmpeg to extract the frames.
-            process.Start();
+            // After this, reorder the .png files in the directory named {videoFilename} by renaming them.
 
-            // Read the output of ffmpeg.
-            String FfmpegOutput = process.StandardError.ReadToEnd();
+            ffmpegCommandList.Add($"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{videoFilename}\\rr%05d.png\" " +
+                $"-filter:a \"{audioFiltergraph}\" " +
+                $"-progress \"{videoFilename}.progress\"");
 
-            // Log the ffmpeg output.
-            File.AppendAllText(LogFile, FfmpegOutput);
+            // After this, move the first and last .png files from the directory named {videoFilename} to the current
+            // directory, naming the first "{videoFilename}.First.png" and the last "{videoFilename}.Last.png".
+            // Then delete the directory.
 
-            // Wait here for the process to exit.
-            process.WaitForExit();
-            int ExitCode = process.ExitCode;
-            process.Close();
-
-            if (!(ExitCode == 0))
-            {
-                return false;
-            }
-
-            // Calculate the length, in seconds, of this clip. The slow reversal frame count, when adjusted back to the count of frames for the 
-            // output video, can leave a fractional number of frames. This fractional amount will be counted as a full frame in the output video. 
-            // Ie., 30 frames at 29fps for the reversal = 1.03448 seconds. 1.03448 * 30fps for the output video = 31.0344 frames, which then 
-            // will generate 32 frames in the output video. 32 frames / 30fps = 1.066667 seconds.
-            // double seconds = frameCount / reversalFps;
-            // double outputFrameCount = seconds * FramesPerSecond;
-            // if (outputFrameCount > Math.Floor(outputFrameCount)) { outputFrameCount = (double)Math.Floor(outputFrameCount + (double)1); }
+            // Add the task to the list of tasks
+            FFmpegTasks.Add(new FFmpegTask(1, calculatedFrameBasedDuration, videoFilename, ffmpegCommandList));
 
             // Add the video clip to the list of clips.
             CreatedClipList.Add(videoFilename + OutputVideoInterimExtension);
