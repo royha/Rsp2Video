@@ -104,7 +104,55 @@ namespace RSPro2Video
             // Execute the ffmpeg command to create the reverse video.
             if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads)) == false) { return false; }
 
+            // Get and store the clip duration.
+            if (GetProgressDuration(ffmpegTask.VideoFilename) < 0) { return false; }
+
             return true;
+        }
+
+
+        private double GetProgressDuration(string videoFilename)
+        {
+            String progressFile = videoFilename + ".progress";
+            String progressFileContents = String.Empty;
+            String searchString = "frame=";
+
+            // Read in the .progress file.
+            try { progressFileContents = File.ReadAllText(progressFile); }
+            catch (Exception e) 
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error opening {progressFile}. {e.Message}\r\n\r\n");
+                return -1d;
+            }
+
+            // Find the last frame count.
+            int i = progressFileContents.LastIndexOf(searchString);
+            if (i == -1) 
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to find frame count in {progressFile}. {progressFileContents}\r\n\r\n"); 
+                return -1d;
+            }
+
+            // Parse the last frame count.
+            String frameCountString = progressFileContents.Substring(i + searchString.Length);
+            frameCountString = frameCountString.Substring(0, frameCountString.IndexOf('\n'));
+            if (Int32.TryParse(frameCountString, out int frameCount) == false)
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Error parsing frame count in {progressFile}. {progressFileContents}\r\n\r\n"); 
+                return -1d;
+            }
+            double duration = Math.Round((double)frameCount / FramesPerSecond, 15);
+
+            // Store the reverse video clip duration.
+            if (ClipDuration.TryAdd($"{videoFilename}{OutputVideoInterimExtension}", duration) == false)
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {progressFile} already exists in ClipDuration.\r\n\r\n");
+                return -1d;
+            }
+
+            File.Delete(progressFile);
+
+            return duration;
         }
 
         /// <summary>
@@ -190,7 +238,7 @@ namespace RSPro2Video
             }
 
             // Store the reverse video clip duration.
-            if (ClipDuration.TryAdd(ffmpegTask.VideoFilename, (double)newFrames.Length * FramesPerSecond) == false)
+            if (ClipDuration.TryAdd($"{ffmpegTask.VideoFilename}{OutputVideoInterimExtension}", (double)newFrames.Length * FramesPerSecond) == false)
             {
                 File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {ffmpegTask.VideoFilename} already exists in ClipDuration.\r\n\r\n");
                 return false;
@@ -561,6 +609,9 @@ namespace RSPro2Video
             double originalFrameBasedEndSeconds = Math.Round(Math.Ceiling(sampleBasedEndSeconds * FramesPerSecond) / FramesPerSecond, 15);
             double originalFrameBasedDuration = Math.Round(originalFrameBasedEndSeconds - originalFrameBasedStartSeconds, 15);
 
+            double silentAudioBeforeDuration = Math.Round(sampleBasedStartSeconds - originalFrameBasedStartSeconds, 15);
+            double silentAudioAfterDuration = Math.Round(originalFrameBasedEndSeconds - sampleBasedEndSeconds, 15);
+
             // The initial silence is the fraction of a frame (in seconds) from the frame end to the sample end
             // (because the audio will be reversed), extended by the reversal speed.
             double originalFinalSilenceDuration = Math.Round(originalFrameBasedEndSeconds - sampleBasedEndSeconds, 15);
@@ -689,7 +740,7 @@ namespace RSPro2Video
             // The command to use when memory requirements allow the reverseFiltergraph method.
             ffmpegCommandList.Add($"-y -hide_banner " +
                 $"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" -loop 1 " +
-                $"-filter_complex \"{interpolationFiltergraph};{reverseFiltergraph}; {audioFiltergraph}\" " +
+                $"-filter_complex \"{interpolationFiltergraph}; {reverseFiltergraph}; {audioFiltergraph}\" " +
                 $"-map [v] -map [a] -progress \"{videoFilename}.progress\" -threads {{0}} {OutputInterimSettings} " +
                 $"\"{videoFilename}{OutputVideoInterimExtension}\"");
 
