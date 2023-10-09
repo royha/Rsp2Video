@@ -85,10 +85,10 @@ namespace RSPro2Video
         private Boolean RunReverseVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
             // Available memory is sufficient to use the filtergraph reverse method.
-            if (RunReverseVideoTaskReverseMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
+            // if (RunReverseVideoTaskReverseMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
 
             // Available memory is insufficent to use the filtergraph reverse method. Use the .png method instead.
-            // if (RunReverseVideoTaskPngMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
+            if (RunReverseVideoTaskPngMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
 
             return true;
         }
