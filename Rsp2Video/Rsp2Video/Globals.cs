@@ -2,6 +2,7 @@
 
 using Rsp2Video;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -50,7 +51,7 @@ namespace RSPro2Video
         String WorkingDirectory;                                        // The directory of the _tmp directory under the output video file (settings.OutputFile).
         String FramesDirectory;                                         // The directory of the _frames directory under the WorkingDirectory.
         String WorkingInputVideoFile;                                   // The working input file. Typically "v.mp4" in the working directory.
-        DirectoryInfo diTmpDirectory;                                   // Stores information for the TEMP_DIR directory.
+        DirectoryInfo diPngDirectory;                                   // Stores information for the TEMP_DIR directory.
         DirectoryInfo fiTmpDirectory;                                   // Stores information for the FRAMES_DIR directory.
         IProgress<string> Progress;                                     // Allows the long-running process to update the UI.
 
@@ -79,6 +80,7 @@ namespace RSPro2Video
         List<String> CreatedClipList = new List<String>();              // The list of video clips that have already been created.
         List<VideoOutput> VideoOutputs = new List<VideoOutput>();       // The list of videos to output, and the clips needed to assemble them.
         int VideoOutputIndex = 0;                                       // The index to VideoOutputs specifying which video clip list is being accessed.
+        ConcurrentDictionary<String, Double> ClipDuration = new ConcurrentDictionary<String, Double>(); // Durations of each video clip.
         List<String> OutputOptionsInterimSettings;
         List<String> OutputOptionsImageSequenceSettings;
         List<String> OutputOptionsFinalSettings;

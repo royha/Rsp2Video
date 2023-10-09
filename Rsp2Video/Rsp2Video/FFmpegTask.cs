@@ -13,11 +13,18 @@ namespace RSPro2Video
     {
         /// <summary>
         /// The phase of the multiprocessing process this task is in.
-        /// 1 = Reverse video creation.
-        /// 2 = Forward bookmark video and forward video creation.
-        /// 3 = Card videos and transition videos.
+        /// 1 = Reverse, Forward bookmark, Forward video creation.
+        /// 2 = Explanation and Transition video creation.
         /// </summary>
         public int Phase { get; set; }
+
+        /// <summary>
+        /// The sort order within a phase.
+        /// 1 = Reverse videos.
+        /// 2 = Forward bookmark videos.
+        /// 3 = Forward videos.
+        /// </summary>
+        public FfmpegTaskSortOrder SortOrder { get; set; }
 
         /// <summary>
         /// The estimated duration of the video in seconds.
@@ -47,12 +54,14 @@ namespace RSPro2Video
         /// card videos.
         /// </summary>
         /// <param name="phase"></param>
+        /// <param name="sortOrder></param>
         /// <param name="estimatedDuration"></param>
         /// <param name="videoFilename"></param>
         /// <param name="ffmpegCommand"></param>
-        public FFmpegTask(int phase, double estimatedDuration, string videoFilename, String ffmpegCommand)
+        public FFmpegTask(int phase, FfmpegTaskSortOrder sortOrder, double estimatedDuration, string videoFilename, String ffmpegCommand)
         {
             this.Phase = phase;
+            this.SortOrder = sortOrder;
             this.EstimatedDuration = estimatedDuration;
             this.VideoFilename = videoFilename;
             this.FFmpegCommands = new List<String>()
@@ -69,15 +78,19 @@ namespace RSPro2Video
         /// file sequence and combines it with the reversed audio.
         /// </summary>
         /// <param name="phase"></param>
+        /// <param name="sortOrder></param>
         /// <param name="estimatedDuration"></param>
         /// <param name="videoFilename"></param>
         /// <param name="ffmpegCommands"></param>
-        public FFmpegTask(int phase, double estimatedDuration, string videoFilename, List<string> ffmpegCommands)
+        public FFmpegTask(int phase, FfmpegTaskSortOrder sortOrder, double estimatedDuration, string videoFilename, List<string> ffmpegCommands)
         {
             this.Phase = phase;
+            this.SortOrder = sortOrder;
             this.EstimatedDuration = estimatedDuration;
             this.VideoFilename = videoFilename;
             this.FFmpegCommands = ffmpegCommands;
         }
     }
+
+    public enum FfmpegTaskSortOrder { None = 0, ReverseVideo, ForwardBookmarkVideo, ForwardVideo }
 }

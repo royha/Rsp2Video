@@ -393,6 +393,53 @@ namespace RSPro2Video
         }
 
         /// <summary>
+        /// Runs the ffmpeg program with the specified arguments.
+        /// </summary>
+        /// <param name="arguments">The ffmpeg commands.</param>
+        /// <returns>Returns true if successful; otherwise false.</returns>
+        private bool RunFfmpegRaw(String arguments)
+        {
+            // Create the Process to call the external program.
+            Process process = new Process();
+
+            // Configure the process using the StartInfo properties.
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = FfmpegApp,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Maximized
+            };
+
+            // Log the ffmpeg command line options.
+            File.AppendAllText(LogFile, $"\r\n\r\n***Command line: {process.StartInfo.FileName} {process.StartInfo.Arguments}\r\n\r\n");
+
+            // Start ffmpeg to extract the frames.
+            process.Start();
+
+            // Read the output of ffmpeg.
+            String FfmpegOutput = process.StandardError.ReadToEnd();
+
+            // Log the ffmpeg output.
+            File.AppendAllText(LogFile, FfmpegOutput);
+
+            // Wait here for the process to exit.
+            process.WaitForExit();
+            int ExitCode = process.ExitCode;
+            process.Close();
+
+            // Return success or failure.
+            if (!(ExitCode == 0))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Creates the clips to be assembled by qmelt for a fill video with forward and reverse bookmarks.
         /// </summary>
         private void AssembleClipListFnRFullVideo()

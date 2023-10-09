@@ -30,6 +30,156 @@ namespace RSPro2Video
 
             // Create all of the reversal video files.
             CreateAllReverseVideoTasks();
+
+            // Execute the collected FFmpeg tasks.
+            RunAllFfmpegTasks();
+        }
+
+        /// <summary>
+        /// Executes all FFmpeg tasks.
+        /// </summary>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private Boolean RunAllFfmpegTasks()
+        {
+            Boolean retval = true;
+            int ffmpegThreads = 0;
+
+            // Get a list of Phase 1 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
+            List<FFmpegTask> phase1Tasks = FFmpegTasks
+                .FindAll(f => f.Phase == 1)
+                .OrderBy(o => o.SortOrder)
+                .ThenByDescending(t => t.EstimatedDuration)
+                .ToList();
+
+            // Run all of the Phase 1 tasks in order.
+            foreach (FFmpegTask ffmpegTask in phase1Tasks)
+            {
+                switch (ffmpegTask.SortOrder)
+                {
+                    case FfmpegTaskSortOrder.ReverseVideo:
+                        retval = RunReverseVideoTask(ffmpegThreads, ffmpegTask);
+                        break;
+
+                    case FfmpegTaskSortOrder.ForwardBookmarkVideo: 
+                        break;
+
+                    case FfmpegTaskSortOrder.ForwardVideo:
+                        break;
+                }
+
+                if (retval == false) 
+                { 
+                    return false; 
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a reverse video clip based on the specified FFmpegTask.
+        /// </summary>
+        /// <param name="ffmpegThreads">The value for the ffmpeg -threads command.</param>
+        /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private Boolean RunReverseVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
+        {
+            // Available memory is insufficent to use the filtergraph reverse method. Use the .png method instead.
+            if (RunReverseVideoTaskPngMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a reverse video clip based on the specified FFmpegTask.
+        /// </summary>
+        /// <param name="ffmpegThreads">The value for the ffmpeg -threads command.</param>
+        /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+
+        private Boolean RunReverseVideoTaskPngMethod(int ffmpegThreads, FFmpegTask ffmpegTask)
+        {
+            // If the memory requirements for this reversal video are too great to use reverseFiltergraph method, output a
+            // series of .png files for the video.
+
+            DirectoryInfo diPngDirectory;
+
+            // Create a directory to store the .png files.
+            String PngDirectory = Path.Combine(WorkingDirectory, ffmpegTask.VideoFilename);
+
+            // Create the directory for the .png files.
+            try { diPngDirectory = Directory.CreateDirectory(PngDirectory); }
+            catch (Exception e)
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to create directory {PngDirectory}, {e.Message}\r\n\r\n");
+                return false; 
+            }
+
+            // Output the clip as a series of .png files.
+            if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[1], ffmpegThreads)) == false) { return false; }
+
+            // Rename the .png files to reverse their order.
+            String[] newFrames = ReorderFrames(ffmpegTask.VideoFilename);
+
+            // Assemble the reversed .png files and add the reversed audio to create the reversal clip.
+            if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[2], ffmpegThreads)) == false) { return false; }
+
+            // Move and rename the last .png file to the VideoFilename.First.png.
+            String imageFilename = Path.Combine(WorkingDirectory, $"{ffmpegTask.VideoFilename}.First.png");
+
+            if (File.Exists(imageFilename))
+            {
+                try { File.Delete(imageFilename); }
+                catch (Exception e) 
+                { 
+                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n"); 
+                    return false; 
+                }
+            }
+
+            try { File.Move(Path.Combine(PngDirectory, newFrames[newFrames.Length - 1]), imageFilename); }
+            catch (Exception e) 
+            { 
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n"); 
+                return false; 
+            }
+
+            // Move and rename the first .png file to the VideoFilename.Last.png
+            imageFilename = Path.Combine(WorkingDirectory, $"{ffmpegTask.VideoFilename}.Last.png");
+
+            if (File.Exists(imageFilename))
+            {
+                try { File.Delete(imageFilename); }
+                catch (Exception e)
+                {
+                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
+                    return false;
+                }
+            }
+
+            try { File.Move(Path.Combine(PngDirectory, newFrames[0]), imageFilename); }
+            catch (Exception e)
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
+                return false;
+            }
+
+            // Delete the directory for the .png files.
+            try { diPngDirectory.Delete(true); }
+            catch 
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete directory {PngDirectory}\r\n\r\n");
+                // return false; 
+            }
+
+            // Store the reverse video clip duration.
+            if (ClipDuration.TryAdd(ffmpegTask.VideoFilename, (double)newFrames.Length * FramesPerSecond) == false)
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {ffmpegTask.VideoFilename} already exists in ClipDuration.\r\n\r\n");
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -259,13 +409,13 @@ namespace RSPro2Video
             return true;
         }
 
-        private int ReorderFrames(string name)
+        private String[] ReorderFrames(string videoFilename)
         {
             // Change into the _tmp directory.
-            Directory.SetCurrentDirectory(Path.Combine(WorkingDirectory, FRAMES_DIR));
+            Directory.SetCurrentDirectory(Path.Combine(WorkingDirectory, videoFilename));
 
             // Get a list of all the .png files (with path) from this clip.
-            String[] frames = Directory.GetFiles(".", name + ".*.png");
+            String[] frames = Directory.GetFiles(".", "f*.png");
 
             // Create an array of the .png files in reverse order with a slightly modified filename (adding "r" to the front of the filename).
             String[] newFrames = new string[frames.Length];
@@ -281,13 +431,6 @@ namespace RSPro2Video
                 newFrames[i] = "r" + frames[j];
             }
 
-            // Copy first and last frame frame to working directory, and record their filenames in the list.
-            String imageFilename = name + ".First.png";
-            File.Copy(frames[frames.Length - 1], "..\\" + imageFilename, true);
-
-            imageFilename = name + ".Last.png";
-            File.Copy(frames[0], "..\\" + imageFilename, true);
-
             // Rename all of the files.
             for (i = 0; i < frames.Length; ++i)
             {
@@ -302,7 +445,7 @@ namespace RSPro2Video
             // Change back to the working directory.
             Directory.SetCurrentDirectory(WorkingDirectory);
 
-            return frames.Length;
+            return newFrames;
         }
 
         private bool AssembleReverseVideoFrames(Bookmark reversal, int reversalNumber, ReversalRate reversalRate, int frameCount)
@@ -403,9 +546,9 @@ namespace RSPro2Video
 
             // The initial silence is the fraction of a frame (in seconds) from the frame end to the sample end
             // (because the audio will be reversed), extended by the reversal speed.
-            double originalInitialSilenceDuration = Math.Round(originalFrameBasedEndSeconds - sampleBasedEndSeconds, 15);
+            double originalFinalSilenceDuration = Math.Round(originalFrameBasedEndSeconds - sampleBasedEndSeconds, 15);
 
-            double calculatedInitialSilenceDuration = Math.Round(originalInitialSilenceDuration / reversalSpeed, 15);
+            double calculatedFinalSilenceDuration = Math.Round(originalFinalSilenceDuration / reversalSpeed, 15);
 
             // The extended duration is end time of the reversal clip, taking into account the gap between the end sample and
             // end frame, the extended time of the audio at the reversal rate (100, 85, 70%), and the gap to the start frame.
@@ -415,20 +558,35 @@ namespace RSPro2Video
             // (1.228571428571429s * 29.97 = 36.82028571428571, Math.Ceilng = 37). That frame count is then applied at the
             // output frame rate (37 frames / 29.97 fps = 1.234567901234568s). That number is subtracted from the frame based
             // end seconds to arrive at the calculated frame based start in seconds.
-            double calculatedFrameBasedEndSeconds = Math.Round(Math.Ceiling((originalFrameBasedEndSeconds + originalInitialSilenceDuration)
+            double calculatedFrameBasedEndSeconds = Math.Round(Math.Ceiling((originalFrameBasedEndSeconds + originalFinalSilenceDuration)
                 * FramesPerSecond) / FramesPerSecond, 15);
+            double calculatedFrameBasedStartSeconds = 
+                (originalFrameBasedEndSeconds - 
+                    Math.Ceiling(
+                        Math.Round(originalFrameBasedDuration / reversalSpeed, 15)      // Original duration, stretched.
+                    * FramesPerSecond)                                                  // Frame count, celininged.
+                / FramesPerSecond                                                       // Converted back to a duration.
+                );                                                                      // Converted back to a specific time.
             double calculatedFrameBasedDuration = Math.Round(Math.Ceiling(Math.Round((calculatedFrameBasedEndSeconds - originalFrameBasedStartSeconds)
                 / reversalSpeed * FramesPerSecond, 11)) / FramesPerSecond, 15);
 
             // To walk it through ...
-            // double temp = calculatedFrameBasedEndSeconds - originalFrameBasedStartSeconds;
-            // temp = temp / reversalSpeed;
-            // temp = temp * FramesPerSecond;
-            // temp = Math.Round(temp, 11);
-            // temp = Math.Ceiling(temp);
-            // temp = temp / FramesPerSecond;
-            // temp = Math.Round(temp, 15);
-            // calculatedFrameBasedEndSeconds = temp;
+            //double temp;
+
+            //temp = originalFrameBasedDuration / reversalSpeed;      // Original duration, stretched.
+            //temp = Math.Round(temp, 15);                            // Frame count, celininged.
+            //temp = Math.Ceiling(temp * FramesPerSecond);            // Converted back to a duration.
+            //temp = temp / FramesPerSecond;                          // Converted back to a specific time.
+            //calculatedFrameBasedStartSeconds = originalFrameBasedEndSeconds - temp;
+
+            //temp = calculatedFrameBasedEndSeconds - originalFrameBasedStartSeconds;
+            //temp = temp / reversalSpeed;
+            //temp = temp * FramesPerSecond;
+            //temp = Math.Round(temp, 11);
+            //temp = Math.Ceiling(temp);
+            //temp = temp / FramesPerSecond;
+            //temp = Math.Round(temp, 15);
+            //calculatedFrameBasedEndSeconds = temp;
 
 
             // The list of FFMpeg commands to add to the task.
@@ -449,7 +607,7 @@ namespace RSPro2Video
 
                 videoFilename = $"{reversal.Name}.{reversalNumber}.{reversalRate.ReversalSpeed}.Text";
 
-                audioFiltergraph = $"[0:a]atrim={calculatedFrameBasedEndSeconds:0.############}:duration={calculatedInitialSilenceDuration:0.############}," +
+                audioFiltergraph = $"[0:a]atrim={calculatedFrameBasedEndSeconds:0.############}:duration={calculatedFinalSilenceDuration:0.############}," +
                     $"asetpts=PTS-STARTPTS,volume=volume=0,areverse[SilentA];" +
                     $"[0:a]atrim={sampleBasedStartSeconds:0.############}:{sampleBasedEndSeconds:0.############}," +
                     $"asetpts=PTS-STARTPTS,asetrate={SampleRate}*{reversalSpeed:0.###},aresample={SampleRate},areverse[SlowReverseA];" +
@@ -462,7 +620,7 @@ namespace RSPro2Video
                 videoFilename = $"{reversal.Name}.{reversalNumber}.{reversalRate.ReversalSpeed}-{reversalRate.ReversalTone}.Text";
 
                 // TODO: Add rubberband commands.
-                audioFiltergraph = $"[0:a]atrim={calculatedFrameBasedEndSeconds:0.############}:duration={calculatedInitialSilenceDuration:0.############}," +
+                audioFiltergraph = $"[0:a]atrim={calculatedFrameBasedEndSeconds:0.############}:duration={calculatedFinalSilenceDuration:0.############}," +
                     $"asetpts=PTS-STARTPTS,volume=volume=0,areverse[SilentA];" +
                     $"[0:a]atrim={sampleBasedStartSeconds:0.############}:{sampleBasedEndSeconds:0.############}," +
                     $"asetpts=PTS-STARTPTS,rubberband=pitch={reversalTone:0.######}:tempo={reversalSpeed:0.######}:pitchq=quality,areverse[SlowReverseA];" +
@@ -476,45 +634,47 @@ namespace RSPro2Video
             {
                 // No motion interpolation requested (MotionInterpolation.None) or required (reversalRate.ReversalSpeed == 100).
 
-                interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedEndSeconds}:{originalFrameBasedEndSeconds}," +
+                interpolationFiltergraph = $"[0:v]trim={originalFrameBasedStartSeconds}:{originalFrameBasedEndSeconds}," +
                     $"setpts=PTS-STARTPTS," +
                     $"setpts=PTS/{reversalSpeed:0.###}," +
                     $"fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];" +
-                    $"[1:v]overlay[OverlayedV]";
+                    $"[SlowForwardV][1:v]overlay[OverlayedV]";
             }
             else
             {
                 switch (ProjectSettings.MotionInterpolation)
                 {
                     case MotionInterpolation.BlendFrames:
-                        interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedEndSeconds}:{originalFrameBasedEndSeconds}," +
+                        interpolationFiltergraph = $"[0:v]trim={originalFrameBasedStartSeconds}:{originalFrameBasedEndSeconds}," +
                             $"setpts=PTS-STARTPTS,setpts=PTS/{reversalSpeed:0.###}," +
                             $"tblend=all_mode=average,fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];" +
-                            $"[1:v]overlay[OverlayedV]";
+                            $"[SlowForwardV][1:v]overlay[OverlayedV]";
                         break;
 
                     case MotionInterpolation.MotionGood:
-                        interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedEndSeconds}:{originalFrameBasedEndSeconds}," +
+                        interpolationFiltergraph = $"[0:v]trim={originalFrameBasedStartSeconds}:{originalFrameBasedEndSeconds}," +
                             $"setpts=PTS-STARTPTS," +
                             $"minterpolate=me=hexbs:fps={FramesPerSecond:0.############}/{reversalSpeed:0.###}," +
                             $"setpts=PTS/{reversalSpeed:0.###},fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];" +
-                            $"[1:v]overlay[OverlayedV]";
+                            $"[SlowForwardV][1:v]overlay[OverlayedV]";
                         break;
 
                     case MotionInterpolation.MotionBest:
-                        interpolationFiltergraph = $"[0:v]trim={calculatedFrameBasedEndSeconds}:{originalFrameBasedEndSeconds}," +
+                        interpolationFiltergraph = $"[0:v]trim={originalFrameBasedStartSeconds}:{originalFrameBasedEndSeconds}," +
                             $"setpts=PTS-STARTPTS," +
                             $"minterpolate=mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1:fps={FramesPerSecond:0.############}/{reversalSpeed:0.###}," +
                             $"setpts=PTS/{reversalSpeed:0.###},fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];" +
-                            $"[1:v]overlay[OverlayedV]";
+                            $"[SlowForwardV][1:v]overlay[OverlayedV]";
                         break;
                 }
             }
 
             // The command to use when memory requirements allow the reverseFiltergraph method.
-            ffmpegCommandList.Add($"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" " +
+            ffmpegCommandList.Add($"-y -hide_banner " +
+                $"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" -loop 1 " +
                 $"-filter_complex \"{interpolationFiltergraph};{reverseFiltergraph}; {audioFiltergraph}\" " +
-                $"-map [v] -map [a] -progress \"{videoFilename}.progress\"");
+                $"-map [v] -map [a] -progress \"{videoFilename}.progress\" -threads {{0}} {OutputInterimSettings} " +
+                $"\"{videoFilename}{OutputVideoInterimExtension}\"");
 
             // After this, extract the first and last frames of the output video, naming the first file
             // "{videoFilename}.First.png" and the last "{videoFilename}.Last.png".
@@ -531,22 +691,24 @@ namespace RSPro2Video
 
             // Prior to this, create a directory named {videoFilename}
 
-            ffmpegCommandList.Add($"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" -pix_fmt rgb48 -an " + 
-                $"-filter:v \"{interpolationFiltergraph}\" " +
-                $"-progress \"{videoFilename}\\{videoFilename}.progress\" \"{videoFilename}\\r%05d.png\"");
+            ffmpegCommandList.Add($"-y -hide_banner " +
+                $"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" -loop 1 -pix_fmt rgb48 -an " + 
+                $"-filter_complex \"{interpolationFiltergraph}\" -map [OverlayedV] " +
+                $"-progress \"{videoFilename}\\{videoFilename}.progress\" -threads {{0}} \"{videoFilename}\\f%05d.png\"");
 
             // After this, reorder the .png files in the directory named {videoFilename} by renaming them.
 
-            ffmpegCommandList.Add($"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{videoFilename}\\rr%05d.png\" " +
-                $"-filter:a \"{audioFiltergraph}\" " +
-                $"-progress \"{videoFilename}.progress\"");
+            ffmpegCommandList.Add($"-y -hide_banner " +
+                $"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{videoFilename}\\rf%05d.png\" " +
+                $"-filter_complex \"[1:v]null[v];{audioFiltergraph}\" -map [a] -map [v] " +
+                $"-progress \"{videoFilename}.progress\" -threads {{0}} {OutputInterimSettings} \"{videoFilename}{OutputVideoInterimExtension}\"");
 
             // After this, move the first and last .png files from the directory named {videoFilename} to the current
             // directory, naming the first "{videoFilename}.First.png" and the last "{videoFilename}.Last.png".
             // Then delete the directory.
 
             // Add the task to the list of tasks
-            FFmpegTasks.Add(new FFmpegTask(1, calculatedFrameBasedDuration, videoFilename, ffmpegCommandList));
+            FFmpegTasks.Add(new FFmpegTask(1, FfmpegTaskSortOrder.ReverseVideo, calculatedFrameBasedDuration, videoFilename, ffmpegCommandList));
 
             // Add the video clip to the list of clips.
             CreatedClipList.Add(videoFilename + OutputVideoInterimExtension);

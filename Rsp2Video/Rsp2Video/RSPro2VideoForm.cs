@@ -33,9 +33,9 @@ namespace RSPro2Video
         {
             OutputOptionsInterimSettings = new List<String>(new String[] {
                     "-qscale:v 2",
-                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart -reset_timestamps 1",
-                    // "-c:v h264_nvenc -preset p2 -profile:v high -b:v 5M -bufsize 5M -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1",
-                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart -reset_timestamps 1" });
+                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart",
+                    // "-c:v h264_nvenc -preset p2 -profile:v high -b:v 5M -bufsize 5M -c:a aac -b:a 384k -movflags +faststart",
+                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart" });
             OutputOptionsImageSequenceSettings = new List<String>(new String[] {
                     "-qscale:v 2",
                     "-c:v libx264 -preset ultrafast -crf 18 -threads 0 -c:a aac -q:a 1 -movflags +faststart",
@@ -560,7 +560,7 @@ namespace RSPro2Video
             try
             {
                 // Try to create the directory.
-                diTmpDirectory = Directory.CreateDirectory(WorkingDirectory);
+                diPngDirectory = Directory.CreateDirectory(WorkingDirectory);
             }
             catch { return false; }
 
@@ -658,7 +658,7 @@ namespace RSPro2Video
                 try
                 {
                     // Delete the directory and any files and directories in that directory.
-                    diTmpDirectory.Delete(true);
+                    diPngDirectory.Delete(true);
                 }
                 catch { return false; }
 
