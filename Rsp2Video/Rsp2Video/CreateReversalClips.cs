@@ -84,14 +84,31 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunReverseVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
+            // Available memory is sufficient to use the filtergraph reverse method.
+            if (RunReverseVideoTaskReverseMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
+
             // Available memory is insufficent to use the filtergraph reverse method. Use the .png method instead.
-            if (RunReverseVideoTaskPngMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
+            // if (RunReverseVideoTaskPngMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
 
             return true;
         }
 
         /// <summary>
-        /// Creates a reverse video clip based on the specified FFmpegTask.
+        /// Creates a reverse video clip based on the specified FFmpegTask. Uses filter_complex filtergraph to reverse the video.
+        /// </summary>
+        /// <param name="ffmpegThreads">The value for the ffmpeg -threads command.</param>
+        /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private Boolean RunReverseVideoTaskReverseMethod(int ffmpegThreads, FFmpegTask ffmpegTask)
+        {
+            // Execute the ffmpeg command to create the reverse video.
+            if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads)) == false) { return false; }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a reverse video clip based on the specified FFmpegTask. Exports and imports .png files to reverse the video.
         /// </summary>
         /// <param name="ffmpegThreads">The value for the ffmpeg -threads command.</param>
         /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
