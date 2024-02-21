@@ -393,7 +393,8 @@ namespace RSPro2Video
         }
 
         /// <summary>
-        /// Runs the ffmpeg program with the specified arguments.
+        /// Runs the ffmpeg program with the specified argument string without adding the filename to CreatedClipList or to
+        /// VideoOutputs.
         /// </summary>
         /// <param name="arguments">The ffmpeg commands.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
@@ -440,7 +441,7 @@ namespace RSPro2Video
         }
 
         /// <summary>
-        /// Creates the clips to be assembled by qmelt for a fill video with forward and reverse bookmarks.
+        /// Creates the clips for a full video with forward and reverse bookmarks.
         /// </summary>
         private void AssembleClipListFnRFullVideo()
         {

@@ -950,6 +950,12 @@ namespace RSPro2Video
                     ++x;
                 }
 
+                // Special case for a bookmark name that is 6 characters in length.
+                if (len == 6)
+                {
+                    x += 4;
+                }
+
                 // Skip the Unknown Int32.
                 x += 4;
 

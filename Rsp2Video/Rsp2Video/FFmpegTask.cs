@@ -92,5 +92,5 @@ namespace RSPro2Video
         }
     }
 
-    public enum FfmpegTaskSortOrder { None = 0, ReverseVideo, ForwardBookmarkVideo, ForwardVideo }
+    public enum FfmpegTaskSortOrder { None = 0, ReverseVideo, ForwardBookmarkVideo, ForwardVideo, TransitionVideo }
 }
