@@ -188,6 +188,33 @@ namespace RSPro2Video
         public int ReversalTone { get; set; }
     }
 
+    /// <summary>
+    /// The locations of the starting square bracet and the ending square bracket in a forward bookmark.
+    /// </summary>
+    public class BracketPair
+    {
+        /// <summary>
+        /// The location of the opening square bracket.
+        /// </summary>
+        public int BracketOpen { get; set; }
+
+        /// <summary>
+        /// The location of the Closing square bracket.
+        /// </summary>
+        public int BracketClose { get; set; }
+
+        /// <summary>
+        /// Constructs a new object with the specified values.
+        /// </summary>
+        /// <param name="open">The index of the opening square bracket.</param>
+        /// <param name="close">The index of the closing square bracket.</param>
+        public BracketPair(int open, int close)
+        {
+            this.BracketOpen = open;
+            this.BracketClose = close;
+        }
+    }
+
     public enum VideoContents { None, FullVideo, BookmarksOnly, SeparateVideos }
     public enum OutputType { None, VideoFile, VideoProject }
     public enum BookmarkFileType { None, FmBok, bok, RSVideo, Text, RTF }

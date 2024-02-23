@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RSPro2Video.Properties;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -1029,14 +1030,38 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool CreateOverlayPngFiles()
         {
-            //foreach (Bookmark forwardBookmark in ForwardBookmarks)
-            Parallel.ForEach(ForwardBookmarks, forwardBookmark =>
+            String forwardOverlayText;
+            String reverseOverlayText;
+
+            foreach (Bookmark forwardBookmark in ForwardBookmarks)
+            //Parallel.ForEach(ForwardBookmarks, forwardBookmark =>
             {
                 // For Forward and Reverse, create a text overly from the forward bookmark text.
                 if (ProjectSettings.BookmarkTypeFnR)
                 {
                     // Write the text of the forward speech to a .png file.
-                    CreateForwardTextOverlay(forwardBookmark.Name + ".Text.png", forwardBookmark.Text);
+                    if (ProjectSettings.VideoContents == VideoContents.SeparateVideos)
+                    {
+                        // Write the text of the forward speech for each specific reversal to a .png file.
+                        for (int j = 0; j < forwardBookmark.ReferencedBookmarks.Count; ++j)
+                        {
+                            forwardOverlayText = ProjectSettings.IncludeBookmarkNameInTextOverlays ?
+                                forwardBookmark.Name + ": " + forwardBookmark.Text : forwardBookmark.Text;
+
+                            forwardOverlayText = KeepSpecificBracketPair(j, forwardOverlayText);
+
+                            // Write the text of the forward speech to a .png file.
+                            CreateForwardTextOverlay(forwardBookmark.Name + "-" + j + ".Text.png", forwardOverlayText);
+                        }
+                    }
+                    else
+                    {
+                        forwardOverlayText = ProjectSettings.IncludeBookmarkNameInTextOverlays ?
+                            forwardBookmark.Name + ": " + forwardBookmark.Text : forwardBookmark.Text;
+
+                        // Write the text of the forward speech to a .png file.
+                        CreateForwardTextOverlay(forwardBookmark.Name + ".Text.png", forwardOverlayText);
+                    }
                 }
 
                 // if Orphaned Reversals or Quick Check, display the reverse bookmark name and text.
@@ -1045,8 +1070,11 @@ namespace RSPro2Video
                     // Get the first referenced bookmark.
                     Bookmark reverseBookmark = forwardBookmark.ReferencedBookmarks[0];
 
+                    reverseOverlayText = ProjectSettings.IncludeBookmarkNameInTextOverlays ?
+                            reverseBookmark.Name + ": " + reverseBookmark.Text : reverseBookmark.Text;
+
                     // Save to the forward name ".Text.png", the name and text of the reverse bookmark.
-                    CreateForwardTextOverlay(forwardBookmark.Name + ".Text.png", reverseBookmark.Name + ": " + reverseBookmark.Text);
+                    CreateForwardTextOverlay(reverseBookmark.Name + ".Text.png", reverseOverlayText);
                 }
 
                 // Write the forward explanation to a .png file.
@@ -1062,7 +1090,30 @@ namespace RSPro2Video
                     // Write the text of the reverse speech to a .png file.
                     if (ProjectSettings.BookmarkTypeFnR)
                     {
-                        CreateReverseTextOverlay(reverseBookmark.Name + ".Text.png", forwardBookmark.Text, reverseBookmark.Text, i);
+                        // Write the text of the forward speech to a .png file.
+                        if (ProjectSettings.VideoContents == VideoContents.SeparateVideos)
+                        {
+                            // Write the text of the forward speech for each specific reversal to a .png file.
+                            forwardOverlayText = ProjectSettings.IncludeBookmarkNameInTextOverlays ?
+                                forwardBookmark.Name + ": " + forwardBookmark.Text : forwardBookmark.Text;
+                            reverseOverlayText = ProjectSettings.IncludeBookmarkNameInTextOverlays ?
+                                reverseBookmark.Name + ": " + reverseBookmark.Text : reverseBookmark.Text;
+
+                            forwardOverlayText = KeepSpecificBracketPair(i, forwardOverlayText);
+
+                            // Write the text of the forward and reverse speech to a .png file.
+                            CreateReverseTextOverlay(reverseBookmark.Name + "-" + i + ".Text.png", forwardOverlayText, reverseOverlayText, i);
+                        }
+                        else
+                        {
+                            forwardOverlayText = ProjectSettings.IncludeBookmarkNameInTextOverlays ?
+                                forwardBookmark.Name + ": " + forwardBookmark.Text : forwardBookmark.Text;
+                            reverseOverlayText = ProjectSettings.IncludeBookmarkNameInTextOverlays ?
+                                reverseBookmark.Name + ": " + reverseBookmark.Text : reverseBookmark.Text;
+
+                            // Write the text of the forward and reverse speech to a .png file.
+                            CreateReverseTextOverlay(reverseBookmark.Name + "-" + i + ".Text.png", forwardOverlayText, reverseOverlayText, i);
+                        }
                     }
 
                     if (ProjectSettings.BookmarkTypeQuickCheck || ProjectSettings.BookmarkTypeOrphanedReversals)
@@ -1076,10 +1127,128 @@ namespace RSPro2Video
                         CreateCard(reverseBookmark.Name + ".Explanation.png", reverseBookmark.Explanation);
                     }
                 }
-            //}
-            });
+            }
+            //});
 
             return true;
+        }
+
+        /// <summary>
+        /// Removes all square bracket pairs except for the specified bracket pair.
+        /// </summary>
+        /// <param name="keep">The specified bracket pair to keep.</param>
+        /// <param name="BookmarkText">The bookmark text which may contain square bracket pairs.</param>
+        /// <returns>The bookmark string with only the specified bracket pair.</returns>
+        private string KeepSpecificBracketPair(int keep, string BookmarkText)
+        {
+            int location = 0;
+            int length = 0;
+            String s;
+
+            if (BookmarkText == null || BookmarkText == String.Empty)
+            {
+                return String.Empty;
+            }
+
+            List<BracketPair> bracketPairs = GetBracketLocations(BookmarkText);
+
+            if (bracketPairs.Count == 0) 
+            { 
+                return BookmarkText; 
+            }
+
+            StringBuilder sb = new StringBuilder();
+
+            // Add text before the opening bracket.
+            if (bracketPairs[0].BracketOpen > 0)
+            {
+                length = bracketPairs[0].BracketOpen;
+                s = BookmarkText.Substring(0, length);
+                sb.Append(s);
+            }
+
+            // Walk through the bracket pairs.
+            for (int i = 0; i < bracketPairs.Count; ++i)
+            {
+                length = bracketPairs[i].BracketClose - bracketPairs[i].BracketOpen;
+
+                // Skip removal if this is the bracket pair to keep.
+                if (i == keep)
+                {
+                    // Add the bracketed text with the brackets and the text to the next opening bracket or end of string.
+
+                    // Is there another pair of brackets?
+                    if (i + 1 < bracketPairs.Count)
+                    {
+                        length = bracketPairs[i + 1].BracketOpen - bracketPairs[i].BracketOpen;
+                        s = BookmarkText.Substring(bracketPairs[i].BracketOpen, length);
+                    }
+                    else
+                    {
+                        // If not, take the rest of the BookmarkText.
+                        s = BookmarkText.Substring(bracketPairs[i].BracketOpen);
+                    }
+                    sb.Append(s);
+
+                    continue;
+                }
+
+                // Add text after the opening bracket to before the closing bracket.
+                s = BookmarkText.Substring(bracketPairs[i].BracketOpen + 1, length - 1);
+                sb.Append(s);
+
+                // Add the text after the closing bracket up to the next opening bracket or end of string.
+
+                // Is there another pair of brackets?
+                if (i + 1 < bracketPairs.Count)
+                {
+                    // There is another bracket pair. Copy up to the opening bracket.
+                    length = bracketPairs[i + 1].BracketOpen - 2 - bracketPairs[i].BracketClose + 1;
+                    s = BookmarkText.Substring(bracketPairs[i].BracketClose + 1, length);
+                    sb.Append(s);
+                }
+                else
+                {
+                    // Take the BookmarkText after the closing bracket.
+                    // If this closing bracket is at the end of the string, do nothing.
+                    if (bracketPairs[i].BracketClose + 1 < BookmarkText.Length)
+                    {
+                        s = BookmarkText.Substring(bracketPairs[i].BracketClose + 1);
+                        sb.Append(s);
+                    }
+                }
+            }
+
+            // Return the new bookmark string.
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Gets the locations
+        /// </summary>
+        /// <param name="bookmarkText"></param>
+        /// <returns></returns>
+        private List<BracketPair> GetBracketLocations(string bookmarkText)
+        {
+            List<BracketPair> bracketPairs = new List<BracketPair>();
+
+            int i = 0, opening, closing;
+            int index = 0;
+
+            while ((index = bookmarkText.IndexOf('[', index)) >= 0)
+            {
+                opening = index;
+
+                index = bookmarkText.IndexOf(']', index);
+                if (index < 0) break;
+
+                closing = index;
+
+                bracketPairs.Add(new BracketPair(opening, closing));
+                ++i;
+            }
+
+            return bracketPairs;
         }
 
         /// <summary>
