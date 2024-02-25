@@ -666,7 +666,7 @@ namespace RSPro2Video
             String audioFiltergraph;
             String interpolationFiltergraph = String.Empty;
             String reverseVideoFiltergraph = "[OverlayedV]reverse[v]";
-            String reverseAudioFiltergraph = "[SlowAudio]areverse[a]";
+            // String reverseAudioFiltergraph = "[SlowAudio]areverse[a]";
 
 
 
@@ -1039,10 +1039,10 @@ namespace RSPro2Video
                 // For Forward and Reverse, create a text overly from the forward bookmark text.
                 if (ProjectSettings.BookmarkTypeFnR)
                 {
-                    // Write the text of the forward speech to a .png file.
+                    // Write the text of the forward bookmark to a .png file.
                     if (ProjectSettings.VideoContents == VideoContents.SeparateVideos)
                     {
-                        // Write the text of the forward speech for each specific reversal to a .png file.
+                        // Write the text of the forward bookmark for each specific reversal to a .png file.
                         for (int j = 0; j < forwardBookmark.ReferencedBookmarks.Count; ++j)
                         {
                             forwardOverlayText = ProjectSettings.IncludeBookmarkNameInTextOverlays ?
@@ -1050,7 +1050,7 @@ namespace RSPro2Video
 
                             forwardOverlayText = KeepSpecificBracketPair(j, forwardOverlayText);
 
-                            // Write the text of the forward speech to a .png file.
+                            // Write the text of the forward bookmark to a .png file.
                             CreateForwardTextOverlay(forwardBookmark.Name + "-" + j + ".Text.png", forwardOverlayText);
                         }
                     }
@@ -1141,7 +1141,6 @@ namespace RSPro2Video
         /// <returns>The bookmark string with only the specified bracket pair.</returns>
         private string KeepSpecificBracketPair(int keep, string BookmarkText)
         {
-            int location = 0;
             int length = 0;
             String s;
 

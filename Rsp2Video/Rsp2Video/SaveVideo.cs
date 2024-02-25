@@ -450,14 +450,11 @@ namespace RSPro2Video
             // Add 1/2 second of black.
             AddBlack(0.5d);
 
-            // Add the video offset.
-            AddVideoOffset();
-
             // Add the opening card.
             AddOpeningCard();
 
             // Fade in to the opening frame from black.
-            AddTransitionFromBlack("OpeningFrame");
+            AddTransitionFromBlack("OpeningFrame", ProjectSettings.TransitionLengthCard);
             
             // Add the starting video clip.
             AddStartingVideoClip();
@@ -471,23 +468,24 @@ namespace RSPro2Video
                 Progress.Report(String.Format("Working: Creating video for {0}: {1}", forwardBookmark.Name, forwardBookmark.Text));
 
                 // If there is a forward explanation.
-                if (String.IsNullOrWhiteSpace(forwardBookmark.Explanation) == false)
+                if (ProjectSettings.IncludeForwardExplanations && String.IsNullOrWhiteSpace(forwardBookmark.Explanation) == false)
                 {
                     // Add fade to black.
-                    AddTransitionToBlack(forwardBookmark.Name + ".First");
+                    AddTransitionToBlack(forwardBookmark.Name + ".First", ProjectSettings.TransitionLengthCard);
 
                     // Add the forward explanation.
                     AddExplanationCard(forwardBookmark);
 
                     // Add fade from black.
-                    AddTransitionFromBlack(forwardBookmark.Name + ".First");
+                    AddTransitionFromBlack(forwardBookmark.Name + ".First", ProjectSettings.TransitionLengthCard);
                 }
 
                 // Add the forward video with text overlay.
                 AddForwardVideo(forwardBookmark);
 
-                // Set the frame to transition from.
+                // Set the frame to transition from and initial transition length.
                 TransitionFromFrame = forwardBookmark.Name + ".Last";
+                double TransitionLength = ProjectSettings.TransitionLengthMajor;
 
                 if (forwardBookmark.ReferencedBookmarks.Count > 0)
                 {
@@ -497,7 +495,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
@@ -509,7 +508,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
@@ -521,7 +521,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
@@ -533,7 +534,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
@@ -546,7 +548,7 @@ namespace RSPro2Video
                         if (ProjectSettings.IncludeBackAndForth)
                         {
                             // Add the transition to the back and forth.
-                            AddBackAndForthTransition(reverseBookmark);
+                            AddBackAndForthTransition(reverseBookmark, ProjectSettings.TransitionLengthMajor);
 
                             // Add the back and forth.
                             AddBackAndForth(reverseBookmark);
@@ -556,32 +558,35 @@ namespace RSPro2Video
                         }
 
                         // If there is a reverse explanation.
-                        if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
+                        if (ProjectSettings.IncludeReverseExplanations)
                         {
-                            // Add fade to black.
-                            AddTransitionToBlack(TransitionFromFrame);
+                            if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
+                            {
+                                // Add fade to black.
+                                AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
 
-                            // Add the forward explanation.
-                            AddExplanationCard(reverseBookmark);
+                                // Add the forward explanation.
+                                AddExplanationCard(reverseBookmark);
 
-                            // Prepare for the next transition.
-                            TransitionFromFrame = "Black";
+                                // Prepare for the next transition.
+                                TransitionFromFrame = "Black";
+                            }
                         }
                     }
                 }
 
                 // If the forward replay was requested, play it.
-                if (ProjectSettings.ReplayForwardVideo)
-                {
-                    // Transition to the first frame of this forward bookmark.
-                    AddTransitionFromFrameToForwardTransition(forwardBookmark);
+                //if (ProjectSettings.ReplayForwardVideo)
+                //{
+                //    // Transition to the first frame of this forward bookmark.
+                //    AddTransitionFromFrameToForwardTransition(forwardBookmark);
 
-                    // Add the forward video again.
-                    AddForwardVideo(forwardBookmark: forwardBookmark, HideTextOverlay: true);
+                //    // Add the forward video again.
+                //    AddForwardVideo(forwardBookmark: forwardBookmark, HideTextOverlay: true);
 
-                    // Prepare for the next transition.
-                    TransitionFromFrame = forwardBookmark.Name + ".Last";
-                }
+                //    // Prepare for the next transition.
+                //    TransitionFromFrame = forwardBookmark.Name + ".Last";
+                //}
 
                 //
                 // All reversals for this forward forwardBookmark have been added. 
@@ -590,7 +595,7 @@ namespace RSPro2Video
                 // Transition to normal video, unless replaying the forward video.
                 if (ProjectSettings.ReplayForwardVideo == false)
                 {
-                    AddTransitionToNormalVideo(forwardBookmark.Name + ".Last");
+                    AddTransitionToNormalVideo(forwardBookmark.Name + ".Last", ProjectSettings.TransitionLengthMajor);
                 }
 
                 // Add the normal video between forward bookmarks.
@@ -598,7 +603,7 @@ namespace RSPro2Video
             }
 
             // Add fade to black.
-            AddTransitionToBlack(TransitionFromFrame);
+            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
             
             // Add the closing card.
             AddClosingCard();
@@ -617,9 +622,6 @@ namespace RSPro2Video
             // Add 1/2 second of black.
             AddBlack(0.5d);
 
-            // Add the video offset.
-            AddVideoOffset();
-
             // Add the opening card.
             AddOpeningCard();
 
@@ -627,7 +629,7 @@ namespace RSPro2Video
             if (ForwardBookmarks.Count > 0 && String.IsNullOrWhiteSpace(ForwardBookmarks[0].Explanation) == true)
             {
                 // Fade in to the opening frame from black.
-                AddTransitionFromBlack(ForwardBookmarks[0].Name + ".First");
+                AddTransitionFromBlack(ForwardBookmarks[0].Name + ".First", ProjectSettings.TransitionLengthCard);
             }
 
             // Loop through all of the forward bookmarks.
@@ -639,19 +641,18 @@ namespace RSPro2Video
                 Progress.Report(String.Format("Working: Creating video for {0}: {1}", forwardBookmark.Name, forwardBookmark.Text));
 
                 // If there is a forward explanation.
-                if (String.IsNullOrWhiteSpace(forwardBookmark.Explanation) == false)
+                if (ProjectSettings.IncludeForwardExplanations && String.IsNullOrWhiteSpace(forwardBookmark.Explanation) == false)
                 {
                     // Add fade to black if this is not the first forward bookmark.
                     if (i > 0)
                     {
-                        AddTransitionToBlack(forwardBookmark.Name + ".First");
+                        AddTransitionToBlack(forwardBookmark.Name + ".First", ProjectSettings.TransitionLengthCard);
                     }
 
-                    // Add the forward explanation.
                     AddExplanationCard(forwardBookmark);
 
                     // Add fade from black.
-                    AddTransitionFromBlack(forwardBookmark.Name + ".First");
+                    AddTransitionFromBlack(forwardBookmark.Name + ".First", ProjectSettings.TransitionLengthCard);
                 }
 
                 // Add the forward video with text overlay.
@@ -659,6 +660,7 @@ namespace RSPro2Video
 
                 // Set the frame to transition from.
                 TransitionFromFrame = forwardBookmark.Name + ".Last";
+                double TransitionLength = ProjectSettings.TransitionLengthMajor;
 
                 if (forwardBookmark.ReferencedBookmarks.Count > 0)
                 {
@@ -668,7 +670,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
@@ -680,7 +683,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
@@ -692,7 +696,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
@@ -704,7 +709,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
@@ -717,7 +723,7 @@ namespace RSPro2Video
                         if (ProjectSettings.IncludeBackAndForth)
                         {
                             // Add the transition to the back and forth.
-                            AddBackAndForthTransition(reverseBookmark);
+                            AddBackAndForthTransition(reverseBookmark, ProjectSettings.TransitionLengthMajor);
 
                             // Add the back and forth.
                             AddBackAndForth(reverseBookmark);
@@ -727,39 +733,42 @@ namespace RSPro2Video
                         }
 
                         // If there is a reverse explanation.
-                        if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
+                        if (ProjectSettings.IncludeReverseExplanations)
                         {
-                            // Add fade to black.
-                            AddTransitionToBlack(TransitionFromFrame);
+                            if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
+                            {
+                                // Add fade to black.
+                                AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
 
-                            // Add the forward explanation.
-                            AddExplanationCard(reverseBookmark);
+                                // Add the forward explanation.
+                                AddExplanationCard(reverseBookmark);
 
-                            // Prepare for the next transition.
-                            TransitionFromFrame = "Black";
+                                // Prepare for the next transition.
+                                TransitionFromFrame = "Black";
+                            }
                         }
                     }
                 }
 
                 // If the forward replay was requested, play it.
-                if (ProjectSettings.ReplayForwardVideo)
-                {
-                    // Transition to the first frame of this forward bookmark.
-                    AddTransitionFromFrameToForwardTransition(forwardBookmark);
+                //if (ProjectSettings.ReplayForwardVideo)
+                //{
+                //    // Transition to the first frame of this forward bookmark.
+                //    AddTransitionFromFrameToForwardTransition(forwardBookmark);
 
-                    // Add the forward video again.
-                    AddForwardVideo(forwardBookmark: forwardBookmark, HideTextOverlay: true);
+                //    // Add the forward video again.
+                //    AddForwardVideo(forwardBookmark: forwardBookmark, HideTextOverlay: true);
 
-                    // Prepare for the next transition.
-                    TransitionFromFrame = forwardBookmark.Name + ".Last";
-                }
+                //    // Prepare for the next transition.
+                //    TransitionFromFrame = forwardBookmark.Name + ".Last";
+                //}
 
                 // Transition from the end of this reversal to the beginning of the next.
-                AddTransitionToNextForward(i);
+                AddTransitionToNextForward(i, ProjectSettings.TransitionLengthMajor);
             }
 
             // Add fade to black.
-            AddTransitionToBlack(TransitionFromFrame);
+            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
 
             // Add the closing card.
             AddClosingCard();
@@ -813,30 +822,29 @@ namespace RSPro2Video
                         // Add 1/2 second of black.
                         AddBlack(0.5d);
 
-                        // Add the video offset.
-                        AddVideoOffset();
-
                         // If there is a forward explanation.
-                        if (String.IsNullOrWhiteSpace(forwardBookmark.Explanation) == false)
+                        if (ProjectSettings.IncludeForwardExplanations && String.IsNullOrWhiteSpace(forwardBookmark.Explanation) == false)
                         {
                             // Add the forward explanation.
                             AddExplanationCard(forwardBookmark);
                         }
 
                         // Add fade from black.
-                        AddTransitionFromBlack(forwardBookmark.Name + ".First");
+                        AddTransitionFromBlack(forwardBookmark.Name + ".First", ProjectSettings.TransitionLengthCard);
 
                         // Add the forward video with text overlay.
                         AddForwardVideo(forwardBookmark);
 
                         // Set the frame to transition from.
                         TransitionFromFrame = forwardBookmark.Name + ".Last";
+                        double TransitionLength = ProjectSettings.TransitionLengthMajor;
 
                         // Add the four reversal rates.
                         if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
@@ -848,7 +856,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
@@ -860,7 +869,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
@@ -872,7 +882,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
@@ -885,7 +896,7 @@ namespace RSPro2Video
                         if (ProjectSettings.IncludeBackAndForth)
                         {
                             // Add the transition to the back and forth.
-                            AddBackAndForthTransition(reverseBookmark);
+                            AddBackAndForthTransition(reverseBookmark, ProjectSettings.TransitionLengthMajor);
 
                             // Add the back and forth.
                             AddBackAndForth(reverseBookmark);
@@ -895,10 +906,10 @@ namespace RSPro2Video
                         }
 
                         // If there is a reverse explanation.
-                        if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
+                        if (ProjectSettings.IncludeReverseExplanations && String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
                         {
                             // Add fade to black.
-                            AddTransitionToBlack(TransitionFromFrame);
+                            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
 
                             // Add the forward explanation.
                             AddExplanationCard(reverseBookmark);
@@ -910,7 +921,7 @@ namespace RSPro2Video
                         else
                         {
                             // Add fade to black.
-                            AddTransitionToBlack(TransitionFromFrame);
+                            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
                         }
 
                         // Add 1/2 second of black.
@@ -949,6 +960,7 @@ namespace RSPro2Video
 
                 // Set the frame to transition from.
                 TransitionFromFrame = forwardBookmark.Name + ".Last";
+                double TransitionLength = ProjectSettings.TransitionLengthMajor;
 
                 if (forwardBookmark.ReferencedBookmarks.Count > 0)
                 {
@@ -958,7 +970,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
@@ -970,7 +983,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
@@ -982,7 +996,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
@@ -994,7 +1009,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
@@ -1007,13 +1023,29 @@ namespace RSPro2Video
                         if (ProjectSettings.IncludeBackAndForth)
                         {
                             // Add the transition to the back and forth.
-                            AddBackAndForthTransition(reverseBookmark);
+                            AddBackAndForthTransition(reverseBookmark, ProjectSettings.TransitionLengthMajor);
 
                             // Add the back and forth.
                             AddBackAndForth(reverseBookmark);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
+                        }
+
+                        // If there is a reverse explanation.
+                        if (ProjectSettings.IncludeReverseExplanations)
+                        {
+                            if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
+                            {
+                                // Add fade to black.
+                                AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+
+                                // Add the forward explanation.
+                                AddExplanationCard(reverseBookmark);
+
+                                // Prepare for the next transition.
+                                TransitionFromFrame = "Black";
+                            }
                         }
                     }
                 }
@@ -1023,7 +1055,7 @@ namespace RSPro2Video
                 //
 
                 // Transition to normal video.
-                AddTransitionToNormalVideo(forwardBookmark.Name + ".Last");
+                AddTransitionToNormalVideo(forwardBookmark.Name + ".Last", ProjectSettings.TransitionLengthMajor);
 
                 // Add the normal video between forward bookmarks.
                 AddNormalVideo(ForwardBookmarks, i);
@@ -1059,6 +1091,7 @@ namespace RSPro2Video
 
                 // Set the frame to transition from.
                 TransitionFromFrame = forwardBookmark.Name + ".Last";
+                double TransitionLength = ProjectSettings.TransitionLengthMajor;
 
                 if (forwardBookmark.ReferencedBookmarks.Count > 0)
                 {
@@ -1068,7 +1101,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
@@ -1080,7 +1114,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
@@ -1092,7 +1127,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
@@ -1104,7 +1140,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
@@ -1117,7 +1154,7 @@ namespace RSPro2Video
                         if (ProjectSettings.IncludeBackAndForth)
                         {
                             // Add the transition to the back and forth.
-                            AddBackAndForthTransition(reverseBookmark);
+                            AddBackAndForthTransition(reverseBookmark, ProjectSettings.TransitionLengthMajor);
 
                             // Add the back and forth.
                             AddBackAndForth(reverseBookmark);
@@ -1125,11 +1162,27 @@ namespace RSPro2Video
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
                         }
+
+                        // If there is a reverse explanation.
+                        if (ProjectSettings.IncludeReverseExplanations)
+                        {
+                            if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
+                            {
+                                // Add fade to black.
+                                AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+
+                                // Add the forward explanation.
+                                AddExplanationCard(reverseBookmark);
+
+                                // Prepare for the next transition.
+                                TransitionFromFrame = "Black";
+                            }
+                        }
                     }
                 }
 
                 // Transition from the end of this reversal to the beginning of the next.
-                AddTransitionToNextForward(i);
+                AddTransitionToNextForward(i, ProjectSettings.TransitionLengthMajor);
             }
 
             // Add 1/2 second of black.
@@ -1182,20 +1235,19 @@ namespace RSPro2Video
                         // Add 1/2 second of black.
                         AddBlack(0.5d);
 
-                        // Add the video offset.
-                        AddVideoOffset();
-
                         // Add the forward video with text overlay.
                         AddForwardVideo(forwardBookmark);
 
                         // Set the frame to transition from.
                         TransitionFromFrame = forwardBookmark.Name + ".Last";
+                        double TransitionLength = ProjectSettings.TransitionLengthMajor;
 
                         // Add the four reversal rates.
                         if (ProjectSettings.ReversalRate1.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
@@ -1207,7 +1259,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate2.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
@@ -1219,7 +1272,8 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate3.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
@@ -1231,13 +1285,46 @@ namespace RSPro2Video
                         if (ProjectSettings.ReversalRate4.UseThisRate == true)
                         {
                             // Transition into the reverse bookmark.
-                            AddTransitionFromFrameToReverseTransition(reverseBookmark);
+                            AddTransitionFromFrameToReverseTransition(reverseBookmark, TransitionLength);
+                            TransitionLength = ProjectSettings.TransitionLengthMinor;
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
 
                             // Prepare for the next transition.
                             TransitionFromFrame = reverseBookmark.Name + ".Last";
+                        }
+
+                        // If a back and forth was requested, add it.
+                        if (ProjectSettings.IncludeBackAndForth)
+                        {
+                            // Add the transition to the back and forth.
+                            AddBackAndForthTransition(reverseBookmark, ProjectSettings.TransitionLengthMajor);
+
+                            // Add the back and forth.
+                            AddBackAndForth(reverseBookmark);
+
+                            // Prepare for the next transition.
+                            TransitionFromFrame = reverseBookmark.Name + ".Last";
+                        }
+
+                        // If there is a reverse explanation.
+                        if (ProjectSettings.IncludeReverseExplanations && String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
+                        {
+                            // Add fade to black.
+                            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+
+                            // Add the forward explanation.
+                            AddExplanationCard(reverseBookmark);
+
+                            // Prepare for the next transition.
+                            TransitionFromFrame = "Black";
+                        }
+                        // There was no reverse explanation, so a fade to black is in order.
+                        else
+                        {
+                            // Add fade to black.
+                            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
                         }
 
                         // Add 1/2 second of black.
@@ -1309,24 +1396,28 @@ namespace RSPro2Video
         {
             bool retval = true;
 
-            // If There is an opening card, add it.
-            if (String.IsNullOrWhiteSpace(OpeningCard) == false)
+            // Skip if OpeningCard isn't included.
+            if (ProjectSettings.IncludeOpeningCard)
             {
-                // Create the filename for this video clip.
-                String filename = "OpeningCard";
+                // If There is an opening card, add it.
+                if (String.IsNullOrWhiteSpace(OpeningCard) == false)
+                {
+                    // Create the filename for this video clip.
+                    String filename = "OpeningCard";
 
-                // Calculate the length of time to display the card.
-                double displayLength = (double)OpeningCard.Length / (double)ProjectSettings.ReadingCharactersPerSecond;
+                    // Calculate the length of time to display the card.
+                    double displayLength = (double)OpeningCard.Length / (double)ProjectSettings.ReadingCharactersPerSecond;
 
-                // Create the inner commands for ffmpeg. 
-                String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
-                    FramesPerSecond,
-                    filename,
-                    displayLength,
-                    RelativePathToWorkingInputVideoFile);
+                    // Create the inner commands for ffmpeg. 
+                    String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
+                        FramesPerSecond,
+                        filename,
+                        displayLength,
+                        RelativePathToWorkingInputVideoFile);
 
-                // Call ffmpeg.
-                retval = RunFfmpeg(filename, command);
+                    // Call ffmpeg.
+                    retval = RunFfmpeg(filename, command);
+                }
             }
 
             return retval;
@@ -1340,24 +1431,28 @@ namespace RSPro2Video
         {
             bool retval = true;
 
-            // If There is a closing card, add it.
-            if (String.IsNullOrWhiteSpace(ClosingCard) == false)
+            // Skip if ClosingCard isn't included.
+            if (ProjectSettings.IncludeClosingCard)
             {
-                // Create the filename for this video clip.
-                String filename = "ClosingCard";
+                // If There is a closing card, add it.
+                if (String.IsNullOrWhiteSpace(ClosingCard) == false)
+                {
+                    // Create the filename for this video clip.
+                    String filename = "ClosingCard";
 
-                // Calculate the length of time to display the card.
-                double displayLength = (double)ClosingCard.Length / (double)ProjectSettings.ReadingCharactersPerSecond;
+                    // Calculate the length of time to display the card.
+                    double displayLength = (double)ClosingCard.Length / (double)ProjectSettings.ReadingCharactersPerSecond;
 
-                // Create the inner commands for ffmpeg. 
-                String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
-                    FramesPerSecond,
-                    filename,
-                    displayLength,
-                    RelativePathToWorkingInputVideoFile);
+                    // Create the inner commands for ffmpeg. 
+                    String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######}",
+                        FramesPerSecond,
+                        filename,
+                        displayLength,
+                        RelativePathToWorkingInputVideoFile);
 
-                // Call ffmpeg.
-                retval = RunFfmpeg(filename, command);
+                    // Call ffmpeg.
+                    retval = RunFfmpeg(filename, command);
+                }
             }
 
             return retval;
@@ -1372,15 +1467,6 @@ namespace RSPro2Video
             // Calculate the start time and duration.
             double startTime = 0.0d;
             double duration = ((double)ForwardBookmarks[0].SampleStart / (double)SampleRate);
-
-            // Adjust for the audio delay.
-            //startTime += (double)ProjectSettings.VideoDelay / 1000d;
-            //if (startTime < 0)
-            //{
-            //    // If the audio delay is negative, reduce the duration by the audio delay.
-            //    duration += startTime;
-            //    startTime = 0;
-            //}
 
             // Create the filename for this clip.
             String filename = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
@@ -1423,9 +1509,16 @@ namespace RSPro2Video
         /// Adds a transition from black to the specified image.
         /// </summary>
         /// <param name="ImageName">The image to fade to, without an extension.</param>
+        /// <param name="TransitionLength">Length in time for the transition.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool AddTransitionFromBlack(String ImageName)
+        private bool AddTransitionFromBlack(String ImageName, Double TransitionLength)
         {
+            // If the transition length is less than the time of a single frame, return.
+            if (TransitionLength < 1.0d / FramesPerSecond)
+            {
+                return true;
+            }
+
             // Set the video output filename.
             String filename = "Black-" + ImageName;
 
@@ -1451,7 +1544,7 @@ namespace RSPro2Video
             String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -i \"{3}\" -filter_complex \"[1:a]volume=0.0,atrim=duration={2:0.######}[a];[0:v]fade=t=in:d={2:0.######}[v]\" -map \"[v]\" -map \"[a]\" -t {2:0.######}",
                 FramesPerSecond,
                 ImageName,
-                fadeLength,
+                TransitionLength,
                 RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
@@ -1462,14 +1555,18 @@ namespace RSPro2Video
         /// Adds a transition from the specified image to black.
         /// </summary>
         /// <param name="ImageName">The image to fade to, without an extension.</param>
+        /// <param name="TransitionLength">Length in time for the transition.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool AddTransitionToBlack(String ImageName)
+        private bool AddTransitionToBlack(String ImageName, Double TransitionLength)
         {
+            // If the transition length is less than the time of a single frame, return.
+            if (TransitionLength < 1.0d / FramesPerSecond)
+            {
+                return true;
+            }
+
             // Set the video output filename.
             String filename = ImageName + "-Black";
-
-            // Calculate the length of time to display the card.
-            double fadeLength = 1.0d;
 
             // Create the inner commands for ffmpeg.
             // -r {0}                       # Frame rate.
@@ -1490,7 +1587,7 @@ namespace RSPro2Video
             String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -i \"{3}\" -t {2:0.######} -filter_complex \"[1:a]volume=0.0,atrim=duration={2:0.######}[a];[0:v]fade=t=out:d={2:0.######}[v]\" -map \"[v]\" -map \"[a]\" -t {2:0.######}",
                 FramesPerSecond,
                 ImageName,
-                fadeLength,
+                TransitionLength,
                 RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
@@ -1558,9 +1655,16 @@ namespace RSPro2Video
         /// Creates a transition with text overlay from TransitionFromFrame to the first frame of the reverse clip.
         /// </summary>
         /// <param name="reverseBookmark">The reverse bookmark of this transition.</param>
+        /// <param name="TransitionLength">Length in time for the transition.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool AddTransitionFromFrameToReverseTransition(Bookmark reverseBookmark)
+        private bool AddTransitionFromFrameToReverseTransition(Bookmark reverseBookmark, Double TransitionLength)
         {
+            // If the transition length is less than the time of a single frame, return.
+            if (TransitionLength < 1.0d / FramesPerSecond)
+            {
+                return true;
+            }
+
             bool retval = true;
 
             //
@@ -1574,14 +1678,11 @@ namespace RSPro2Video
             if (TransitionFromFrame == "Black")
             {
                 // Use the method that performs this function.
-                return AddTransitionFromBlack(TransitionToFrame);
+                return AddTransitionFromBlack(TransitionToFrame, TransitionLength);
             }
             
             // Set the video output filename.
             String filename1 = TransitionFromFrame + "-" + TransitionToFrame;
-
-            // Calculate the length of time to display the card.
-            double transitionLength = 1.0d;
 
             // Create the inner commands for ffmpeg.
             // -r {0}                                   # Frame rate.
@@ -1611,7 +1712,7 @@ namespace RSPro2Video
                 FramesPerSecond,
                 TransitionFromFrame,
                 TransitionToFrame,
-                transitionLength,
+                TransitionLength,
                 RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
@@ -1644,9 +1745,16 @@ namespace RSPro2Video
         /// Adds a transition from TransitionFromFrame to the first frame of the forward bookmark.
         /// </summary>
         /// <param name="forwardBookmark">The forward bookmark.</param>
+        /// <param name="TransitionLength">Length in time for the transition.</param>
         /// <returns></returns>
-        private bool AddTransitionFromFrameToForwardTransition(Bookmark forwardBookmark)
+        private bool AddTransitionFromFrameToForwardTransition(Bookmark forwardBookmark, Double TransitionLength)
         {
+            // If the transition length is less than the time of a single frame, return.
+            if (TransitionLength < 1.0d / FramesPerSecond)
+            {
+                return true;
+            }
+
             bool retval = true;
 
             //
@@ -1660,14 +1768,11 @@ namespace RSPro2Video
             if (TransitionFromFrame == "Black")
             {
                 // Use the method that performs this function.
-                return AddTransitionFromBlack(TransitionToFrame);
+                return AddTransitionFromBlack(TransitionToFrame, TransitionLength);
             }
 
             // Set the video output filename.
             String filename1 = TransitionFromFrame + "-" + TransitionToFrame;
-
-            // Calculate the length of time to display the card.
-            double transitionLength = 1.0d;
 
             // Create the inner commands for ffmpeg.
             // -r {0}                                   # Frame rate.
@@ -1697,7 +1802,7 @@ namespace RSPro2Video
                 FramesPerSecond,
                 TransitionFromFrame,
                 TransitionToFrame,
-                transitionLength,
+                TransitionLength,
                 RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
@@ -1766,8 +1871,14 @@ namespace RSPro2Video
             return RunFfmpeg(filename, command);
         }
 
-        private bool AddBackAndForthTransition(Bookmark reverseBookmark)
+        private bool AddBackAndForthTransition(Bookmark reverseBookmark, Double TransitionLength)
         {
+            // If the transition length is less than the time of a single frame, return.
+            if (TransitionLength < 1.0d / FramesPerSecond)
+            {
+                return true;
+            }
+
             bool retval = true;
 
             //
@@ -1777,14 +1888,11 @@ namespace RSPro2Video
             // Create the filename for this video clip.
             String filename1 = TransitionFromFrame;
 
-            // Calculate the length of time to display the card.
-            double displayLength = 1.0d;
-
             // Create the inner commands for ffmpeg. 
             String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######} ",
                 FramesPerSecond,
                 filename1,
-                displayLength,
+                TransitionLength,
                 RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
@@ -1853,10 +1961,6 @@ namespace RSPro2Video
             double startTime = (double)reverseBookmark.SampleStart / (double)SampleRate;
             double duration = ((double)reverseBookmark.SampleEnd / (double)SampleRate) - startTime;
 
-            // Adjust for the audio delay.
-            //startTime += (double)ProjectSettings.VideoDelay / 1000d;
-            //startTime = startTime < 0 ? 0 : startTime;
-
             // Create the filename for this clip.
             String filename1 = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
 
@@ -1899,21 +2003,25 @@ namespace RSPro2Video
         /// Creates a transition from TransitionFromFrame to transitionToFrame.
         /// </summary>
         /// <param name="transitionToFrame">The frame to transition to.</param>
+        /// <param name="TransitionLength">Length in time for the transition.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool AddTransitionToNormalVideo(String transitionToFrame)
+        private bool AddTransitionToNormalVideo(String transitionToFrame, Double TransitionLength)
         {
+            // If the transition length is less than the time of a single frame, return.
+            if (TransitionLength < 1.0d / FramesPerSecond)
+            {
+                return true;
+            }
+
             // If we are transitioning from black.
             if (TransitionFromFrame == "Black")
             {
                 // Use the method that performs this function.
-                return AddTransitionFromBlack(transitionToFrame);
+                return AddTransitionFromBlack(transitionToFrame, TransitionLength);
             }
 
             // Set the video output filename.
             String filename = TransitionFromFrame + "-" + transitionToFrame;
-
-            // Calculate the length of time to display the card.
-            double transitionLength = 1.0d;
 
             // Create the inner commands for ffmpeg.
             // -r {0}                                   # Frame rate.
@@ -1943,15 +2051,21 @@ namespace RSPro2Video
                 FramesPerSecond,
                 TransitionFromFrame,
                 transitionToFrame,
-                transitionLength,
+                TransitionLength,
                 RelativePathToWorkingInputVideoFile);
 
             // Call ffmpeg.
             return RunFfmpeg(filename, command);
         }
 
-        private bool AddTransitionToNextForward(int index)
+        private bool AddTransitionToNextForward(int index, double TransitionLength)
         {
+            // If the transition length is less than the time of a single frame, return.
+            if (TransitionLength < 1.0d / FramesPerSecond)
+            {
+                return true;
+            }
+
             bool retval = true;
 
             // If this is not the last bookmark
@@ -1964,14 +2078,11 @@ namespace RSPro2Video
                 if (TransitionFromFrame == "Black")
                 {
                     // Use the method that performs this function.
-                    return AddTransitionFromBlack(TransitionToFrame);
+                    return AddTransitionFromBlack(TransitionToFrame, TransitionLength);
                 }
                 
                 // Set the video output filename.
                 String filename = TransitionFromFrame + "-" + TransitionToFrame;
-
-                // Calculate the length of time to display the card.
-                double transitionLength = 1.0d;
 
                 // Create the inner commands for ffmpeg.
                 // -r {0}                                   # Frame rate.
@@ -2001,7 +2112,7 @@ namespace RSPro2Video
                     FramesPerSecond,
                     TransitionFromFrame,
                     TransitionToFrame,
-                    transitionLength,
+                    TransitionLength,
                     RelativePathToWorkingInputVideoFile);
 
                 // Call ffmpeg.
