@@ -46,14 +46,14 @@ namespace RSPro2Video
             int ffmpegThreads = 0;
 
             // Get a list of Phase 1 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
-            List<FFmpegTask> phase1Tasks = FFmpegTasks
-                .FindAll(f => f.Phase == 1)
+            List<FFmpegTask> phaseOneTasks = FFmpegTasks
+                .FindAll(f => f.Phase == FfmpegPhase.PhaseOne)
                 .OrderBy(o => o.SortOrder)
                 .ThenByDescending(t => t.EstimatedDuration)
                 .ToList();
 
             // Run all of the Phase 1 tasks in order.
-            foreach (FFmpegTask ffmpegTask in phase1Tasks)
+            foreach (FFmpegTask ffmpegTask in phaseOneTasks)
             {
                 switch (ffmpegTask.SortOrder)
                 {
@@ -579,16 +579,11 @@ namespace RSPro2Video
                 return false;
             }
 
-            // Calculate the length, in seconds, of this clip. The slow reversal frame count, when adjusted back to the count of frames for the 
-            // output video, can leave a fractional number of frames. This fractional amount will be counted as a full frame in the output video. 
-            // Ie., 30 frames at 29fps for the reversal = 1.03448 seconds. 1.03448 * 30fps for the output video = 31.0344 frames, which then 
-            // will generate 32 frames in the output video. 32 frames / 30fps = 1.066667 seconds.
-            // double seconds = frameCount / reversalFps;
-            // double outputFrameCount = seconds * FramesPerSecond;
-            // if (outputFrameCount > Math.Floor(outputFrameCount)) { outputFrameCount = (double)Math.Floor(outputFrameCount + (double)1); }
+            // Calculate the length, in seconds, of this clip.
+            double EstimatedDuration = Math.Ceiling(frameCount / reversalFps);
 
-            // Add the video clip to the list of clips.
-            CreatedClipList.Add(videoFilename + OutputVideoInterimExtension);
+            // Add the file to the clips lists.
+            AddToClips(videoFilename, EstimatedDuration, AddToVideoOutputs: false);
 
             return true;
         }
@@ -812,10 +807,11 @@ namespace RSPro2Video
             // Then delete the directory.
 
             // Add the task to the list of tasks
-            FFmpegTasks.Add(new FFmpegTask(1, FfmpegTaskSortOrder.ReverseVideo, calculatedFrameBasedDuration, videoFilename, ffmpegCommandList));
+            FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseOne, FfmpegTaskSortOrder.ReverseVideo, calculatedFrameBasedDuration, videoFilename, ffmpegCommandList));
 
             // Add the video clip to the list of clips.
-            CreatedClipList.Add(videoFilename + OutputVideoInterimExtension);
+            AddToClips(videoFilename + OutputVideoInterimExtension, 
+                calculatedFrameBasedDuration / FramesPerSecond, AddToVideoOutputs: false);
 
             return true;
         }

@@ -77,7 +77,8 @@ namespace RSPro2Video
         int CalculatedFontHeight;
 
         List<FFmpegTask> FFmpegTasks = new List<FFmpegTask>();          // The list of ffmpeg tasks to run to create the video clips.
-        List<String> CreatedClipList = new List<String>();              // The list of video clips that have already been created.
+        Dictionary<String,double> ClipsToCreate = new Dictionary<String,double>();  // The list of video clips to create.
+        Dictionary<String,String> ClipsToDuplicate = new Dictionary<String,String>();   // The list of video clips that need to be duplicated.
         List<VideoOutput> VideoOutputs = new List<VideoOutput>();       // The list of videos to output, and the clips needed to assemble them.
         int VideoOutputIndex = 0;                                       // The index to VideoOutputs specifying which video clip list is being accessed.
         ConcurrentDictionary<String, Double> ClipDuration = new ConcurrentDictionary<String, Double>(); // Durations of each video clip.

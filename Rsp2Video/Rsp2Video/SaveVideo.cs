@@ -319,6 +319,73 @@ namespace RSPro2Video
             return true;
         }
 
+
+        /// <summary>
+        /// Stores the FFmpeg command as an FFmpegTask.
+        /// </summary>
+        /// <param name="Filename">The name of the output file without an extension.</param>
+        /// <param name="FfmpegCommand">The ffmpeg commands.</param>
+        /// <param name="Phase">The phase for this ffmpeg task.</param>
+        /// <param name="SortOrder">The sort order for this ffmpeg task.</param>
+        /// <param name="EstimatedDuration">The best guess for the clip duration (for sorting purposes).</param>
+        /// <param name="AddToVideo">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
+        /// <returns>Returns true if successful; otherwise false.</returns>
+        private bool CreateFfmpegTask(String Filename, 
+            String FfmpegCommand, FfmpegPhase Phase, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, Boolean AddToVideoOutputs = true)
+        {
+            // Add the file to the clips lists.
+            String FilenameWithExtension = AddToClips(Filename, EstimatedDuration, AddToVideoOutputs);
+
+            // Add the task to the list of tasks
+            FFmpegTasks.Add(new FFmpegTask(Phase, SortOrder, EstimatedDuration, FilenameWithExtension, FfmpegCommand));
+
+            return true;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Filename">The name of the output file without an extension.</param>
+        /// <param name="EstimatedDuration">The best guess for the clip duration (for sorting purposes).</param>
+        /// <param name="AddToVideoOutputs">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
+        /// <returns>The updated filename of the clip to write (since some clips must be duplicated).</returns>
+        private String AddToClips (String Filename, double EstimatedDuration = 0.0d, Boolean AddToVideoOutputs = true)
+        {
+            // Add the extension to the filename.
+            String FilenameWithExtension = Filename + OutputVideoInterimExtension;
+
+            // If this file is not in the list of clips to create, add it.
+            if (!ClipsToCreate.ContainsKey(FilenameWithExtension))
+            {
+                // Add the filename and estimated duration to the list of created clips.
+                ClipsToCreate.Add(FilenameWithExtension, EstimatedDuration);
+            }
+            else
+            {
+                // The filename already exists, so this file needs to be duplicated. If this file is already
+                // in the list of created clips, find a unique, new filename in the list of clips to duplicate.
+                int i = 1;
+                while (ClipsToDuplicate.ContainsKey($"{Filename}({i}){OutputVideoInterimExtension}")) { ++i; }
+
+                String newFilename = $"{Filename}({i}){OutputVideoInterimExtension}";
+
+                // Add the new, unique filename and the original filename.
+                ClipsToDuplicate.Add(FilenameWithExtension, newFilename);
+
+                // Store the new filename in VideoOutputs and FFmpegTasks.
+                FilenameWithExtension = newFilename;
+            }
+
+            // If requested, add the filename to the list of clips to use to create this video.
+            if (AddToVideoOutputs == true)
+            {
+                VideoOutputs[VideoOutputIndex].Clips.Add(FilenameWithExtension);
+            }
+
+            return FilenameWithExtension;
+        }
+
         /// <summary>
         /// Runs the ffmpeg program with the specified commands to produce the output file.
         /// </summary>
@@ -334,7 +401,7 @@ namespace RSPro2Video
             filename += OutputVideoInterimExtension;
 
             // If this file is not in the list of created clips, create it.
-            if (CreatedClipList.IndexOf(filename) == -1)
+            // if (ClipsToCreate.IndexOf(filename) == -1)
             {
                 // Create the Process to call the external program.
                 Process process = new Process();
@@ -380,13 +447,13 @@ namespace RSPro2Video
                 }
 
                 // Add the filename to the list of created clips.
-                CreatedClipList.Add(filename);
+                // ClipsToCreate.Add(filename);
             }
 
             // If requested, add the filename to the list of clips to use to create this video.
             if (AddToVideoOutputs == true)
             {
-                VideoOutputs[VideoOutputIndex].Clips.Add(filename);
+                // VideoOutputs[VideoOutputIndex].Clips.Add(filename);
             }
 
             return retval;
@@ -941,9 +1008,6 @@ namespace RSPro2Video
             // Add 1/2 second of black.
             AddBlack(0.5d);
 
-            // Add the video offset.
-            AddVideoOffset();
-
             // Add the starting video clip.
             AddStartingVideoClip();
 
@@ -1074,9 +1138,6 @@ namespace RSPro2Video
 
             // Add 1/2 second of black.
             AddBlack(0.2f);
-
-            // Add the video offset.
-            AddVideoOffset();
 
             // Loop through all of the forward bookmarks.
             for (int i = 0; i < ForwardBookmarks.Count; ++i)
@@ -1352,10 +1413,6 @@ namespace RSPro2Video
         /// Creates a video clip of the specified number of seconds of black.
         /// </summary>
         /// <remarks>
-        /// The final output video is created with qmelt.exe. The qmelt.exe program won't output
-        /// the correct video resolution unless the first frame or clip is at the correct video
-        /// resolution.
-        /// 
         /// This is the first clip added to the video. I create it from the first frame of the
         /// source video, make it black, and repeat that frame for the specified duration. This
         /// results in the correct video resolution in the output video.
@@ -1376,15 +1433,6 @@ namespace RSPro2Video
 
             // Call ffmpeg.
             return RunFfmpeg(filename, command);
-        }
-
-            /// <summary>
-            /// Adds the video offset.
-            /// </summary>
-            /// <returns></returns>
-            private bool AddVideoOffset()
-        {
-            return true;
         }
 
 
@@ -1521,9 +1569,6 @@ namespace RSPro2Video
 
             // Set the video output filename.
             String filename = "Black-" + ImageName;
-
-            // Calculate the length of time to display the card.
-            double fadeLength = 1.0d;
 
             // Create the inner commands for ffmpeg.
             // -r {0}                       # Frame rate.

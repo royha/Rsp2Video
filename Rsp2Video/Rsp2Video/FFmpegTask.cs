@@ -16,7 +16,7 @@ namespace RSPro2Video
         /// 1 = Reverse, Forward bookmark, Forward video creation.
         /// 2 = Explanation and Transition video creation.
         /// </summary>
-        public int Phase { get; set; }
+        public FfmpegPhase Phase { get; set; }
 
         /// <summary>
         /// The sort order within a phase.
@@ -58,7 +58,7 @@ namespace RSPro2Video
         /// <param name="estimatedDuration"></param>
         /// <param name="videoFilename"></param>
         /// <param name="ffmpegCommand"></param>
-        public FFmpegTask(int phase, FfmpegTaskSortOrder sortOrder, double estimatedDuration, string videoFilename, String ffmpegCommand)
+        public FFmpegTask(FfmpegPhase phase, FfmpegTaskSortOrder sortOrder, double estimatedDuration, string videoFilename, String ffmpegCommand)
         {
             this.Phase = phase;
             this.SortOrder = sortOrder;
@@ -82,7 +82,7 @@ namespace RSPro2Video
         /// <param name="estimatedDuration"></param>
         /// <param name="videoFilename"></param>
         /// <param name="ffmpegCommands"></param>
-        public FFmpegTask(int phase, FfmpegTaskSortOrder sortOrder, double estimatedDuration, string videoFilename, List<string> ffmpegCommands)
+        public FFmpegTask(FfmpegPhase phase, FfmpegTaskSortOrder sortOrder, double estimatedDuration, string videoFilename, List<string> ffmpegCommands)
         {
             this.Phase = phase;
             this.SortOrder = sortOrder;
@@ -92,5 +92,6 @@ namespace RSPro2Video
         }
     }
 
+    public enum FfmpegPhase { None = 0, PhaseOne, PhaseTwo }
     public enum FfmpegTaskSortOrder { None = 0, ReverseVideo, ForwardBookmarkVideo, ForwardVideo, TransitionVideo }
 }
