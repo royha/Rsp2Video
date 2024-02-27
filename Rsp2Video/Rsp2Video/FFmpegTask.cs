@@ -20,9 +20,13 @@ namespace RSPro2Video
 
         /// <summary>
         /// The sort order within a phase.
-        /// 1 = Reverse videos.
-        /// 2 = Forward bookmark videos.
-        /// 3 = Forward videos.
+        /// PhaseOne:
+        ///   1 = Reverse videos.
+        ///   2 = Forward bookmark videos.
+        ///   3 = Forward videos.
+        /// PhaseTwo:
+        ///   4 = Card videos.
+        ///   5 = Transition videos.
         /// </summary>
         public FfmpegTaskSortOrder SortOrder { get; set; }
 
@@ -93,5 +97,5 @@ namespace RSPro2Video
     }
 
     public enum FfmpegPhase { None = 0, PhaseOne, PhaseTwo }
-    public enum FfmpegTaskSortOrder { None = 0, ReverseVideo, ForwardBookmarkVideo, ForwardVideo, TransitionVideo }
+    public enum FfmpegTaskSortOrder { None = 0, ReverseVideo, ForwardBookmarkVideo, ForwardVideo, CardVideo, TransitionVideo }
 }
