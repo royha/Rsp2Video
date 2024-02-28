@@ -31,9 +31,6 @@ namespace RSPro2Video
 
             // Create all of the reversal video files.
             CreateAllReverseVideoTasks();
-
-            // Execute the collected FFmpeg tasks.
-            RunAllFfmpegTasks();
         }
 
         /// <summary>
@@ -106,7 +103,7 @@ namespace RSPro2Video
             if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads)) == false) { return false; }
 
             // Get and store the clip duration.
-            if (GetProgressDuration(ffmpegTask.VideoFilename) < 0) { return false; }
+            if (GetProgressDuration(ffmpegTask.VideoFilenames[0]) < 0) { return false; }
 
             return true;
         }
@@ -171,7 +168,7 @@ namespace RSPro2Video
             DirectoryInfo diPngDirectory;
 
             // Create a directory to store the .png files.
-            String PngDirectory = Path.Combine(WorkingDirectory, ffmpegTask.VideoFilename);
+            String PngDirectory = Path.Combine(WorkingDirectory, ffmpegTask.VideoFilenames[0]);
 
             // Create the directory for the .png files.
             try { diPngDirectory = Directory.CreateDirectory(PngDirectory); }
@@ -185,13 +182,13 @@ namespace RSPro2Video
             if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[1], ffmpegThreads)) == false) { return false; }
 
             // Rename the .png files to reverse their order.
-            String[] newFrames = ReorderFrames(ffmpegTask.VideoFilename);
+            String[] newFrames = ReorderFrames(ffmpegTask.VideoFilenames[0]);
 
             // Assemble the reversed .png files and add the reversed audio to create the reversal clip.
             if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[2], ffmpegThreads)) == false) { return false; }
 
-            // Move and rename the last .png file to the VideoFilename.First.png.
-            String imageFilename = Path.Combine(WorkingDirectory, $"{ffmpegTask.VideoFilename}.First.png");
+            // Move and rename the last .png file to the VideoFilenames.First.png.
+            String imageFilename = Path.Combine(WorkingDirectory, $"{ffmpegTask.VideoFilenames[0]}.First.png");
 
             if (File.Exists(imageFilename))
             {
@@ -210,8 +207,8 @@ namespace RSPro2Video
                 return false; 
             }
 
-            // Move and rename the first .png file to the VideoFilename.Last.png
-            imageFilename = Path.Combine(WorkingDirectory, $"{ffmpegTask.VideoFilename}.Last.png");
+            // Move and rename the first .png file to the VideoFilenames.Last.png
+            imageFilename = Path.Combine(WorkingDirectory, $"{ffmpegTask.VideoFilenames}.Last.png");
 
             if (File.Exists(imageFilename))
             {
@@ -239,9 +236,9 @@ namespace RSPro2Video
             }
 
             // Store the reverse video clip duration.
-            if (ClipDuration.TryAdd($"{ffmpegTask.VideoFilename}{OutputVideoInterimExtension}", (double)newFrames.Length * FramesPerSecond) == false)
+            if (ClipDuration.TryAdd($"{ffmpegTask.VideoFilenames}{OutputVideoInterimExtension}", (double)newFrames.Length * FramesPerSecond) == false)
             {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {ffmpegTask.VideoFilename} already exists in ClipDuration.\r\n\r\n");
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {ffmpegTask.VideoFilenames} already exists in ClipDuration.\r\n\r\n");
                 return false;
             }
 
@@ -655,6 +652,7 @@ namespace RSPro2Video
 
             // The list of FFMpeg commands to add to the task.
             List<String> ffmpegCommandList = new List<String>();
+            List<String> videoFilenames = new List<String>();
 
             // Create the filter_complex filtergraphs.
             String videoFilename;
@@ -664,11 +662,11 @@ namespace RSPro2Video
             // String reverseAudioFiltergraph = "[SlowAudio]areverse[a]";
 
 
-
             //
             // Trying to get this working.
             //
 
+            // These are not being used:
             videoFilename = $"{reversal.Name}.{reversalNumber}.{reversalRate.ReversalSpeed}.Text";
 
             audioFiltergraph = $"[0:a]atrim=0:{silentAudioBeforeDuration:0.############},volume=volume=0,areverse[SilentAudioBefore];" +
@@ -684,7 +682,7 @@ namespace RSPro2Video
                 $"setpts=PTS/{reversalSpeed:0.###}," +
                 $"fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];" +
                 $"[SlowForwardV][1:v]overlay[OverlayedV]";
-
+            
             String command = $"-y -hide_banner -ss {originalFrameBasedStartSeconds} " +
                 $"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" -loop 1 " +
                 $"-filter_complex \"{interpolationFiltergraph}; {reverseVideoFiltergraph}; {audioFiltergraph}\" " +
@@ -772,6 +770,8 @@ namespace RSPro2Video
                 $"-filter_complex \"{interpolationFiltergraph}; {reverseVideoFiltergraph}; {audioFiltergraph}\" " +
                 $"-map [v] -map [a] -progress \"{videoFilename}.progress\" -threads {{0}} {OutputInterimSettings} " +
                 $"\"{videoFilename}{OutputVideoInterimExtension}\"");
+            
+            videoFilenames.Add(videoFilename);
 
             // TODO: I am postponing the .png-based reversal video creation.
 
@@ -795,6 +795,8 @@ namespace RSPro2Video
                 $"-filter_complex \"{interpolationFiltergraph}\" -map [OverlayedV] " +
                 $"-progress \"{videoFilename}\\{videoFilename}.progress\" -threads {{0}} \"{videoFilename}\\f%05d.png\"");
 
+            videoFilenames.Add(videoFilename);
+
             // After this, reorder the .png files in the directory named {videoFilename} by renaming them.
 
             ffmpegCommandList.Add($"-y -hide_banner " +
@@ -802,12 +804,14 @@ namespace RSPro2Video
                 $"-filter_complex \"[1:v]null[v];{audioFiltergraph}\" -map [a] -map [v] " +
                 $"-progress \"{videoFilename}.progress\" -threads {{0}} {OutputInterimSettings} \"{videoFilename}{OutputVideoInterimExtension}\"");
 
+            videoFilenames.Add(videoFilename);
+
             // After this, move the first and last .png files from the directory named {videoFilename} to the current
             // directory, naming the first "{videoFilename}.First.png" and the last "{videoFilename}.Last.png".
             // Then delete the directory.
 
             // Add the task to the list of tasks
-            FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseOne, FfmpegTaskSortOrder.ReverseVideo, calculatedFrameBasedDuration, videoFilename, ffmpegCommandList));
+            FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseOne, FfmpegTaskSortOrder.ReverseVideo, calculatedFrameBasedDuration, videoFilenames, ffmpegCommandList));
 
             // Add the video clip to the list of clips.
             AddToClips(videoFilename + OutputVideoInterimExtension, 

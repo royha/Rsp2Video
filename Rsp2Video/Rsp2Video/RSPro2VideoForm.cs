@@ -475,6 +475,7 @@ namespace RSPro2Video
             // Create text files from the bookmark data.
             CreateTextImageFiles();
 
+            // This will go away.
             // Create the still images for the first and last frames of the forward video clips.
             CreateForwardStills();
 

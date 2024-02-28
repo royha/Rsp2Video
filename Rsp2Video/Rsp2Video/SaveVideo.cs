@@ -16,6 +16,7 @@ using System.Xml.Serialization;
 
 namespace RSPro2Video
 {
+    // CreateTaskList might be a better name for this method.
     public partial class RSPro2VideoForm : Form
     {
         /// <summary>
@@ -81,6 +82,9 @@ namespace RSPro2Video
                 // Create the video from forward and reverse bookmarks only.
                 AssembleClipListOrphanedReversalBookmarksOnly();
             }
+
+            // The list of FFmepg tasks has been created. Execute the collected FFmpeg tasks.
+            RunAllFfmpegTasks();
 
             // Assemble the clips into a video (or videos).
             AssembleVideo();
@@ -183,7 +187,7 @@ namespace RSPro2Video
         //    foreach (VideoOutput videoOutput in VideoOutputs)
         //    {
         //        // Update the user.
-        //        Progress.Report("Working: Assembling " + videoOutput.Filename);
+        //        Progress.Report("Working: Assembling " + videoOutput.Filenames);
 
         //        // Create the file list for this video.
         //        StringBuilder fileList = new StringBuilder();
@@ -203,7 +207,7 @@ namespace RSPro2Video
 
         //        // Create the arguments string.
         //        String arguments = String.Format("-consumer avformat:\"..\\{0}\" {1}{2}",
-        //            videoOutput.Filename,
+        //            videoOutput.Filenames,
         //            OutputFinalSettingsQmelt,
         //            fileList.ToString());
 
@@ -333,11 +337,11 @@ namespace RSPro2Video
         private bool CreateFfmpegTask(String Filename,
             String FfmpegCommand, FfmpegPhase Phase, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, Boolean AddToVideoOutputs = true)
         {
-            // Add the file to the clips lists.
-            String FilenameWithExtension = AddToClips(Filename, EstimatedDuration, AddToVideoOutputs);
-
             // Add the task to the list of tasks
-            FFmpegTasks.Add(new FFmpegTask(Phase, SortOrder, EstimatedDuration, FilenameWithExtension, FfmpegCommand));
+            FFmpegTasks.Add(new FFmpegTask(Phase, SortOrder, EstimatedDuration, Filename, FfmpegCommand));
+
+            // Add the file to the list of clips to create.
+            AddToClips(Filename, EstimatedDuration, AddToVideoOutputs);
 
             return true;
         }
@@ -345,21 +349,38 @@ namespace RSPro2Video
         /// <summary>
         /// Stores the FFmpeg command as an FFmpegTask.
         /// </summary>
-        /// <param name="Filename">The name of the output file without an extension.</param>
+        /// <param name="Filenames">The name of the output file without an extension.</param>
         /// <param name="FfmpegCommand">The ffmpeg commands.</param>
         /// <param name="Phase">The phase for this ffmpeg task.</param>
         /// <param name="SortOrder">The sort order for this ffmpeg task.</param>
         /// <param name="EstimatedDuration">The best guess for the clip duration (for sorting purposes).</param>
         /// <param name="AddToVideo">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool CreateFfmpegTask(String Filename,
+        private bool CreateFfmpegTask(List<String> Filenames,
             List<String> FfmpegCommands, FfmpegPhase Phase, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, Boolean AddToVideoOutputs = true)
         {
-            // Add the file to the clips lists.
-            String FilenameWithExtension = AddToClips(Filename, EstimatedDuration, AddToVideoOutputs);
-
             // Add the task to the list of tasks
-            FFmpegTasks.Add(new FFmpegTask(Phase, SortOrder, EstimatedDuration, FilenameWithExtension, FfmpegCommands));
+            FFmpegTasks.Add(new FFmpegTask(Phase, SortOrder, EstimatedDuration, Filenames, FfmpegCommands));
+
+            // Add the file to the list of clips to create.
+            if (SortOrder == FfmpegTaskSortOrder.ReverseVideo)
+            {
+                // For reverse videos, Until I implement the .png reversal method (Filenames[1] and Filenames[2]), take only the first filename.
+                AddToClips(Filenames[0], EstimatedDuration, AddToVideoOutputs);
+            }
+            else if (SortOrder == FfmpegTaskSortOrder.TransitionVideo || SortOrder == FfmpegTaskSortOrder.ForwardBookmarkVideo)
+            {
+                // For transition videos that come to this overload (ie., they have an image overlay), use the [1]th filename.
+                AddToClips(Filenames[1], EstimatedDuration, AddToVideoOutputs);
+            }
+            else
+            {
+                // Put every filename into the list of clips to create.
+                foreach (string filename in Filenames)
+                {
+                    AddToClips(filename, EstimatedDuration, AddToVideoOutputs);
+                }
+            }
 
             return true;
         }
@@ -661,6 +682,9 @@ namespace RSPro2Video
                                 TransitionFromFrame = "Black";
                             }
                         }
+
+                        // Reset the transition length for the next reversal set.
+                        TransitionLength = ProjectSettings.TransitionLengthMajor;
                     }
                 }
 
@@ -1668,6 +1692,7 @@ namespace RSPro2Video
         private bool AddForwardBookmarkVideo(Bookmark forwardBookmark, bool HideTextOverlay = false)
         {
             List<String> FfmpegCommands = new List<String>();
+            List<String> Filenames = new List<String>();
 
             //
             // Extract the forward clip from the source video.
@@ -1678,8 +1703,7 @@ namespace RSPro2Video
             double duration = ((double)forwardBookmark.SampleEnd / (double)SampleRate) - startTime;
 
             // Create the filename for this clip.
-            String filename1 = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
-            String filename2 = String.Empty;
+            Filenames.Add(String.Format("v{0:0.######}-{1:0.######}", startTime, duration));
 
             // Create the inner commands for ffmpeg.
             String command = String.Format("-ss {0:0.######} -i \"{1}\" -t {2:0.######}",
@@ -1697,9 +1721,12 @@ namespace RSPro2Video
                 // Overlay the forward text overlay image.
                 //
 
+                // Create the filename for this clip.
+                Filenames.Add(forwardBookmark.Name);
+
                 // Create the inner commands for ffmpeg.
                 command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -t {3} -filter_complex \"[0:v][1:v]overlay\"",
-                    filename1,
+                    Filenames[0],
                     OutputVideoInterimExtension,
                     forwardBookmark.Name,
                     duration);
@@ -1709,12 +1736,11 @@ namespace RSPro2Video
             }
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(Filename: filename2,
+            return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
                 Phase: FfmpegPhase.PhaseOne,
                 SortOrder: FfmpegTaskSortOrder.ForwardBookmarkVideo,
-                EstimatedDuration: duration,
-                AddToVideoOutputs: HideTextOverlay);
+                EstimatedDuration: duration);
         }
 
         /// <summary>
@@ -1725,6 +1751,9 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool AddTransitionFromFrameToReverseTransition(Bookmark reverseBookmark, Double TransitionLength)
         {
+            List<String> FfmpegCommands = new List<String>();
+            List<String> Filenames = new List<String>();
+
             // If the transition length is less than the time of a single frame, return.
             if (TransitionLength < 1.0d / FramesPerSecond)
             {
@@ -1745,10 +1774,8 @@ namespace RSPro2Video
                 return AddTransitionFromBlack(TransitionToFrame, TransitionLength);
             }
 
-            List<String> FfmpegCommands = new List<String>();
-
             // Set the video output filename.
-            String filename1 = TransitionFromFrame + "-" + TransitionToFrame;
+            Filenames.Add(TransitionFromFrame + "-" + TransitionToFrame);
 
             // Create the inner commands for ffmpeg.
             // -r {0}                                   # Frame rate.
@@ -1789,11 +1816,11 @@ namespace RSPro2Video
             //
 
             // Create the filename for this clip.
-            String filename2 = filename1 + ".Text";
+            Filenames.Add(Filenames[0] + ".Text");
 
             // Create the inner commands for ffmpeg.
             command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
-                filename1,
+                Filenames[0],
                 OutputVideoInterimExtension,
                 reverseBookmark.Name);
 
@@ -1801,7 +1828,7 @@ namespace RSPro2Video
             FfmpegCommands.Add(command);
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(Filename: filename2,
+            return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
                 Phase: FfmpegPhase.PhaseTwo,
                 SortOrder: FfmpegTaskSortOrder.TransitionVideo,
@@ -1816,6 +1843,9 @@ namespace RSPro2Video
         /// <returns></returns>
         private bool AddTransitionFromFrameToForwardTransition(Bookmark forwardBookmark, Double TransitionLength)
         {
+            List<String> FfmpegCommands = new List<String>();
+            List<String> Filenames = new List<String>();
+
             // If the transition length is less than the time of a single frame, return.
             if (TransitionLength < 1.0d / FramesPerSecond)
             {
@@ -1836,10 +1866,8 @@ namespace RSPro2Video
                 return AddTransitionFromBlack(TransitionToFrame, TransitionLength);
             }
 
-            List<String> FfmpegCommands = new List<String>();
-
             // Set the video output filename.
-            String filename1 = TransitionFromFrame + "-" + TransitionToFrame;
+            Filenames.Add(TransitionFromFrame + "-" + TransitionToFrame);
 
             // Create the inner commands for ffmpeg.
             // -r {0}                                   # Frame rate.
@@ -1880,11 +1908,11 @@ namespace RSPro2Video
             //
 
             // Create the filename for this clip.
-            String filename2 = filename1 + ".Text";
+            Filenames.Add(Filenames[0] + ".Text");
 
             // Create the inner commands for ffmpeg.
             command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
-                filename1,
+                Filenames[0],
                 OutputVideoInterimExtension,
                 forwardBookmark.Name);
 
@@ -1892,7 +1920,7 @@ namespace RSPro2Video
             FfmpegCommands.Add(command);
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(Filename: filename2,
+            return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
                 Phase: FfmpegPhase.PhaseTwo,
                 SortOrder: FfmpegTaskSortOrder.TransitionVideo,
@@ -1954,6 +1982,7 @@ namespace RSPro2Video
         private bool AddBackAndForthTransition(Bookmark reverseBookmark, Double TransitionLength)
         {
             List<String> FfmpegCommands = new List<String>();
+            List<String> Filenames = new List<String>();
 
             // If the transition length is less than the time of a single frame, return.
             if (TransitionLength < 1.0d / FramesPerSecond)
@@ -1966,12 +1995,13 @@ namespace RSPro2Video
             //
 
             // Create the filename for this video clip.
-            String filename1 = TransitionFromFrame;
+            //String filename1 = TransitionFromFrame;
+            Filenames.Add(TransitionFromFrame);
 
             // Create the inner commands for ffmpeg. 
             String command = String.Format("-r {0:0.######} -loop 1 -i \"{1}.png\" -t {2:0.######} -i \"{3}\" -af volume=0.0 -t {2:0.######} ",
                 FramesPerSecond,
-                filename1,
+                Filenames[0],
                 TransitionLength,
                 RelativePathToWorkingInputVideoFile);
 
@@ -1983,11 +2013,12 @@ namespace RSPro2Video
             //
 
             // Create the filename for this clip.
-            String filename2 = filename1 + ".Text";
+            // String filename2 = filename1 + ".Text";
+            Filenames.Add(Filenames[0] + ".Text");
 
             // Create the inner commands for ffmpeg.
             command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
-                filename1,
+                Filenames[0],
                 OutputVideoInterimExtension,
                 reverseBookmark.Name);
 
@@ -1995,7 +2026,7 @@ namespace RSPro2Video
             FfmpegCommands.Add(command);
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(Filename: filename2,
+            return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
                 Phase: FfmpegPhase.PhaseTwo,
                 SortOrder: FfmpegTaskSortOrder.TransitionVideo,
@@ -2005,6 +2036,7 @@ namespace RSPro2Video
         private bool AddBackAndForth(Bookmark reverseBookmark)
         {
             List<String> FfmpegCommands = new List<String>();
+            List<String> Filenames = new List<String>();
             
             // Find the first selected reverse video.
             ReversalRate reversalRate;
@@ -2043,7 +2075,7 @@ namespace RSPro2Video
             double duration = ((double)reverseBookmark.SampleEnd / (double)SampleRate) - startTime;
 
             // Create the filename for this clip.
-            String filename1 = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
+            Filenames.Add(String.Format("v{0:0.######}-{1:0.######}", startTime, duration));
 
             // Create the inner commands for ffmpeg.
             String command = String.Format("-ss {0:0.######} -i \"{1}\" -t {2:0.######}",
@@ -2059,11 +2091,11 @@ namespace RSPro2Video
             //
 
             // Create the filename for this clip.
-            String filename2 = reverseBookmark.Name + ".Forward.Text";
+            Filenames.Add(reverseBookmark.Name + ".Forward.Text");
 
             // Create the inner commands for ffmpeg.
             command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
-                filename1,
+                Filenames[0],
                 OutputVideoInterimExtension,
                 reverseBookmark.Name);
 
@@ -2071,7 +2103,7 @@ namespace RSPro2Video
             FfmpegCommands.Add(command);
 
             // Create the ffmpeg task for this clip.
-            CreateFfmpegTask(Filename: filename2,
+            CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
                 Phase: FfmpegPhase.PhaseTwo,
                 SortOrder: FfmpegTaskSortOrder.TransitionVideo,
