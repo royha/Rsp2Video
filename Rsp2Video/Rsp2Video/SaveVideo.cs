@@ -406,15 +406,26 @@ namespace RSPro2Video
             }
             else
             {
-                // The filename already exists, so this file needs to be duplicated. If this file is already
-                // in the list of created clips, find a unique, new filename in the list of clips to duplicate.
-                int i = 1;
-                while (ClipsToDuplicate.ContainsKey($"{Filename}({i}){OutputVideoInterimExtension}")) { ++i; }
+                // Create the new filename.
+                String newFilename;
 
-                String newFilename = $"{Filename}({i}){OutputVideoInterimExtension}";
+                if (!ClipsToDuplicate.ContainsKey(FilenameWithExtension))
+                {
+                    // Create the new filename.
+                    newFilename = $"{Filename}(0){OutputVideoInterimExtension}";
 
-                // Add the new, unique filename and the original filename.
-                ClipsToDuplicate.Add(FilenameWithExtension, newFilename);
+                    // Add the new filename to the new list.
+                    ClipsToDuplicate.Add(FilenameWithExtension, 
+                        new List<string> { newFilename });
+                }
+                else
+                {
+                    // Create the new filename.
+                    newFilename = $"{Filename}({ClipsToDuplicate[FilenameWithExtension].Count}){OutputVideoInterimExtension}";
+
+                    // Add the new filename to the existing list.
+                    ClipsToDuplicate[FilenameWithExtension].Add(newFilename);
+                }
 
                 // Store the new filename in VideoOutputs and FFmpegTasks.
                 FilenameWithExtension = newFilename;
