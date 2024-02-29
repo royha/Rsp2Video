@@ -488,7 +488,7 @@ namespace RSPro2Video
             progress.Report("Working: Creating text overlays.");
 
             // Run MELT to output the video.
-            SaveVideo();
+            CreateFfmpegTasks();
 
             // Move the completed video to the destination directory.
             // MoveVideoToDestinationDirectory();

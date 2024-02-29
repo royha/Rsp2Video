@@ -20,9 +20,9 @@ namespace RSPro2Video
     public partial class RSPro2VideoForm : Form
     {
         /// <summary>
-        /// Saves the video or video project to disk.
+        /// Creates the ffmpeg tasks that will generate the video clips.
         /// </summary>
-        private void SaveVideo()
+        private void CreateFfmpegTasks()
         {
             // If Forward and Reverse selected.
             if (ProjectSettings.BookmarkTypeFnR)
