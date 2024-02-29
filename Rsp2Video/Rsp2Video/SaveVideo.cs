@@ -1489,7 +1489,7 @@ namespace RSPro2Video
                 VerticalResolution);
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseOne, FfmpegTaskSortOrder.CardVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.CardVideo, duration);
         }
 
 
@@ -1521,7 +1521,7 @@ namespace RSPro2Video
                         RelativePathToWorkingInputVideoFile);
 
                     // Create the ffmpeg task for this clip.
-                    retval = CreateFfmpegTask(filename, command, FfmpegPhase.PhaseOne, FfmpegTaskSortOrder.CardVideo, duration);
+                    retval = CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.CardVideo, duration);
                 }
             }
 
@@ -1556,7 +1556,7 @@ namespace RSPro2Video
                         RelativePathToWorkingInputVideoFile);
 
                     // Create the ffmpeg task for this clip.
-                    retval = CreateFfmpegTask(filename, command, FfmpegPhase.PhaseOne, FfmpegTaskSortOrder.CardVideo, duration);
+                    retval = CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.CardVideo, duration);
                 }
             }
 
@@ -1583,7 +1583,7 @@ namespace RSPro2Video
                 duration);
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseOne, FfmpegTaskSortOrder.CardVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.CardVideo, duration);
         }
 
         /// <summary>
@@ -1607,7 +1607,7 @@ namespace RSPro2Video
                 RelativePathToWorkingInputVideoFile);
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseOne, FfmpegTaskSortOrder.CardVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.CardVideo, duration);
         }
 
         /// <summary>
@@ -1650,7 +1650,7 @@ namespace RSPro2Video
                 RelativePathToWorkingInputVideoFile);
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.TransitionVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseThree, FfmpegTaskSortOrder.TransitionVideo, duration);
         }
 
         /// <summary>
@@ -1693,7 +1693,7 @@ namespace RSPro2Video
                 RelativePathToWorkingInputVideoFile);
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.TransitionVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseThree, FfmpegTaskSortOrder.TransitionVideo, duration);
         }
 
         /// <summary>
@@ -1749,7 +1749,7 @@ namespace RSPro2Video
             // Create the ffmpeg task for this clip.
             return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
-                Phase: FfmpegPhase.PhaseOne,
+                Phase: FfmpegPhase.PhaseTwo,
                 SortOrder: FfmpegTaskSortOrder.ForwardBookmarkVideo,
                 EstimatedDuration: duration);
         }
@@ -1841,7 +1841,7 @@ namespace RSPro2Video
             // Create the ffmpeg task for this clip.
             return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
-                Phase: FfmpegPhase.PhaseTwo,
+                Phase: FfmpegPhase.PhaseThree,
                 SortOrder: FfmpegTaskSortOrder.TransitionVideo,
                 EstimatedDuration: TransitionLength);
         }
@@ -1933,7 +1933,7 @@ namespace RSPro2Video
             // Create the ffmpeg task for this clip.
             return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
-                Phase: FfmpegPhase.PhaseTwo,
+                Phase: FfmpegPhase.PhaseThree,
                 SortOrder: FfmpegTaskSortOrder.TransitionVideo,
                 EstimatedDuration: TransitionLength);
         }
@@ -1987,7 +1987,7 @@ namespace RSPro2Video
             }
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseOne, FfmpegTaskSortOrder.ReverseVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.ReverseVideo, duration);
         }
 
         private bool AddBackAndForthTransition(Bookmark reverseBookmark, Double TransitionLength)
@@ -2039,7 +2039,7 @@ namespace RSPro2Video
             // Create the ffmpeg task for this clip.
             return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
-                Phase: FfmpegPhase.PhaseTwo,
+                Phase: FfmpegPhase.PhaseThree,
                 SortOrder: FfmpegTaskSortOrder.TransitionVideo,
                 EstimatedDuration: TransitionLength);
         }
@@ -2116,7 +2116,7 @@ namespace RSPro2Video
             // Create the ffmpeg task for this clip.
             CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
-                Phase: FfmpegPhase.PhaseTwo,
+                Phase: FfmpegPhase.PhaseThree,
                 SortOrder: FfmpegTaskSortOrder.TransitionVideo,
                 EstimatedDuration: duration);
 
@@ -2182,7 +2182,7 @@ namespace RSPro2Video
                 RelativePathToWorkingInputVideoFile);
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.TransitionVideo, TransitionLength);
+            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseThree, FfmpegTaskSortOrder.TransitionVideo, TransitionLength);
         }
 
         private bool AddTransitionToNextForward(int index, double TransitionLength)
@@ -2241,7 +2241,7 @@ namespace RSPro2Video
                     RelativePathToWorkingInputVideoFile);
 
                 // Create the ffmpeg task for this clip.
-                CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.TransitionVideo, TransitionLength);
+                CreateFfmpegTask(filename, command, FfmpegPhase.PhaseThree, FfmpegTaskSortOrder.TransitionVideo, TransitionLength);
             }
 
             return true;
@@ -2299,7 +2299,7 @@ namespace RSPro2Video
             }
 
             // Create the ffmpeg task for this clip.
-            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.TransitionVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseThree, FfmpegTaskSortOrder.TransitionVideo, duration);
         }
     }
 }

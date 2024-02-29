@@ -54,14 +54,39 @@ namespace RSPro2Video
             {
                 switch (ffmpegTask.SortOrder)
                 {
+                    case FfmpegTaskSortOrder.ReverseMinterpolateVideo:
+                        retval = RunReverseMinterpolateVideoTask(ffmpegThreads, ffmpegTask);
+                        break;
+                }
+
+                if (retval == false)
+                {
+                    return false;
+                }
+            }
+
+            // Get a list of Phase 2 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
+            List<FFmpegTask> phaseTwoTasks = FFmpegTasks
+                .FindAll(f => f.Phase == FfmpegPhase.PhaseTwo)
+                .OrderBy(o => o.SortOrder)
+                .ThenByDescending(t => t.EstimatedDuration)
+                .ToList();
+
+            // Run all of the Phase 2 tasks in order.
+            foreach (FFmpegTask ffmpegTask in phaseTwoTasks)
+            {
+                switch (ffmpegTask.SortOrder)
+                {
                     case FfmpegTaskSortOrder.ReverseVideo:
                         retval = RunReverseVideoTask(ffmpegThreads, ffmpegTask);
                         break;
 
-                    case FfmpegTaskSortOrder.ForwardBookmarkVideo: 
+                    case FfmpegTaskSortOrder.ForwardBookmarkVideo:
+                        retval = RunForwardBookmarkVideoTask(ffmpegThreads, ffmpegTask);
                         break;
 
                     case FfmpegTaskSortOrder.ForwardVideo:
+                        retval = RunForwardVideoTask(ffmpegThreads, ffmpegTask);
                         break;
                 }
 
@@ -71,11 +96,55 @@ namespace RSPro2Video
                 }
             }
 
+            // Get a list of Phase 3 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
+            List<FFmpegTask> phaseThreeTasks = FFmpegTasks
+                .FindAll(f => f.Phase == FfmpegPhase.PhaseThree)
+                .OrderBy(o => o.SortOrder)
+                .ThenByDescending(t => t.EstimatedDuration)
+                .ToList();
+
+            // Run all of the Phase 3 tasks in order.
+            foreach (FFmpegTask ffmpegTask in phaseTwoTasks)
+            {
+                switch (ffmpegTask.SortOrder)
+                {
+                    case FfmpegTaskSortOrder.CardVideo:
+                        retval = RunCardVideoTask(ffmpegThreads, ffmpegTask);
+                        break;
+
+                    case FfmpegTaskSortOrder.TransitionVideo:
+                        retval = RunTransitionVideoTask(ffmpegThreads, ffmpegTask);
+                        break;
+                }
+
+                if (retval == false)
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
         /// <summary>
-        /// Creates a reverse video clip based on the specified FFmpegTask.
+        /// Creates a reverse bookmark video clip based on the specified FFmpegTask.
+        /// </summary>
+        /// <param name="ffmpegThreads">The value for the ffmpeg -threads command.</param>
+        /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private Boolean RunReverseMinterpolateVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
+        {
+            // Available memory is sufficient to use the filtergraph reverse method.
+            // if (RunReverseVideoTaskReverseMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
+
+            // Available memory is insufficent to use the filtergraph reverse method. Use the .png method instead.
+            if (RunReverseVideoTaskPngMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a reverse bookmark video clip based on the specified FFmpegTask.
         /// </summary>
         /// <param name="ffmpegThreads">The value for the ffmpeg -threads command.</param>
         /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
@@ -88,6 +157,50 @@ namespace RSPro2Video
             // Available memory is insufficent to use the filtergraph reverse method. Use the .png method instead.
             if (RunReverseVideoTaskPngMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
 
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a forward bookmark video clip based on the specified FFmpegTask.
+        /// </summary>
+        /// <param name="ffmpegThreads">The value for the ffmpeg -threads command.</param>
+        /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private Boolean RunForwardBookmarkVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a forward video clip (video between bookmarks) based on the specified FFmpegTask.
+        /// </summary>
+        /// <param name="ffmpegThreads">The value for the ffmpeg -threads command.</param>
+        /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private Boolean RunForwardVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a text card clip based on the specified FFmpegTask.
+        /// </summary>
+        /// <param name="ffmpegThreads">The value for the ffmpeg -threads command.</param>
+        /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private Boolean RunCardVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a transition clip based on the specified FFmpegTask.
+        /// </summary>
+        /// <param name="ffmpegThreads">The value for the ffmpeg -threads command.</param>
+        /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private Boolean RunTransitionVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
+        {
             return true;
         }
 
@@ -660,6 +773,7 @@ namespace RSPro2Video
             String interpolationFiltergraph = String.Empty;
             String reverseVideoFiltergraph = "[OverlayedV]reverse[v]";
             // String reverseAudioFiltergraph = "[SlowAudio]areverse[a]";
+            Boolean minterpolationActive = false;
 
 
             //
@@ -737,6 +851,8 @@ namespace RSPro2Video
             }
             else
             {
+                minterpolationActive = true;
+
                 switch (ProjectSettings.MotionInterpolation)
                 {
                     case MotionInterpolation.BlendFrames:
@@ -811,7 +927,22 @@ namespace RSPro2Video
             // Then delete the directory.
 
             // Add the task to the list of tasks
-            FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseOne, FfmpegTaskSortOrder.ReverseVideo, calculatedFrameBasedDuration, videoFilenames, ffmpegCommandList));
+            if (minterpolationActive)
+            {
+                FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseOne,
+                    FfmpegTaskSortOrder.ReverseMinterpolateVideo,
+                    calculatedFrameBasedDuration,
+                    videoFilenames,
+                    ffmpegCommandList));
+            }
+            else
+            {
+                FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseTwo,
+                    FfmpegTaskSortOrder.ReverseVideo,
+                    calculatedFrameBasedDuration,
+                    videoFilenames,
+                    ffmpegCommandList));
+            }
 
             // Add the video clip to the list of clips.
             AddToClips(videoFilename + OutputVideoInterimExtension, 
