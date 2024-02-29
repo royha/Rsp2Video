@@ -80,6 +80,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="ProjectSettings.cs" />
+    <Compile Include="RunFfmpegTasks.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="VideoOutput.cs" />
     <EmbeddedResource Include="ParseError.resx">
       <DependentUpon>ParseError.cs</DependentUpon>
