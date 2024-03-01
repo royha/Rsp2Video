@@ -215,6 +215,33 @@ namespace RSPro2Video
         }
     }
 
+    /// <summary>
+    /// Clip duration determined by reading the ffmpeg .progress file.
+    /// </summary>
+    public class ClipDuration
+    {
+        /// <summary>
+        /// The final "frame=" value from the ffmpeg .progress file.
+        /// </summary>
+        public int FrameCount { get; set; }
+
+        /// <summary>
+        /// The duration in seconds calculated from the frame count in the ffmpeg .progress file.
+        /// </summary>
+        public double Duration { get; set; }
+
+        /// <summary>
+        /// Constructs a new ClipDuration object with the specified values.
+        /// </summary>
+        /// <param name="frameCount">The frame count.</param>
+        /// <param name="duration">The duration in seconds.</param>
+        public ClipDuration(int frameCount, double duration)
+        {
+            this.FrameCount = frameCount;
+            this.Duration = duration;
+        }
+    }
+
     public enum VideoContents { None, FullVideo, BookmarksOnly, SeparateVideos }
     public enum OutputType { None, VideoFile, VideoProject }
     public enum BookmarkFileType { None, FmBok, bok, RSVideo, Text, RTF }

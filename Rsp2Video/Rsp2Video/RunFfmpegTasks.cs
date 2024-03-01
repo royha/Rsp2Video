@@ -122,43 +122,47 @@ namespace RSPro2Video
         private Boolean RunReverseMinterpolateVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
             String videoFilename = ffmpegTask.VideoFilenames[0];
+            String videoFilenameWithExtension = videoFilename + OutputVideoInterimExtension;
+
+            // Set the value for the ffmpeg "-threads" parameter.
+            String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
             // Run the command.
-            if (RunFfmpeg(videoFilename, ffmpegTask.FFmpegCommands[0], ffmpegThreads) == false)
+            if (RunFfmpeg(videoFilename, ffmpegCommand, ffmpegThreads) == false)
             {
                 return false;
             }
 
-            // Get the duration.
-            double duration = GetProgressDuration(ffmpegTask.VideoFilenames[0]);
-            if (duration < 0.0d)
+            // Get the duration and set that duration in the ClipDuration dictionary.
+            ClipDuration clipDuration = GetProgressDuration(videoFilename);
+            if (clipDuration.FrameCount < 0)
             {
                 return false;
             }
 
-            // Add the file and duration to the list.
-            if (ClipDuration.TryAdd($"{videoFilename}{OutputVideoInterimExtension}", duration) == false)
-            {
-                return false;
-            }
+            // Create the ffmpeg command to write the .First.png file.
+            // TODO: Single first frame:
+            // ffmpeg -y -hide_banner -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 -frames:v 1 "output.First.png" 
+            String getFirst = $"-y -hide_banner -i \"{videoFilenameWithExtension}\" "
+                + $"-pix_fmt rgb48 -an -filter:v \"select=eq(n\\,0)\" -f image2 -update 1 \"{videoFilename}.First.png\"";
 
-            // Create the .First.png file.
-            // *** Trying -vframes 1 instead of -update 1.
-            String getFirst = $"-i \"{videoFilename}{OutputVideoInterimExtension}\" "
-                + $"-pix_fmt rgb48 -an -filter:v \"select=eq(n\\,0)\" -f image2 -vframes 1 \"{videoFilename}.First.png\"";
-
+            // Run the ffmpeg command.
             if (RunFfmpegRaw(getFirst) == false)
             {
                 return false;
             }
 
-            // Find the last frame.
-            int lastFrame = (int)Math.Round(duration / FramesPerSecond);
+            // Create the ffmpeg command to write the .Last.png file.
+            // TODO: Multiple frames ending in the last frame.
+            // ffmpeg -y -hide_banner -sseof -0.25 -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 "output.Last.%04d.png"
+            // Need to verify the clip is at least 0.25 seconds long. If not, just extract all frames.
+            // Need a special case for very low frame rates (4fps, for example)
+            // If it fails, go back and do 1.0 seconds, then 3.0 seconds. Maybe just start with 3.0 seconds
+            // Rename the one I want, then del {something}*.png
+            String getLast = $"-y -hide_banner -sseof -{FramesPerSecond} -i \"{videoFilenameWithExtension}\" "
+                + $"-pix_fmt rgb48 -an -filter:v \"select=eq(n\\,{clipDuration.FrameCount - 1})\" -f image2 -update 1 \"{videoFilename}.Last.png\"";
 
-            // Create the .Last.png file.
-            String getLast = $"-i \"{videoFilename}{OutputVideoInterimExtension}\" "
-                + $"-pix_fmt rgb48 -an -filter:v \"select=eq(n\\,{lastFrame})\" -f image2 -update 1 \"{videoFilename}.Last.png\"";
-
+            // Run the ffmpeg command.
             if (RunFfmpegRaw(getLast) == false)
             {
                 return false;
@@ -240,13 +244,13 @@ namespace RSPro2Video
             if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads)) == false) { return false; }
 
             // Get and store the clip duration.
-            if (GetProgressDuration(ffmpegTask.VideoFilenames[0]) < 0) { return false; }
+            if (GetProgressDuration(ffmpegTask.VideoFilenames[0]).FrameCount < 0) { return false; }
 
             return true;
         }
 
 
-        private double GetProgressDuration(string videoFilename)
+        private ClipDuration GetProgressDuration(string videoFilename)
         {
             String progressFile = videoFilename + ".progress";
             String progressFileContents = String.Empty;
@@ -257,7 +261,7 @@ namespace RSPro2Video
             catch (Exception e)
             {
                 File.AppendAllText(LogFile, $"\r\n\r\n***Error opening {progressFile}. {e.Message}\r\n\r\n");
-                return -1d;
+                return new ClipDuration(-1, -1.0d);
             }
 
             // Log the .progress file.
@@ -270,7 +274,7 @@ namespace RSPro2Video
             if (i == -1)
             {
                 File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to find frame count in {progressFile}. {progressFileContents}\r\n\r\n");
-                return -1d;
+                return new ClipDuration(-1, -1.0d);
             }
 
             // Parse the last frame count.
@@ -279,7 +283,7 @@ namespace RSPro2Video
             if (Int32.TryParse(frameCountString, out int frameCount) == false)
             {
                 File.AppendAllText(LogFile, $"\r\n\r\n***Error: Error parsing frame count in {progressFile}. {progressFileContents}\r\n\r\n");
-                return -1d;
+                return new ClipDuration(-1, -1.0d);
             }
             double duration = Math.Round((double)frameCount / FramesPerSecond, 15);
 
@@ -287,12 +291,12 @@ namespace RSPro2Video
             if (ClipDuration.TryAdd($"{videoFilename}{OutputVideoInterimExtension}", duration) == false)
             {
                 File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {progressFile} already exists in ClipDuration.\r\n\r\n");
-                return -1d;
+                return new ClipDuration(-1, -1.0d);
             }
 
             File.Delete(progressFile);
 
-            return duration;
+            return new ClipDuration(frameCount, duration);
         }
 
         /// <summary>

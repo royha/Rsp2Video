@@ -556,8 +556,9 @@ namespace RSPro2Video
             }
 
             // The command to use when memory requirements allow the reverseFiltergraph method.
+            // TODO: calculatedFrameBasedStartSeconds is way off and needs fixing.
             ffmpegCommandList.Add($"-y -hide_banner " +
-                $"-i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" -loop 1 " +
+                $"-ss {originalFrameBasedStartSeconds:0.############} -i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" -loop 1 " +
                 $"-filter_complex \"{interpolationFiltergraph}; {reverseVideoFiltergraph}; {audioFiltergraph}\" " +
                 $"-map [v] -map [a] -progress \"{videoFilename}.progress\" -threads {{0}} {OutputInterimSettings} " +
                 $"\"{videoFilename}{OutputVideoInterimExtension}\"");
@@ -670,10 +671,6 @@ namespace RSPro2Video
             Process process = new Process();
             double timeInSeconds = (double)sample / (double)SampleRate;
             double lengthInSeconds = (1d / FramesPerSecond) - (1d / 8192d);      // I subtract a small amount to make sure I get only one frame.
-
-            // Adjust for the audio delay.
-            //timeInSeconds += (double)ProjectSettings.VideoDelay / 1000d;
-            //timeInSeconds = timeInSeconds < 0 ? 0 : timeInSeconds;
 
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo
@@ -918,7 +915,7 @@ namespace RSPro2Video
                                 reverseBookmark.Name + ": " + reverseBookmark.Text : reverseBookmark.Text;
 
                             // Write the text of the forward and reverse speech to a .png file.
-                            CreateReverseTextOverlay(reverseBookmark.Name + "-" + i + ".Text.png", forwardOverlayText, reverseOverlayText, i);
+                            CreateReverseTextOverlay(reverseBookmark.Name + ".Text.png", forwardOverlayText, reverseOverlayText, i);
                         }
                     }
 
