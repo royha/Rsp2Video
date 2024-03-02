@@ -122,48 +122,25 @@ namespace RSPro2Video
         private Boolean RunReverseMinterpolateVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
             String videoFilename = ffmpegTask.VideoFilenames[0];
-            String videoFilenameWithExtension = videoFilename + OutputVideoInterimExtension;
 
             // Set the value for the ffmpeg "-threads" parameter.
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
             // Run the command.
-            if (RunFfmpeg(videoFilename, ffmpegCommand, ffmpegThreads) == false)
+            if (RunFfmpegRaw(ffmpegCommand) == false)
             {
                 return false;
             }
 
-            // Get the duration and set that duration in the ClipDuration dictionary.
+            // Get the clip duration and set that duration in the ClipDuration dictionary.
             ClipDuration clipDuration = GetProgressDuration(videoFilename);
             if (clipDuration.FrameCount < 0)
             {
                 return false;
             }
 
-            // Create the ffmpeg command to write the .First.png file.
-            // TODO: Single first frame:
-            // ffmpeg -y -hide_banner -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 -frames:v 1 "output.First.png" 
-            String getFirst = $"-y -hide_banner -i \"{videoFilenameWithExtension}\" "
-                + $"-pix_fmt rgb48 -an -filter:v \"select=eq(n\\,0)\" -f image2 -update 1 \"{videoFilename}.First.png\"";
-
-            // Run the ffmpeg command.
-            if (RunFfmpegRaw(getFirst) == false)
-            {
-                return false;
-            }
-
-            // Create the ffmpeg command to write the .Last.png file.
-            // TODO: Multiple frames ending in the last frame.
-            // ffmpeg -y -hide_banner -sseof -0.25 -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 "output.Last.%04d.png"
-            // Need to verify the clip is at least 0.25 seconds long. If not, just extract all frames.
-            // Need a special case for very low frame rates (4fps, for example)
-            // If it fails, go back and do 1.0 seconds, then 3.0 seconds. Maybe just start with 3.0 seconds
-            // Rename the one I want, then del {something}*.png
-            String getLast = $"-y -hide_banner -sseof -{FramesPerSecond} -i \"{videoFilenameWithExtension}\" "
-                + $"-pix_fmt rgb48 -an -filter:v \"select=eq(n\\,{clipDuration.FrameCount - 1})\" -f image2 -update 1 \"{videoFilename}.Last.png\"";
-
-            // Run the ffmpeg command.
-            if (RunFfmpegRaw(getLast) == false)
+            // Get the first and last frame of the clip.
+            if (CreateFirstAndLastFrameFromClip(videoFilename, clipDuration.Duration) == false)
             {
                 return false;
             }
@@ -179,11 +156,29 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunReverseVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
-            // Available memory is sufficient to use the filtergraph reverse method.
-            // if (RunReverseVideoTaskReverseMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
+            String videoFilename = ffmpegTask.VideoFilenames[0];
 
-            // Available memory is insufficent to use the filtergraph reverse method. Use the .png method instead.
-            if (RunReverseVideoTaskPngMethod(ffmpegThreads, ffmpegTask) == false) { return false; }
+            // Set the value for the ffmpeg "-threads" parameter.
+            String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
+
+            // Run the command.
+            if (RunFfmpegRaw(ffmpegCommand) == false)
+            {
+                return false;
+            }
+
+            // Get the clip duration and set that duration in the ClipDuration dictionary.
+            ClipDuration clipDuration = GetProgressDuration(videoFilename);
+            if (clipDuration.FrameCount < 0)
+            {
+                return false;
+            }
+
+            // Get the first and last frame of the clip.
+            if (CreateFirstAndLastFrameFromClip(videoFilename, clipDuration.Duration) == false)
+            {
+                return false;
+            }
 
             return true;
         }
@@ -196,6 +191,30 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunForwardBookmarkVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
+            String videoFilename = ffmpegTask.VideoFilenames[0];
+
+            // Set the value for the ffmpeg "-threads" parameter.
+            String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
+
+            // Run the command.
+            if (RunFfmpegRaw(ffmpegCommand) == false)
+            {
+                return false;
+            }
+
+            // Get the clip duration and set that duration in the ClipDuration dictionary.
+            ClipDuration clipDuration = GetProgressDuration(videoFilename);
+            if (clipDuration.FrameCount < 0)
+            {
+                return false;
+            }
+
+            // Get the first and last frame of the clip.
+            if (CreateFirstAndLastFrameFromClip(videoFilename, clipDuration.Duration) == false)
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -207,6 +226,24 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunForwardVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
+            String videoFilename = ffmpegTask.VideoFilenames[0];
+
+            // Set the value for the ffmpeg "-threads" parameter.
+            String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
+
+            // Run the command.
+            if (RunFfmpegRaw(ffmpegCommand) == false)
+            {
+                return false;
+            }
+
+            // Get the clip duration and set that duration in the ClipDuration dictionary.
+            ClipDuration clipDuration = GetProgressDuration(videoFilename);
+            if (clipDuration.FrameCount < 0)
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -300,6 +337,125 @@ namespace RSPro2Video
         }
 
         /// <summary>
+        /// Creates the {videoFilename}.First.png and {videoFilename}.Last.png for the specified video clip.
+        /// </summary>
+        /// <param name="videoFilename"></param>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        private Boolean CreateFirstAndLastFrameFromClip(string videoFilename, double duration)
+        {
+            String videoFilenameWithExtension = videoFilename + OutputVideoInterimExtension;
+            Boolean retval = false;
+
+            // Create the .First.png file.
+
+            // Create the ffmpeg command to write the .First.png file.
+            // TODO: Single first frame:
+            // ffmpeg -y -hide_banner -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 -imageFiles:v 1 "output.First.png" 
+            String getFirst = $"-y -hide_banner -i \"{videoFilenameWithExtension}\" "
+                + $"-pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename}.First.png\"";
+
+            // Run the ffmpeg command.
+            if (RunFfmpegRaw(getFirst) == false)
+            {
+                return false;
+            }
+
+
+            // Create the .Last.png file.
+
+            // Create a temp directory to store the last imageFiles of the clip.
+            String frameStorageDirectory = Path.Combine(WorkingDirectory, videoFilename);
+            DirectoryInfo diFrameStorageDirectory;
+            try { diFrameStorageDirectory = Directory.CreateDirectory(frameStorageDirectory); }
+            catch (Exception e)
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to create directory {frameStorageDirectory}, {e.Message}\r\n\r\n");
+                return false;
+            }
+
+            // Output the last few imageFiles of the clip in the temp directory.
+
+            String fileOutputString = Path.Combine(frameStorageDirectory, videoFilename);
+            for (int i = 0; retval == false; ++i)
+            {
+                // Get the time to see back from EOF.
+                double sseofValue = LastFrameSeekBack[i];
+
+                // If the clip is longer than the seek back value.
+                if (duration >= sseofValue)
+                {
+                    // Create the ffmpeg command to write the final imageFiles of the clip.
+                    String getLast = $"-y -hide_banner -sseof -{sseofValue} -i \"{videoFilenameWithExtension}\" "
+                        + $"-pix_fmt rgb48 -an \"{fileOutputString + ".Last.%05d.png"}\"";
+
+                    // Run the ffmpeg command.
+                    retval = RunFfmpegRaw(getLast);
+                }
+                else
+                {
+                    // The clip is not longer than the seek back value.
+                    // Create the ffmpeg command to write all imageFiles from the clip.
+                    String getLast = $"-y -hide_banner -i \"{videoFilenameWithExtension}\" "
+                        + $"-pix_fmt rgb48 -an -filter:v \"{fileOutputString + ".Last.%05d.png"}\"";
+
+                    // Run the ffmpeg command.
+                    retval = RunFfmpegRaw(getLast);
+                    break;
+                }
+            }
+
+            // Return false if all tries failed.
+            if (retval == false)
+            {
+                return false;
+            }
+
+            // Create the ffmpeg command to write the final imageFiles of the clip.
+            // TODO: Multiple imageFiles ending in the last frame.
+            // ffmpeg -y -hide_banner -sseof -0.25 -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 "output.Last.%04d.png"
+            // Need to verify the clip is at least 0.25 seconds long. If not, just extract all imageFiles.
+            // Need a special case for very low frame rates (4fps, for example)
+            // If it fails, go back and do 1.0 seconds, then 3.0 seconds. Maybe just start with 3.0 seconds
+            // Rename the one I want, then del {something}*.png
+
+            // Move and rename the last .png file to the VideoFilenames.First.png.
+
+            // Get a list of the files that match.
+            string[] imageFiles = Directory.GetFiles(frameStorageDirectory, $"{videoFilename}.Last.*.png");
+
+            // The File.Move method won't overwrite a file. It must be deleted before a rename/move can succeed.
+            String lastImageFilename = Path.Combine(WorkingDirectory, $"{videoFilename}.Last.png");
+            if (File.Exists(lastImageFilename))
+            {
+                try { File.Delete(lastImageFilename); }
+                catch (Exception e)
+                {
+                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {lastImageFilename}, {e.Message}\r\n\r\n");
+                    return false;
+                }
+            }
+
+            // Move and rename the last frame.
+            string renameFrom = Path.Combine(frameStorageDirectory, imageFiles[imageFiles.Length - 1]);
+            try { File.Move(Path.Combine(frameStorageDirectory, imageFiles[imageFiles.Length - 1]), lastImageFilename); }
+            catch (Exception e)
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {lastImageFilename}, {e.Message}\r\n\r\n");
+                return false;
+            }
+
+            // Delete the directory for the .png files.
+            try { diFrameStorageDirectory.Delete(true); }
+            catch
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete directory {frameStorageDirectory}\r\n\r\n");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Creates a reverse video clip based on the specified FFmpegTask. Exports and imports .png files to reverse the video.
         /// </summary>
         /// <param name="ffmpegThreads">The value for the ffmpeg -threads FfmpegCommand.</param>
@@ -316,13 +472,13 @@ namespace RSPro2Video
             // Create a directory to store the .png files.
             String PngDirectory = Path.Combine(WorkingDirectory, ffmpegTask.VideoFilenames[0]);
 
-            // Create the directory for the .png files.
-            try { diPngDirectory = Directory.CreateDirectory(PngDirectory); }
-            catch (Exception e)
-            {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to create directory {PngDirectory}, {e.Message}\r\n\r\n");
-                return false;
-            }
+        // Create the directory for the .png files.
+        try { diPngDirectory = Directory.CreateDirectory(PngDirectory); }
+        catch (Exception e)
+        {
+            File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to create directory {PngDirectory}, {e.Message}\r\n\r\n");
+            return false;
+        }
 
             // Output the clip as a series of .png files.
             if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[1], ffmpegThreads)) == false) { return false; }
@@ -420,7 +576,7 @@ namespace RSPro2Video
             // Log the ffmpeg FfmpegCommand line options.
             File.AppendAllText(LogFile, $"\r\n\r\n***Command line: {process.StartInfo.FileName} {process.StartInfo.Arguments}\r\n\r\n");
 
-            // Start ffmpeg to extract the frames.
+            // Start ffmpeg to extract the imageFiles.
             process.Start();
 
             // Read the output of ffmpeg.
@@ -469,7 +625,7 @@ namespace RSPro2Video
             // Log the ffmpeg FfmpegCommand line options.
             File.AppendAllText(LogFile, $"\r\n\r\n***Command line: {process.StartInfo.FileName} {process.StartInfo.Arguments}\r\n\r\n");
 
-            // Start ffmpeg to extract the frames.
+            // Start ffmpeg to extract the imageFiles.
             process.Start();
 
             // Read the output of ffmpeg.
