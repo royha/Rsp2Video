@@ -593,7 +593,12 @@ namespace RSPro2Video
             if (ProjectSettings.VideoDelay == 0)
             {
                 // Copy the source video to the working directory.
-                File.Copy(ProjectSettings.SourceVideoFile, WorkingInputVideoFile, true);
+                try { File.Copy(ProjectSettings.SourceVideoFile, WorkingInputVideoFile, true); }
+                catch (Exception e)
+                {
+                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to copy {ProjectSettings.SourceVideoFile} to {WorkingInputVideoFile}\r\nError message: {e.Message}\r\n\r\n");
+                    return false;
+                }
                 return true;
             }
 

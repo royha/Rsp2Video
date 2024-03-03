@@ -114,10 +114,106 @@ namespace RSPro2Video
                 }
             }
 
+            AfterAllFfmpegTasks();
+
             return true;
         }
 
+        public void AfterAllFfmpegTasks()
+        {
+            RemoveFailedClips();
+            DuplicateClips();
+            CalculateClipStarts();
+        }
 
+        /// <summary>
+        /// Removes the clips that couldn't be created from the VideoOutputs[VideoOutputIndex] list
+        /// and the ClipsToDuplicate list.
+        /// </summary>
+        public void RemoveFailedClips()
+        {
+            // Create an array from the FailedClips.
+            List<String> failedClipsList = FailedClips.ToList();
+            List<String> newFailedClipsList = FailedClips.ToList();
+
+            // Search through the failed clips and add all duplicate files from ClipsToDuplicate.
+            foreach (String failedClip in failedClipsList) 
+            {
+                String failedFilenameWithExtension = failedClip + OutputVideoInterimExtension;
+
+                // Check if this failed clip has an entry in ClipsToDuplicate.
+                if (ClipsToDuplicate.ContainsKey(failedFilenameWithExtension))
+                {
+                    // If so, add this to the list of files to ignore.
+                    foreach (String filename in ClipsToDuplicate[failedFilenameWithExtension])
+                    {
+                        // Add this file to the list of clips to remove.
+                        newFailedClipsList.Add(Path.GetFileNameWithoutExtension(filename));
+                    }
+
+                    // Remove this from the list of files to copy.
+                    ClipsToDuplicate.Remove(failedFilenameWithExtension);
+                }
+            }
+
+            // Create a new List that doesn't contain the failed (or duplicate of failed) clips.
+
+            // Create new list without the failed items.
+            List<String> newClipList = new List<String>();
+
+            // Add entries to the list of duplicates to remove as well.
+            foreach (String filename in VideoOutputs[VideoOutputIndex].Clips)
+            {
+                // Is this destinationFfilename in the list of failed clips?
+                if (newFailedClipsList.Contains(filename) == false)
+                {
+                    newClipList.Add(filename);
+                }
+            }
+
+            // Set the new list of clips for this VideoOutput.
+            VideoOutputs[VideoOutputIndex].Clips = newClipList;
+        }
+
+        /// <summary>
+        /// Makes a copy of the ClipsToDuplicate key to each of the entries in the list.
+        /// </summary>
+        public void DuplicateClips()
+        {
+            foreach (var clipToDuplicate in ClipsToDuplicate)
+            {
+                if (File.Exists(clipToDuplicate.Key))
+                {
+                    foreach (String destinationFfilename in clipToDuplicate.Value)
+                    {
+                        try 
+                        { 
+                            File.Copy(clipToDuplicate.Key, destinationFfilename); 
+                        }
+                        catch (Exception e)
+                        {
+                            File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to copy {clipToDuplicate.Key} to {destinationFfilename}\r\nError message: {e.Message}\r\n\r\n");
+                        }
+
+                    }
+                }
+                else
+                {
+                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: File not available to copy {clipToDuplicate.Key}.\r\n\r\n");
+                }
+            }
+        }
+
+
+        public void CalculateClipStarts()
+        {
+
+        }
+
+        /// <summary>
+        /// Records failed FFmpeg tasks to the log and stores entries in FaileClips.
+        /// </summary>
+        /// <param name="ffmpegTask">The FFmpeg task that failed.</param>
         public void AddToFailedClips(FFmpegTask ffmpegTask)
         {
             // Log the error.
@@ -219,7 +315,7 @@ namespace RSPro2Video
             // Loop through the ffmpeg commands.
             for (int i = 0; i < ffmpegTask.FFmpegCommands.Count; ++i)
             {
-                // Get the filename and the ffmpeg command for this iteration.
+                // Get the destinationFfilename and the ffmpeg command for this iteration.
                 videoFilename = ffmpegTask.VideoFilenames[i];
                 String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[i], ffmpegThreads);
 
@@ -230,7 +326,7 @@ namespace RSPro2Video
                 }
             }
 
-            // Get the clip duration of the final filename and set that duration in the ClipDuration dictionary.
+            // Get the clip duration of the final destinationFfilename and set that duration in the ClipDuration dictionary.
             ClipDuration clipDuration = GetProgressDuration(videoFilename);
             if (clipDuration.FrameCount < 0)
             {
@@ -261,7 +357,7 @@ namespace RSPro2Video
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
             // Because separate threads could want to write to a file ("Black.0.5.mp4" for example), I lock the
-            // filename until everything is done. When the locked thread gets access, it will discover the 
+            // destinationFfilename until everything is done. When the locked thread gets access, it will discover the 
             // file already exists and will not attempt to create the file.
             lock (FilenameWithExtension)
             {
@@ -299,7 +395,7 @@ namespace RSPro2Video
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
             // Because separate threads could want to write to a file ("Black.0.5.mp4" for example), I lock the
-            // filename until everything is done. When the locked thread gets access, it will discover the 
+            // destinationFfilename until everything is done. When the locked thread gets access, it will discover the 
             // file already exists and will not attempt to create the file.
             lock (FilenameWithExtension)
             {
@@ -343,7 +439,7 @@ namespace RSPro2Video
                 String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
                 // Because separate threads could want to write to a file ("Black.0.5.mp4" for example), I lock the
-                // filename until everything is done. When the locked thread gets access, it will discover the 
+                // destinationFfilename until everything is done. When the locked thread gets access, it will discover the 
                 // file already exists and will not attempt to create the file.
                 lock (FilenameWithExtension)
                 {
@@ -368,7 +464,7 @@ namespace RSPro2Video
                 // Loop through the ffmpeg commands.
                 for (int i = 0; i < ffmpegTask.FFmpegCommands.Count; ++i)
                 {
-                    // Get the filename and the ffmpeg command for this iteration.
+                    // Get the destinationFfilename and the ffmpeg command for this iteration.
                     videoFilename = ffmpegTask.VideoFilenames[i];
                     String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[i], ffmpegThreads);
 
@@ -379,7 +475,7 @@ namespace RSPro2Video
                     }
                 }
 
-                // Get the clip duration of the final filename and set that duration in the ClipDuration dictionary.
+                // Get the clip duration of the final destinationFfilename and set that duration in the ClipDuration dictionary.
                 GetProgressDuration(videoFilename);
             }
 
