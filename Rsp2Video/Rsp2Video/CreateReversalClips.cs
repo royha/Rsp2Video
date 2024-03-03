@@ -822,7 +822,7 @@ namespace RSPro2Video
         private bool CreateTextImageFiles()
         {
             CreateOverlayPngFiles();
-            CreateOpeningAndClosingCards();
+            CreateOpeningAndClosingCardImages();
 
             return true;
         }
@@ -1056,7 +1056,7 @@ namespace RSPro2Video
         /// <summary>
         /// Creates the opening and closing cards.
         /// </summary>
-        private bool CreateOpeningAndClosingCards()
+        private bool CreateOpeningAndClosingCardImages()
         {
             // Get the opening and closing card text from the right source.
             //if (settings.BookmarkFileType == BookmarkFileType.bok || settings.BookmarkFileType == BookmarkFileType.FmBok)

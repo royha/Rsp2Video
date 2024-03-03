@@ -25,7 +25,6 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunAllFfmpegTasks()
         {
-            Boolean retval = true;
             int ffmpegThreads = 0;
 
             // Get a list of Phase 1 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
@@ -38,6 +37,8 @@ namespace RSPro2Video
             // Run all of the Phase 1 tasks in order.
             foreach (FFmpegTask ffmpegTask in phaseOneTasks)
             {
+                Boolean retval = true;
+
                 switch (ffmpegTask.SortOrder)
                 {
                     case FfmpegTaskSortOrder.ReverseMinterpolateVideo:
@@ -61,6 +62,8 @@ namespace RSPro2Video
             // Run all of the Phase 2 tasks in order.
             foreach (FFmpegTask ffmpegTask in phaseTwoTasks)
             {
+                Boolean retval = true;
+
                 switch (ffmpegTask.SortOrder)
                 {
                     case FfmpegTaskSortOrder.ReverseVideo:
@@ -90,8 +93,10 @@ namespace RSPro2Video
                 .ToList();
 
             // Run all of the Phase 3 tasks in order.
-            foreach (FFmpegTask ffmpegTask in phaseTwoTasks)
+            foreach (FFmpegTask ffmpegTask in phaseThreeTasks)
             {
+                Boolean retval = true;
+
                 switch (ffmpegTask.SortOrder)
                 {
                     case FfmpegTaskSortOrder.CardVideo:
@@ -105,7 +110,7 @@ namespace RSPro2Video
 
                 if (retval == false)
                 {
-                    return false;
+                    // return false;
                 }
             }
 
@@ -191,18 +196,23 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunForwardBookmarkVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
-            String videoFilename = ffmpegTask.VideoFilenames[0];
+            String videoFilename = String.Empty;
 
-            // Set the value for the ffmpeg "-threads" parameter.
-            String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
-
-            // Run the command.
-            if (RunFfmpegRaw(ffmpegCommand) == false)
+            // Loop through the ffmpeg commands.
+            for (int i = 0; i < ffmpegTask.FFmpegCommands.Count; ++i)
             {
-                return false;
+                // Get the filename and the ffmpeg command for this iteration.
+                videoFilename = ffmpegTask.VideoFilenames[i];
+                String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[i], ffmpegThreads);
+
+                // Run the command.
+                if (RunFfmpegRaw(ffmpegCommand) == false)
+                {
+                    return false;
+                }
             }
 
-            // Get the clip duration and set that duration in the ClipDuration dictionary.
+            // Get the clip duration of the final filename and set that duration in the ClipDuration dictionary.
             ClipDuration clipDuration = GetProgressDuration(videoFilename);
             if (clipDuration.FrameCount < 0)
             {
@@ -227,21 +237,30 @@ namespace RSPro2Video
         private Boolean RunForwardVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
             String videoFilename = ffmpegTask.VideoFilenames[0];
+            String FilenameWithExtension = videoFilename + OutputVideoInterimExtension;
 
             // Set the value for the ffmpeg "-threads" parameter.
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
-            // Run the command.
-            if (RunFfmpegRaw(ffmpegCommand) == false)
+            // Because separate threads could want to write to a file ("Black.0.5.mp4" for example), I lock the
+            // filename until everything is done. When the locked thread gets access, it will discover the 
+            // file already exists and will not attempt to create the file.
+            lock (FilenameWithExtension)
             {
-                return false;
-            }
+                // If the file exists, then I don't need to create it.
+                if (File.Exists(FilenameWithExtension))
+                {
+                    return true;
+                }
 
-            // Get the clip duration and set that duration in the ClipDuration dictionary.
-            ClipDuration clipDuration = GetProgressDuration(videoFilename);
-            if (clipDuration.FrameCount < 0)
-            {
-                return false;
+                // Run the command.
+                if (RunFfmpegRaw(ffmpegCommand) == false)
+                {
+                    return false;
+                }
+
+                // Get the clip duration and set that duration in the ClipDuration dictionary.
+                GetProgressDuration(videoFilename);
             }
 
             return true;
@@ -255,6 +274,33 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunCardVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
+            String videoFilename = ffmpegTask.VideoFilenames[0];
+            String FilenameWithExtension = videoFilename + OutputVideoInterimExtension;
+
+            // Set the value for the ffmpeg "-threads" parameter.
+            String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
+
+            // Because separate threads could want to write to a file ("Black.0.5.mp4" for example), I lock the
+            // filename until everything is done. When the locked thread gets access, it will discover the 
+            // file already exists and will not attempt to create the file.
+            lock (FilenameWithExtension)
+            {
+                // If the file exists, then I don't need to create it.
+                if (File.Exists(FilenameWithExtension))
+                {
+                    return true;
+                }
+
+                // Run the command.
+                if (RunFfmpegRaw(ffmpegCommand) == false)
+                {
+                    return false;
+                }
+
+                // Get the clip duration and set that duration in the ClipDuration dictionary.
+                GetProgressDuration(videoFilename);
+            }
+
             return true;
         }
 
@@ -266,22 +312,58 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunTransitionVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
-            return true;
-        }
+            String videoFilename = String.Empty;
+            String FilenameWithExtension = String.Empty;
 
-        /// <summary>
-        /// Creates a reverse video clip based on the specified FFmpegTask. Uses filter_complex filtergraph to reverse the video.
-        /// </summary>
-        /// <param name="ffmpegThreads">The value for the ffmpeg -threads FfmpegCommand.</param>
-        /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
-        /// <returns>Returns true if successful; otherwise, false.</returns>
-        private Boolean RunReverseVideoTaskReverseMethod(int ffmpegThreads, FFmpegTask ffmpegTask)
-        {
-            // Execute the ffmpeg FfmpegCommand to create the reverse video.
-            if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads)) == false) { return false; }
+            // Presently, there are two types of transition videos. Single step and two-step.
+            if (ffmpegTask.VideoFilenames.Count == 1)
+            {
+                videoFilename = ffmpegTask.VideoFilenames[0];
+                FilenameWithExtension = videoFilename + OutputVideoInterimExtension;
 
-            // Get and store the clip duration.
-            if (GetProgressDuration(ffmpegTask.VideoFilenames[0]).FrameCount < 0) { return false; }
+                // Set the value for the ffmpeg "-threads" parameter.
+                String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
+
+                // Because separate threads could want to write to a file ("Black.0.5.mp4" for example), I lock the
+                // filename until everything is done. When the locked thread gets access, it will discover the 
+                // file already exists and will not attempt to create the file.
+                lock (FilenameWithExtension)
+                {
+                    // If the file exists, then I don't need to create it.
+                    if (File.Exists(FilenameWithExtension))
+                    {
+                        return true;
+                    }
+
+                    // Run the command.
+                    if (RunFfmpegRaw(ffmpegCommand) == false)
+                    {
+                        return false;
+                    }
+
+                    // Get the clip duration and set that duration in the ClipDuration dictionary.
+                    GetProgressDuration(videoFilename);
+                }
+            }
+            else
+            {
+                // Loop through the ffmpeg commands.
+                for (int i = 0; i < ffmpegTask.FFmpegCommands.Count; ++i)
+                {
+                    // Get the filename and the ffmpeg command for this iteration.
+                    videoFilename = ffmpegTask.VideoFilenames[i];
+                    String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[i], ffmpegThreads);
+
+                    // Run the command.
+                    if (RunFfmpegRaw(ffmpegCommand) == false)
+                    {
+                        return false;
+                    }
+                }
+
+                // Get the clip duration of the final filename and set that duration in the ClipDuration dictionary.
+                GetProgressDuration(videoFilename);
+            }
 
             return true;
         }
@@ -308,7 +390,7 @@ namespace RSPro2Video
 
             // Find the last frame count.
             int i = progressFileContents.LastIndexOf(searchString);
-            if (i == -1)
+            if (i < 0)
             {
                 File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to find frame count in {progressFile}. {progressFileContents}\r\n\r\n");
                 return new ClipDuration(-1, -1.0d);
@@ -345,20 +427,6 @@ namespace RSPro2Video
         {
             String videoFilenameWithExtension = videoFilename + OutputVideoInterimExtension;
             Boolean retval = false;
-
-            // Create the .First.png file.
-
-            // Create the ffmpeg command to write the .First.png file.
-            // TODO: Single first frame:
-            // ffmpeg -y -hide_banner -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 -imageFiles:v 1 "output.First.png" 
-            String getFirst = $"-y -hide_banner -i \"{videoFilenameWithExtension}\" "
-                + $"-pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename}.First.png\"";
-
-            // Run the ffmpeg command.
-            if (RunFfmpegRaw(getFirst) == false)
-            {
-                return false;
-            }
 
 
             // Create the .Last.png file.
@@ -411,12 +479,6 @@ namespace RSPro2Video
             }
 
             // Create the ffmpeg command to write the final imageFiles of the clip.
-            // TODO: Multiple imageFiles ending in the last frame.
-            // ffmpeg -y -hide_banner -sseof -0.25 -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 "output.Last.%04d.png"
-            // Need to verify the clip is at least 0.25 seconds long. If not, just extract all imageFiles.
-            // Need a special case for very low frame rates (4fps, for example)
-            // If it fails, go back and do 1.0 seconds, then 3.0 seconds. Maybe just start with 3.0 seconds
-            // Rename the one I want, then del {something}*.png
 
             // Move and rename the last .png file to the VideoFilenames.First.png.
 
@@ -449,6 +511,21 @@ namespace RSPro2Video
             catch
             {
                 File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete directory {frameStorageDirectory}\r\n\r\n");
+                return false;
+            }
+
+
+            // Create the .First.png file.
+
+            // Create the ffmpeg command to write the .First.png file.
+            // TODO: Single first frame:
+            // ffmpeg -y -hide_banner -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 -imageFiles:v 1 "output.First.png" 
+            String getFirst = $"-y -hide_banner -i \"{videoFilenameWithExtension}\" "
+                + $"-pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename}.First.png\"";
+
+            // Run the ffmpeg command.
+            if (RunFfmpegRaw(getFirst) == false)
+            {
                 return false;
             }
 
@@ -623,7 +700,8 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg FfmpegCommand line options.
-            File.AppendAllText(LogFile, $"\r\n\r\n***Command line: {process.StartInfo.FileName} {process.StartInfo.Arguments}\r\n\r\n");
+            File.AppendAllText(LogFile, $"\r\n\r\n***Command line: {process.StartInfo.FileName} " 
+                + "{process.StartInfo.Arguments}\r\n\r\n");
 
             // Start ffmpeg to extract the imageFiles.
             process.Start();

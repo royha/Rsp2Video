@@ -54,7 +54,7 @@ namespace RSPro2Video
         DirectoryInfo diPngDirectory;                                   // Stores information for the TEMP_DIR directory.
         DirectoryInfo fiTmpDirectory;                                   // Stores information for the FRAMES_DIR directory.
         IProgress<string> Progress;                                     // Allows the long-running process to update the UI.
-        double[] LastFrameSeekBack = { 0.25, 0.5, 1, 3 };                     // The -sseof value when seeking the last frame of a clip.
+        readonly double[] LastFrameSeekBack = { 0.15d, 0.25d, 0.5d, 1d, 3d };    // The -sseof value when seeking the last frame of a clip.
 
         String SoxApp = @"C:\Program Files (x86)\sox-14-4-2\sox.exe";
         String FfmpegApp = @"C:\Program Files\ffmpeg\bin\ffmpeg.exe";

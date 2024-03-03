@@ -472,29 +472,27 @@ namespace RSPro2Video
             // Copies the source video to the working directory.
             if (CopySourceVideoToWorkingDirectory() == false) { return; }
 
-            // Create text files from the bookmark data.
-            CreateTextImageFiles();
-
-            // This will go away.
-            // Create the still images for the first and last frames of the forward video clips.
-            CreateForwardStills();
-
-            // Create the reversal clips.
-            CreateReversalClips();
-
             // Remove the frames directory.
+            // TODO: The _frames directory needs to go away.
             RemoveFrames_DirDirectory();
-
-            progress.Report("Working: Creating text overlays.");
 
             // Run MELT to output the video.
             CreateFfmpegTasks();
+
+            // Create text files from the bookmark data.
+            CreateTextImageFiles();
+
+            // The list of FFmepg tasks has been created. Execute the collected FFmpeg tasks.
+            RunAllFfmpegTasks();
+
+            // Assemble the clips into a video (or videos).
+            AssembleVideo();
 
             // Move the completed video to the destination directory.
             // MoveVideoToDestinationDirectory();
 
             // Remove the temp directory.
-            
+
             RemoveTemp_DirDirectory();
         }
 
