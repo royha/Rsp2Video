@@ -48,7 +48,7 @@ namespace RSPro2Video
 
                 if (retval == false)
                 {
-                    return false;
+                    AddToFailedClips(ffmpegTask);
                 }
             }
 
@@ -81,7 +81,7 @@ namespace RSPro2Video
 
                 if (retval == false)
                 {
-                    return false;
+                    AddToFailedClips(ffmpegTask);
                 }
             }
 
@@ -110,11 +110,29 @@ namespace RSPro2Video
 
                 if (retval == false)
                 {
-                    // return false;
+                    AddToFailedClips(ffmpegTask);
                 }
             }
 
             return true;
+        }
+
+
+        public void AddToFailedClips(FFmpegTask ffmpegTask)
+        {
+            // Log the error.
+            File.AppendAllText(LogFile, "\r\n\r\n***Error creatinging the following clips:\r\n");
+
+            // Write the error to the log and add to the list.
+            foreach (String filename in ffmpegTask.VideoFilenames)
+            {
+                File.AppendAllText(LogFile, filename);
+                File.AppendAllText(LogFile, "\r\n");
+
+                FailedClips.Add(filename);
+            }
+
+            File.AppendAllText(LogFile, "\r\n");
         }
 
         /// <summary>

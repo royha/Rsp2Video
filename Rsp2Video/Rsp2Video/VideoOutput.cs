@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace RSPro2Video
 {
+    /// <summary>
+    /// The output filename for a video and the list of clips to create that video.
+    /// </summary>
     public class VideoOutput
     {
         /// <summary>
@@ -31,6 +34,33 @@ namespace RSPro2Video
         {
             this.Filename = filename;
             this.Clips = new List<String>();
+        }
+    }
+
+    /// <summary>
+    /// An entry in the list of clips to create an output video.
+    /// </summary>
+    public class VideoOutputClipEntry
+    {
+        /// <summary>
+        /// The name of the clip.
+        /// </summary>
+        public String Name { get; set; }
+
+        /// <summary>
+        /// The start time for the clip.
+        /// </summary>
+        public double StartTime { get; set; }
+
+        /// <summary>
+        /// Constructor. Creates an object with the specified values.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="startTime"></param>
+        public VideoOutputClipEntry(String name, double startTime)
+        {
+            this.Name = name;
+            this.StartTime = startTime;
         }
     }
 }
