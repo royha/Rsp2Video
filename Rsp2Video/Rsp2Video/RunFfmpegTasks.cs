@@ -159,20 +159,20 @@ namespace RSPro2Video
             // Create a new List that doesn't contain the failed (or duplicate of failed) clips.
 
             // Create new list without the failed items.
-            List<String> newClipList = new List<String>();
+            List<ClipEntry> newClipEntryList = new List<ClipEntry>();
 
             // Add entries to the list of duplicates to remove as well.
-            foreach (String filename in VideoOutputs[VideoOutputIndex].Clips)
+            foreach (ClipEntry clipEntry in VideoOutputs[VideoOutputIndex].Clips)
             {
                 // Is this destinationFfilename in the list of failed clips?
-                if (newFailedClipsList.Contains(filename) == false)
+                if (newFailedClipsList.Contains(clipEntry.ClipFilename) == false)
                 {
-                    newClipList.Add(filename);
+                    newClipEntryList.Add(new ClipEntry (clipEntry.ClipFilename));
                 }
             }
 
             // Set the new list of clips for this VideoOutput.
-            VideoOutputs[VideoOutputIndex].Clips = newClipList;
+            VideoOutputs[VideoOutputIndex].Clips = newClipEntryList;
         }
 
         /// <summary>
@@ -207,7 +207,32 @@ namespace RSPro2Video
 
         public void CalculateClipStarts()
         {
+            // A new list without the missing clips.
+            List<ClipEntry> newClips = new List<ClipEntry>();
 
+            // The start time of the clip.
+            Double startTime = 0.0d;
+
+            foreach (ClipEntry clip in VideoOutputs[VideoOutputIndex].Clips)
+            {
+                // Add the duration of this clip to the start time.
+                if (ClipDuration.ContainsKey(clip.ClipFilename))
+                {
+                    // Add a new entry with the start time.
+                    newClips.Add(new ClipEntry(clip.ClipFilename, startTime));
+
+                    // Add the current clip duration to the start time for the next clip.
+                    startTime += ClipDuration[clip.ClipFilename];
+                }
+                else
+                {
+                    // If the clip is not in the duration list, log an error and do not add it to the new list.
+                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: ClipDuration does not contain an entry for \"{clip.ClipFilename}\".\r\n\r\n");
+                }
+            }
+
+            // Update the list of clips.
+            VideoOutputs[VideoOutputIndex].Clips = newClips;
         }
 
         /// <summary>
@@ -663,13 +688,13 @@ namespace RSPro2Video
             // Create a directory to store the .png files.
             String PngDirectory = Path.Combine(WorkingDirectory, ffmpegTask.VideoFilenames[0]);
 
-        // Create the directory for the .png files.
-        try { diPngDirectory = Directory.CreateDirectory(PngDirectory); }
-        catch (Exception e)
-        {
-            File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to create directory {PngDirectory}, {e.Message}\r\n\r\n");
-            return false;
-        }
+            // Create the directory for the .png files.
+            try { diPngDirectory = Directory.CreateDirectory(PngDirectory); }
+            catch (Exception e)
+            {
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to create directory {PngDirectory}, {e.Message}\r\n\r\n");
+                return false;
+            }
 
             // Output the clip as a series of .png files.
             if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[1], ffmpegThreads)) == false) { return false; }

@@ -110,9 +110,9 @@ namespace RSPro2Video
                 // Create the file list for this video.
                 StringBuilder fileList = new StringBuilder();
 
-                // Add all clip files.
+                // Add all clipEntry files.
                 bool firstFile = true;
-                foreach (String clip in videoOutput.Clips)
+                foreach (ClipEntry clipEntry in videoOutput.Clips)
                 {
                     // Add a "+" if this is not the first file.
                     if (firstFile)
@@ -123,9 +123,9 @@ namespace RSPro2Video
                     {
                         fileList.Append("+");
                     }
-                    // Add the clip to the list.
+                    // Add the clipEntry to the list.
                     fileList.Append('"');
-                    fileList.Append(clip);
+                    fileList.Append(clipEntry.ClipFilename);
                     fileList.Append('"');
                 }
 
@@ -189,12 +189,12 @@ namespace RSPro2Video
         //        // Create the file list for this video.
         //        StringBuilder fileList = new StringBuilder();
 
-        //        // Add all clip files.
-        //        foreach (String clip in videoOutput.Clips)
+        //        // Add all clipEntry files.
+        //        foreach (String clipEntry in videoOutput.Clips)
         //        {
-        //            // Add the clip to the list.
+        //            // Add the clipEntry to the list.
         //            fileList.Append("file '");
-        //            fileList.Append(clip);
+        //            fileList.Append(clipEntry);
         //            fileList.Append("'");
         //            fileList.Append(Environment.NewLine);
         //        }
@@ -260,11 +260,11 @@ namespace RSPro2Video
                 // Create the file list for this video.
                 List<String> fileList = new List<string>();
 
-                // Add all clip files.
-                foreach(String clip in videoOutput.Clips)
+                // Add all clipEntry files.
+                foreach(ClipEntry clipEntry in videoOutput.Clips)
                 {
                     // Follow the specific file format.
-                    String line = String.Format("file '{0}'", clip);
+                    String line = String.Format("file '{0}'", clipEntry.ClipFilename);
 
                     // Add the line to the list.
                     fileList.Add(line);
@@ -328,7 +328,7 @@ namespace RSPro2Video
         /// <param name="FfmpegCommand">The ffmpeg commands.</param>
         /// <param name="Phase">The phase for this ffmpeg task.</param>
         /// <param name="SortOrder">The sort order for this ffmpeg task.</param>
-        /// <param name="EstimatedDuration">The best guess for the clip duration (for sorting purposes).</param>
+        /// <param name="EstimatedDuration">The best guess for the clipEntry duration (for sorting purposes).</param>
         /// <param name="AddToVideo">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool CreateFfmpegTask(String Filename,
@@ -382,7 +382,7 @@ namespace RSPro2Video
         /// <param name="FfmpegCommand">The ffmpeg commands.</param>
         /// <param name="Phase">The phase for this ffmpeg task.</param>
         /// <param name="SortOrder">The sort order for this ffmpeg task.</param>
-        /// <param name="EstimatedDuration">The best guess for the clip duration (for sorting purposes).</param>
+        /// <param name="EstimatedDuration">The best guess for the clipEntry duration (for sorting purposes).</param>
         /// <param name="AddToVideo">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool CreateFfmpegTask(List<String> Filenames,
@@ -419,9 +419,9 @@ namespace RSPro2Video
         /// 
         /// </summary>
         /// <param name="Filename">The name of the output file without an extension.</param>
-        /// <param name="EstimatedDuration">The best guess for the clip duration (for sorting purposes).</param>
+        /// <param name="EstimatedDuration">The best guess for the clipEntry duration (for sorting purposes).</param>
         /// <param name="AddToVideoOutputs">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
-        /// <returns>The updated filename of the clip to write (since some clips must be duplicated).</returns>
+        /// <returns>The updated filename of the clipEntry to write (since some clips must be duplicated).</returns>
         private String AddToClips (String Filename, double EstimatedDuration = 0.0d, Boolean AddToVideoOutputs = true)
         {
             // Add the extension to the filename.
@@ -463,7 +463,7 @@ namespace RSPro2Video
             // If requested, add the filename to the list of clips to use to create this video.
             if (AddToVideoOutputs == true)
             {
-                VideoOutputs[VideoOutputIndex].Clips.Add(FilenameWithExtension);
+                VideoOutputs[VideoOutputIndex].Clips.Add(new ClipEntry(FilenameWithExtension));
             }
 
             return FilenameWithExtension;
@@ -485,7 +485,7 @@ namespace RSPro2Video
             // Fade in to the opening frame from black.
             AddTransitionFromBlack("OpeningFrame", ProjectSettings.TransitionLengthCard);
             
-            // Add the starting video clip.
+            // Add the starting video clipEntry.
             AddStartingVideoClip();
 
             // Loop through all of the forward bookmarks.
@@ -617,7 +617,7 @@ namespace RSPro2Video
                 //    AddForwardBookmarkVideo(forwardBookmark: forwardBookmark, HideTextOverlay: true);
 
                 //    // Prepare for the next transition.
-                //    TransitionFromFrame = forwardBookmark.Name + ".Last";
+                //    TransitionFromFrame = forwardBookmark.ClipFilename + ".Last";
                 //}
 
                 //
@@ -792,7 +792,7 @@ namespace RSPro2Video
                 //    AddForwardBookmarkVideo(forwardBookmark: forwardBookmark, HideTextOverlay: true);
 
                 //    // Prepare for the next transition.
-                //    TransitionFromFrame = forwardBookmark.Name + ".Last";
+                //    TransitionFromFrame = forwardBookmark.ClipFilename + ".Last";
                 //}
 
                 // Transition from the end of this reversal to the beginning of the next.
@@ -973,7 +973,7 @@ namespace RSPro2Video
             // Add 1/2 second of black.
             AddBlack(0.5d);
 
-            // Add the starting video clip.
+            // Add the starting video clipEntry.
             AddStartingVideoClip();
 
             // Loop through all of the forward bookmarks.
@@ -1375,10 +1375,10 @@ namespace RSPro2Video
         }
 
         /// <summary>
-        /// Creates a video clip of the specified number of seconds of black.
+        /// Creates a video clipEntry of the specified number of seconds of black.
         /// </summary>
         /// <remarks>
-        /// This is the first clip added to the video. I create it from the first frame of the
+        /// This is the first clipEntry added to the video. I create it from the first frame of the
         /// source video, make it black, and repeat that frame for the specified duration. This
         /// results in the correct video resolution in the output video.
         /// </remarks>
@@ -1386,7 +1386,7 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool AddBlack(double duration)
         {
-            // Create the filename for this video clip.
+            // Create the filename for this video clipEntry.
             String filename = $"Black.{duration:0.######}";
             String FilenameWithExtension = filename + OutputVideoInterimExtension;
 
@@ -1403,7 +1403,7 @@ namespace RSPro2Video
 
             command = AddFfmpegOutputStrings(command, filename);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(filename,
                 command,
                 FfmpegPhase.PhaseTwo,
@@ -1426,7 +1426,7 @@ namespace RSPro2Video
                 // If There is an opening card, add it.
                 if (String.IsNullOrWhiteSpace(OpeningCard) == false)
                 {
-                    // Create the filename for this video clip.
+                    // Create the filename for this video clipEntry.
                     String filename = "OpeningCard";
 
                     // Calculate the length of time to display the card.
@@ -1440,7 +1440,7 @@ namespace RSPro2Video
                         RelativePathToWorkingInputVideoFile);
                     command = AddFfmpegOutputStrings(command, filename);
 
-                    // Create the ffmpeg task for this clip.
+                    // Create the ffmpeg task for this clipEntry.
                     retval = CreateFfmpegTask(filename, 
                         command, 
                         FfmpegPhase.PhaseThree, 
@@ -1466,7 +1466,7 @@ namespace RSPro2Video
                 // If There is a closing card, add it.
                 if (String.IsNullOrWhiteSpace(ClosingCard) == false)
                 {
-                    // Create the filename for this video clip.
+                    // Create the filename for this video clipEntry.
                     String filename = "ClosingCard";
 
                     // Calculate the length of time to display the card.
@@ -1480,7 +1480,7 @@ namespace RSPro2Video
                         RelativePathToWorkingInputVideoFile);
                     command = AddFfmpegOutputStrings(command, filename);
 
-                    // Create the ffmpeg task for this clip.
+                    // Create the ffmpeg task for this clipEntry.
                     retval = CreateFfmpegTask(filename, 
                         command, 
                         FfmpegPhase.PhaseThree, 
@@ -1493,7 +1493,7 @@ namespace RSPro2Video
         }
 
         /// <summary>
-        /// Adds the initial video clip before the first forward forwardBookmark.
+        /// Adds the initial video clipEntry before the first forward forwardBookmark.
         /// </summary>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool AddStartingVideoClip()
@@ -1502,7 +1502,7 @@ namespace RSPro2Video
             double startTime = 0.0d;
             double duration = ((double)ForwardBookmarks[0].SampleStart / (double)SampleRate);
 
-            // Create the filename for this clip.
+            // Create the filename for this clipEntry.
             String filename = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
 
             // Create the inner commands for ffmpeg.
@@ -1513,7 +1513,7 @@ namespace RSPro2Video
 
             command = AddFfmpegOutputStrings(command, filename);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(filename, 
                 command, 
                 FfmpegPhase.PhaseTwo, 
@@ -1528,7 +1528,7 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool AddExplanationCard(Bookmark bookmark)
         {
-            // Create the filename for this video clip.
+            // Create the filename for this video clipEntry.
             String filename = bookmark.Name + ".Explanation";
 
             // Calculate the length of time to display the card.
@@ -1542,7 +1542,7 @@ namespace RSPro2Video
                 RelativePathToWorkingInputVideoFile);
             command = AddFfmpegOutputStrings(command, filename);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(filename,
                 command, 
                 FfmpegPhase.PhaseThree, 
@@ -1575,14 +1575,14 @@ namespace RSPro2Video
             // [2:a]                        # From the third input, select the audio channel.
             // volume=0.0,                  # Multiply the audio value by 0 (silence).
             // atrim=duration={2:0.######}  # Set the audio duration to {3}.
-            // [a];                         # Name this stream "a" for audio.
+            // [a];                         # ClipFilename this stream "a" for audio.
             // [0:v]                        # From the first input, select the video channel.
             // fade=t=in:                   # Fade, type in (fade in).
             // d={2}                        # Duration of the fade.
-            // [v]\"                        # Name this stream "v" for video.
+            // [v]\"                        # ClipFilename this stream "v" for video.
             // -map \"[v]\"                 # Put the video stream into stream 0:0.
             // -map \"[a]\"                 # Put the audio stream into stream 0:1.
-            // -t {2:0.######}              # Set the duration of this clip (may be redundant since the audio duration and fade duration are identical).
+            // -t {2:0.######}              # Set the duration of this clipEntry (may be redundant since the audio duration and fade duration are identical).
             String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -i \"{3}\" -filter_complex \"[1:a]volume=0.0,atrim=duration={2:0.######}[a];[0:v]fade=t=in:d={2:0.######}[v]\" -map \"[v]\" -map \"[a]\" -t {2:0.######}",
                 FramesPerSecond,
                 ImageName,
@@ -1590,7 +1590,7 @@ namespace RSPro2Video
                 RelativePathToWorkingInputVideoFile);
             command = AddFfmpegOutputStrings(command, filename);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(filename, 
                 command, 
                 FfmpegPhase.PhaseThree, 
@@ -1623,14 +1623,14 @@ namespace RSPro2Video
             // [2:a]                        # From the third input, select the audio channel.
             // volume=0.0,                  # Multiply the audio value by 0 (silence).
             // atrim=duration={2:0.######}  # Set the audio duration to {3}.
-            // [a];                         # Name this stream "a" for audio.
+            // [a];                         # ClipFilename this stream "a" for audio.
             // [0:v]                        # From the first input, select the video channel.
             // fade=t=out:                  # Fade, type out (fade out).
             // d={2}                        # Duration of the fade.
-            // [v]\"                        # Name this stream "v" for video.
+            // [v]\"                        # ClipFilename this stream "v" for video.
             // -map \"[v]\"                 # Put the video stream into stream 0:0.
             // -map \"[a]\"                 # Put the audio stream into stream 0:1.
-            // -t {2:0.######}              # Set the duration of this clip (may be redundant since the audio duration and fade duration are identical).
+            // -t {2:0.######}              # Set the duration of this clipEntry (may be redundant since the audio duration and fade duration are identical).
             String command = String.Format("-r {0} -loop 1 -i \"{1}.png\" -i \"{3}\" -t {2:0.######} -filter_complex \"[1:a]volume=0.0,atrim=duration={2:0.######}[a];[0:v]fade=t=out:d={2:0.######}[v]\" -map \"[v]\" -map \"[a]\" -t {2:0.######}",
                 FramesPerSecond,
                 ImageName,
@@ -1638,7 +1638,7 @@ namespace RSPro2Video
                 RelativePathToWorkingInputVideoFile);
             command = AddFfmpegOutputStrings(command, filename);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(filename, 
                 command, 
                 FfmpegPhase.PhaseThree, 
@@ -1647,7 +1647,7 @@ namespace RSPro2Video
         }
 
         /// <summary>
-        /// Adds the specified forward video clip with the forward text overlay image added.
+        /// Adds the specified forward video clipEntry with the forward text overlay image added.
         /// </summary>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool AddForwardBookmarkVideo(Bookmark forwardBookmark, bool HideTextOverlay = false)
@@ -1656,14 +1656,14 @@ namespace RSPro2Video
             List<String> Filenames = new List<String>();
 
             //
-            // Extract the forward clip from the source video.
+            // Extract the forward clipEntry from the source video.
             //
 
             // Calculate the start time and duration.
             double startTime = (double)forwardBookmark.SampleStart / (double)SampleRate;
             double duration = ((double)forwardBookmark.SampleEnd / (double)SampleRate) - startTime;
 
-            // Create the filename for this clip.
+            // Create the filename for this clipEntry.
             String filename = $"v{startTime:0.######}-{duration:0.######}";
             Filenames.Add(filename);
 
@@ -1682,7 +1682,7 @@ namespace RSPro2Video
                 // Overlay the forward text overlay image.
                 //
 
-                // Create the filename for this clip.
+                // Create the filename for this clipEntry.
                 filename = forwardBookmark.Name + ".Text";
                 Filenames.Add(filename);
 
@@ -1695,7 +1695,7 @@ namespace RSPro2Video
                 FfmpegCommands.Add(command);
             }
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
                 Phase: FfmpegPhase.PhaseTwo,
@@ -1704,7 +1704,7 @@ namespace RSPro2Video
         }
 
         /// <summary>
-        /// Creates a transition with text overlay from TransitionFromFrame to the first frame of the reverse clip.
+        /// Creates a transition with text overlay from TransitionFromFrame to the first frame of the reverse clipEntry.
         /// </summary>
         /// <param name="reverseBookmark">The reverse bookmark of this transition.</param>
         /// <param name="TransitionLength">Length in time for the transition.</param>
@@ -1721,7 +1721,7 @@ namespace RSPro2Video
             }
 
             //
-            // Create the transition clip.
+            // Create the transition clipEntry.
             //
 
             // TransitionFromFrame is already set. Now set the TransitionToFrame.
@@ -1747,7 +1747,7 @@ namespace RSPro2Video
             // [2:a]                                    # From the third input, select the audio channel.
             // volume=0.0,                              # Multiply the audio value by 0 (silence).
             // atrim=duration={2:0.######}              # Set the audio duration to {3}.
-            // [a];                                     # Name this stream "a" for audio.
+            // [a];                                     # ClipFilename this stream "a" for audio.
             // [1]format=yuva444p,                      # Format the first image as yuva444p.
             // fade=d={3:0.######}:                     # Set the fade duration.
             // t=in:                                    # Set the fade type to "fade in".
@@ -1756,10 +1756,10 @@ namespace RSPro2Video
             // PTS-STARTPTS/TB                          # PTS is he presentation timestamp in input
             //                                          #   STARTPTS is the PTS of the first frame.
             //                                          #   TB is the timebase of the input timestamps.
-            // [f0];                                    # Name this stream "f0".
+            // [f0];                                    # ClipFilename this stream "f0".
             // [0][f0]overlay,                          # Overlay stream 0 and f0.
             // format=yuv420p                           # Format the overlayed video as yuv420p
-            // [v]\"                                    # Name the overlayed video "v" for video.
+            // [v]\"                                    # ClipFilename the overlayed video "v" for video.
             // -map \"[v]\"                             # Put the video stream into stream 0:0.
             // -map \"[a]\"                             # Put the audio stream into stream 0:1.
             String command = String.Format("-r {0} -loop 1 -t {3:0.######} -i \"{1}.png\" -loop 1 -t {3:0.######} -i \"{2}.png\" -i \"{4}\" -filter_complex \"[2:a]volume=0.0,atrim=duration={3:0.######}[a];[1]format=yuva444p,fade=d={3:0.######}:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
@@ -1777,7 +1777,7 @@ namespace RSPro2Video
             // Overlay the reverse text overlay image.
             //
 
-            // Create the filename for this clip.
+            // Create the filename for this clipEntry.
             filename = Filenames[0] + ".Text";
             Filenames.Add(filename);
 
@@ -1791,7 +1791,7 @@ namespace RSPro2Video
             // Add this command to the list of commands.
             FfmpegCommands.Add(command);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
                 Phase: FfmpegPhase.PhaseThree,
@@ -1817,7 +1817,7 @@ namespace RSPro2Video
             }
 
             //
-            // Create the transition clip.
+            // Create the transition clipEntry.
             //
 
             // TransitionFromFrame is already set. Now set the TransitionToFrame.
@@ -1843,7 +1843,7 @@ namespace RSPro2Video
             // [2:a]                                    # From the third input, select the audio channel.
             // volume=0.0,                              # Multiply the audio value by 0 (silence).
             // atrim=duration={2:0.######}              # Set the audio duration to {3}.
-            // [a];                                     # Name this stream "a" for audio.
+            // [a];                                     # ClipFilename this stream "a" for audio.
             // [1]format=yuva444p,                      # Format the first image as yuva444p.
             // fade=d={3:0.######}:                     # Set the fade duration.
             // t=in:                                    # Set the fade type to "fade in".
@@ -1852,10 +1852,10 @@ namespace RSPro2Video
             // PTS-STARTPTS/TB                          # PTS is he presentation timestamp in input
             //                                          #   STARTPTS is the PTS of the first frame.
             //                                          #   TB is the timebase of the input timestamps.
-            // [f0];                                    # Name this stream "f0".
+            // [f0];                                    # ClipFilename this stream "f0".
             // [0][f0]overlay,                          # Overlay stream 0 and f0.
             // format=yuv420p                           # Format the overlayed video as yuv420p
-            // [v]\"                                    # Name the overlayed video "v" for video.
+            // [v]\"                                    # ClipFilename the overlayed video "v" for video.
             // -map \"[v]\"                             # Put the video stream into stream 0:0.
             // -map \"[a]\"                             # Put the audio stream into stream 0:1.
             String command = String.Format("-r {0} -loop 1 -t {3:0.######} -i \"{1}.png\" -loop 1 -t {3:0.######} -i \"{2}.png\" -i \"{4}\" -filter_complex \"[2:a]volume=0.0,atrim=duration={3:0.######}[a];[1]format=yuva444p,fade=d={3:0.######}:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
@@ -1873,7 +1873,7 @@ namespace RSPro2Video
             // Overlay the reverse text overlay image.
             //
 
-            // Create the filename for this clip.
+            // Create the filename for this clipEntry.
             filename = Filenames[0] + ".Text";
             Filenames.Add(filename);
 
@@ -1887,7 +1887,7 @@ namespace RSPro2Video
             // Add this command to the list of commands.
             FfmpegCommands.Add(command);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
                 Phase: FfmpegPhase.PhaseThree,
@@ -1904,7 +1904,7 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool AddReverseVideo(Bookmark reverseBookmark, int reversalNumber, ReversalRate reversalRate)
         {
-            // Find the specific reverse video clip.
+            // Find the specific reverse video clipEntry.
             String reverseVideoFilename;
             if (reversalRate.ReversalSpeed == reversalRate.ReversalTone)
             {
@@ -1922,7 +1922,7 @@ namespace RSPro2Video
                     reversalRate.ReversalTone);
             }
 
-            // Create the filename for this clip.
+            // Create the filename for this clipEntry.
             String filename = reverseVideoFilename + ".Text";
 
             // Create the inner commands for ffmpeg.
@@ -1931,7 +1931,7 @@ namespace RSPro2Video
                 OutputVideoInterimExtension,
                 reverseBookmark.Name);
 
-            // Get the clip duration.
+            // Get the clipEntry duration.
             double duration = 0.0d;
             if (ClipsToCreate.ContainsKey(reverseVideoFilename))
             {
@@ -1943,7 +1943,7 @@ namespace RSPro2Video
                 return false;
             }
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.ReverseVideo, duration);
         }
 
@@ -1959,10 +1959,10 @@ namespace RSPro2Video
             }
 
             //
-            // Create the transition clip.
+            // Create the transition clipEntry.
             //
 
-            // Create the filename for this video clip.
+            // Create the filename for this video clipEntry.
             String filename = TransitionFromFrame;
             Filenames.Add(filename);
 
@@ -1981,7 +1981,7 @@ namespace RSPro2Video
             // Overlay the reverse text overlay image.
             //
 
-            // Create the filename for this clip.
+            // Create the filename for this clipEntry.
             filename = Filenames[0] + ".Text";
             Filenames.Add(filename);
 
@@ -1995,7 +1995,7 @@ namespace RSPro2Video
             // Add this command to the list of commands.
             FfmpegCommands.Add(command);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
                 Phase: FfmpegPhase.PhaseThree,
@@ -2037,14 +2037,14 @@ namespace RSPro2Video
             }
 
             //
-            // Extract the forward clip from the source video.
+            // Extract the forward clipEntry from the source video.
             //
 
             // Calculate the start time and duration.
             double startTime = (double)reverseBookmark.SampleStart / (double)SampleRate;
             double duration = ((double)reverseBookmark.SampleEnd / (double)SampleRate) - startTime;
 
-            // Create the filename for this clip.
+            // Create the filename for this clipEntry.
             String filename = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
             Filenames.Add(filename);
 
@@ -2062,7 +2062,7 @@ namespace RSPro2Video
             // Overlay the forward text overlay image.
             //
 
-            // Create the filename for this clip.
+            // Create the filename for this clipEntry.
             filename = reverseBookmark.Name + ".Forward.Text";
             Filenames.Add(filename);
 
@@ -2076,14 +2076,14 @@ namespace RSPro2Video
             // Add this command to the list of commands.
             FfmpegCommands.Add(command);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             CreateFfmpegTask(Filenames: Filenames,
                 FfmpegCommands: FfmpegCommands,
                 Phase: FfmpegPhase.PhaseThree,
                 SortOrder: FfmpegTaskSortOrder.TransitionVideo,
                 EstimatedDuration: duration);
 
-            // Add the reverse clip.
+            // Add the reverse clipEntry.
             return AddReverseVideo(reverseBookmark, reversalNumber, reversalRate);
         }
 
@@ -2122,7 +2122,7 @@ namespace RSPro2Video
             // [2:a]                                    # From the third input, select the audio channel.
             // volume=0.0,                              # Multiply the audio value by 0 (silence).
             // atrim=duration={2:0.######}              # Set the audio duration to {3}.
-            // [a];                                     # Name this stream "a" for audio.
+            // [a];                                     # ClipFilename this stream "a" for audio.
             // [1]format=yuva444p,                      # Format the first image as yuva444p.
             // fade=d={3:0.######}:                     # Set the fade duration.
             // t=in:                                    # Set the fade type to "fade in".
@@ -2131,10 +2131,10 @@ namespace RSPro2Video
             // PTS-STARTPTS/TB                          # PTS is he presentation timestamp in input
             //                                          #   STARTPTS is the PTS of the first frame.
             //                                          #   TB is the timebase of the input timestamps.
-            // [f0];                                    # Name this stream "f0".
+            // [f0];                                    # ClipFilename this stream "f0".
             // [0][f0]overlay,                          # Overlay stream 0 and f0.
             // format=yuv420p                           # Format the overlayed video as yuv420p
-            // [v]\"                                    # Name the overlayed video "v" for video.
+            // [v]\"                                    # ClipFilename the overlayed video "v" for video.
             // -map \"[v]\"                             # Put the video stream into stream 0:0.
             // -map \"[a]\"                             # Put the audio stream into stream 0:1.
             String command = String.Format("-r {0} -loop 1 -t {3:0.######} -i \"{1}.png\" -loop 1 -t {3:0.######} -i \"{2}.png\" -i \"{4}\" -filter_complex \"[2:a]volume=0.0,atrim=duration={3:0.######}[a];[1]format=yuva444p,fade=d={3:0.######}:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
@@ -2145,7 +2145,7 @@ namespace RSPro2Video
                 RelativePathToWorkingInputVideoFile);
             command = AddFfmpegOutputStrings(command, filename);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(filename,
                 command,
                 FfmpegPhase.PhaseThree,
@@ -2186,7 +2186,7 @@ namespace RSPro2Video
                 // [2:a]                                    # From the third input, select the audio channel.
                 // volume=0.0,                              # Multiply the audio value by 0 (silence).
                 // atrim=duration={2:0.######}              # Set the audio duration to {3}.
-                // [a];                                     # Name this stream "a" for audio.
+                // [a];                                     # ClipFilename this stream "a" for audio.
                 // [1]format=yuva444p,                      # Format the first image as yuva444p.
                 // fade=d={3:0.######}:                     # Set the fade duration.
                 // t=in:                                    # Set the fade type to "fade in".
@@ -2195,10 +2195,10 @@ namespace RSPro2Video
                 // PTS-STARTPTS/TB                          # PTS is he presentation timestamp in input
                 //                                          #   STARTPTS is the PTS of the first frame.
                 //                                          #   TB is the timebase of the input timestamps.
-                // [f0];                                    # Name this stream "f0".
+                // [f0];                                    # ClipFilename this stream "f0".
                 // [0][f0]overlay,                          # Overlay stream 0 and f0.
                 // format=yuv420p                           # Format the overlayed video as yuv420p
-                // [v]\"                                    # Name the overlayed video "v" for video.
+                // [v]\"                                    # ClipFilename the overlayed video "v" for video.
                 // -map \"[v]\"                             # Put the video stream into stream 0:0.
                 // -map \"[a]\"                             # Put the audio stream into stream 0:1.
                 String command = String.Format("-r {0} -loop 1 -t {3:0.######} -i \"{1}.png\" -loop 1 -t {3:0.######} -i \"{2}.png\" -i \"{4}\"  -filter_complex \"[2:a]volume=0.0,atrim=duration={3:0.######}[a];[1]format=yuva444p,fade=d={3:0.######}:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
@@ -2209,7 +2209,7 @@ namespace RSPro2Video
                     RelativePathToWorkingInputVideoFile);
                 command = AddFfmpegOutputStrings(command, filename);
 
-                // Create the ffmpeg task for this clip.
+                // Create the ffmpeg task for this clipEntry.
                 CreateFfmpegTask(filename,
                     command, 
                     FfmpegPhase.PhaseThree, 
@@ -2225,7 +2225,7 @@ namespace RSPro2Video
         /// </summary>
         /// <param name="ForwardBookmarks"></param>
         /// <param name="index"></param>
-        /// <returns>The ffmpeg task object with the commands to create this clip.</returns>
+        /// <returns>The ffmpeg task object with the commands to create this clipEntry.</returns>
         private bool AddForwardVideo(List<Bookmark> ForwardBookmarks, int index)
         {
             String command;
@@ -2246,7 +2246,7 @@ namespace RSPro2Video
                 //startTimeOfNextBookmark += (double)ProjectSettings.VideoDelay / 1000d;
                 //startTimeOfNextBookmark = startTimeOfNextBookmark < 0 ? 0 : startTimeOfNextBookmark;
 
-                // If the end time of this bookmark is beyond the start time of the next bookmark, this clip is not necessary.
+                // If the end time of this bookmark is beyond the start time of the next bookmark, this clipEntry is not necessary.
                 if (endTime >= startTimeOfNextBookmark)
                 {
                     return true;
@@ -2259,7 +2259,7 @@ namespace RSPro2Video
                 // Create the inner commands for ffmpeg.
                 command = $"-ss {endTime:0.######} -i \"{RelativePathToWorkingInputVideoFile}\" -t {duration:0.######}";
 
-                // Create the filename for the video that comes after this clip. The value of endTime is the end of this bookmark.
+                // Create the filename for the video that comes after this clipEntry. The value of endTime is the end of this bookmark.
                 filename = $"v{endTime:0.######}-{duration:0.######}";
             }
             // This is the last forward bookmark.
@@ -2268,14 +2268,14 @@ namespace RSPro2Video
                 // There is no need to add a time, since we are taking the video file from endTime of this bookmark to the end.
                 command = $"-ss {endTime:0.######} -i \"{RelativePathToWorkingInputVideoFile}\"";
 
-                // Create the filename for the video that comes after this clip. The value of endTime is the end of this bookmark.
+                // Create the filename for the video that comes after this clipEntry. The value of endTime is the end of this bookmark.
                 filename = $"v{endTime:0.######}-End";
             }
 
             // Add progress, output settings, and output filename.
             command = AddFfmpegOutputStrings(command, filename);
 
-            // Create the ffmpeg task for this clip.
+            // Create the ffmpeg task for this clipEntry.
             return CreateFfmpegTask(filename, 
                 command, 
                 FfmpegPhase.PhaseTwo, 

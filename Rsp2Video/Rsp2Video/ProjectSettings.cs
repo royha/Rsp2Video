@@ -32,7 +32,7 @@ namespace RSPro2Video
         // public String RspTranscriptFile { get; set; }
 
         /// <summary>
-        /// Name of the output file. Either a video file, or a video project file as indicated by OutputType.
+        /// ClipFilename of the output file. Either a video file, or a video project file as indicated by OutputType.
         /// </summary>
         public String OutputVideoFile { get; set; }
 
