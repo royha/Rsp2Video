@@ -299,79 +299,79 @@ namespace RSPro2Video
             return newFrames;
         }
 
-        private bool AssembleReverseVideoFrames(Bookmark reversal, int reversalNumber, ReversalRate reversalRate, int frameCount)
-        {
-            // If this rate isn't selected, return.
-            if (reversalRate.UseThisRate == false) { return true; }
+        //private bool AssembleReverseVideoFrames(Bookmark reversal, int reversalNumber, ReversalRate reversalRate, int frameCount)
+        //{
+        //    // If this rate isn't selected, return.
+        //    if (reversalRate.UseThisRate == false) { return true; }
 
-            Process process = new Process();
+        //    Process process = new Process();
 
-            // Generate the filename without the extension, since this will be used to access the .wav and .mkv files.
-            String videoFilename;
-            if (reversalRate.ReversalSpeed == reversalRate.ReversalTone)
-            {
-                videoFilename = String.Format("{0}.{1}.{2}", reversal.Name, reversalNumber, reversalRate.ReversalSpeed);
-            }
-            else
-            {
-                videoFilename = String.Format("{0}.{1}.{2}-{3}", reversal.Name, reversalNumber, reversalRate.ReversalSpeed, reversalRate.ReversalTone);
-            }
+        //    // Generate the filename without the extension, since this will be used to access the .wav and .mkv files.
+        //    String videoFilename;
+        //    if (reversalRate.ReversalSpeed == reversalRate.ReversalTone)
+        //    {
+        //        videoFilename = String.Format("{0}.{1}.{2}", reversal.Name, reversalNumber, reversalRate.ReversalSpeed);
+        //    }
+        //    else
+        //    {
+        //        videoFilename = String.Format("{0}.{1}.{2}-{3}", reversal.Name, reversalNumber, reversalRate.ReversalSpeed, reversalRate.ReversalTone);
+        //    }
 
-            // Calculate the frames per second for this reversal.
-            double reversalFps = FramesPerSecond * ((double)reversalRate.ReversalSpeed / (double)100);
+        //    // Calculate the frames per second for this reversal.
+        //    double reversalFps = FramesPerSecond * ((double)reversalRate.ReversalSpeed / (double)100);
 
-            // Create the ffmpeg argument string.
-            String arguments = String.Format("-y -hide_banner -framerate {0:0.######} -i \"{1}\\r{2}.%05d.png\" -i \"{3}{4}\" {6} -filter:v \"fps=fps={7:0.######}:eof_action=pass\" \"{3}{5}\"",
-                    FramesPerSecond * ((double)reversalRate.ReversalSpeed / 100d),
-                    FRAMES_DIR,
-                    reversal.Name,
-                    videoFilename,
-                    OutputAudioInterimExtension,
-                    OutputVideoInterimExtension,
-                    OutputImageSequenceSettings,
-                    FramesPerSecond);
+        //    // Create the ffmpeg argument string.
+        //    String arguments = String.Format("-y -hide_banner -framerate {0:0.######} -i \"{1}\\r{2}.%05d.png\" -i \"{3}{4}\" {6} -filter:v \"fps=fps={7:0.######}:eof_action=pass\" \"{3}{5}\"",
+        //            FramesPerSecond * ((double)reversalRate.ReversalSpeed / 100d),
+        //            FRAMES_DIR,
+        //            reversal.Name,
+        //            videoFilename,
+        //            OutputAudioInterimExtension,
+        //            OutputVideoInterimExtension,
+        //            OutputImageSequenceSettings,
+        //            FramesPerSecond);
 
-            // Configure the process using the StartInfo properties.
-            process.StartInfo = new ProcessStartInfo
-            {
-                FileName = FfmpegApp,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Maximized
-            };
+        //    // Configure the process using the StartInfo properties.
+        //    process.StartInfo = new ProcessStartInfo
+        //    {
+        //        FileName = FfmpegApp,
+        //        Arguments = arguments,
+        //        UseShellExecute = false,
+        //        RedirectStandardError = true,
+        //        CreateNoWindow = true,
+        //        WindowStyle = ProcessWindowStyle.Maximized
+        //    };
 
-            // Log the ffmpeg command line options.
-            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+        //    // Log the ffmpeg command line options.
+        //    File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
-            // Start ffmpeg to extract the frames.
-            process.Start();
+        //    // Start ffmpeg to extract the frames.
+        //    process.Start();
 
-            // Read the output of ffmpeg.
-            String FfmpegOutput = process.StandardError.ReadToEnd();
+        //    // Read the output of ffmpeg.
+        //    String FfmpegOutput = process.StandardError.ReadToEnd();
 
-            // Log the ffmpeg output.
-            File.AppendAllText(LogFile, FfmpegOutput);
+        //    // Log the ffmpeg output.
+        //    File.AppendAllText(LogFile, FfmpegOutput);
 
-            // Wait here for the process to exit.
-            process.WaitForExit();
-            int ExitCode = process.ExitCode;
-            process.Close();
+        //    // Wait here for the process to exit.
+        //    process.WaitForExit();
+        //    int ExitCode = process.ExitCode;
+        //    process.Close();
 
-            if (!(ExitCode == 0))
-            {
-                return false;
-            }
+        //    if (!(ExitCode == 0))
+        //    {
+        //        return false;
+        //    }
 
-            // Calculate the length, in seconds, of this clip.
-            double EstimatedDuration = Math.Ceiling(frameCount / reversalFps);
+        //    // Calculate the length, in seconds, of this clip.
+        //    double EstimatedDuration = Math.Ceiling(frameCount / reversalFps);
 
-            // Add the file to the clips lists.
-            AddToClips(videoFilename, EstimatedDuration, AddToVideoOutputs: false);
+        //    // Add the file to the clips lists.
+        //    AddToClips(videoFilename, EstimatedDuration, AddToVideoOutputs: false);
 
-            return true;
-        }
+        //    return true;
+        //}
 
         private bool CreateReverseVideoTask(Bookmark reversal, int reversalNumber, ReversalRate reversalRate)
         {
@@ -602,27 +602,30 @@ namespace RSPro2Video
             // directory, naming the first "{videoFilename}.First.png" and the last "{videoFilename}.Last.png".
             // Then delete the directory.
 
-            // Add the task to the list of tasks
-            if (minterpolationActive)
-            {
-                FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseOne,
-                    FfmpegTaskSortOrder.ReverseMinterpolateVideo,
-                    calculatedFrameBasedDuration,
-                    videoFilenames,
-                    ffmpegCommandList));
-            }
-            else
-            {
-                FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseTwo,
-                    FfmpegTaskSortOrder.ReverseVideo,
-                    calculatedFrameBasedDuration,
-                    videoFilenames,
-                    ffmpegCommandList));
-            }
-
             // Add the video clip to the list of clips.
-            AddToClips(videoFilename + OutputVideoInterimExtension, 
+            Boolean createFFmpegTask = AddToClips(videoFilename + OutputVideoInterimExtension,
                 calculatedFrameBasedDuration / FramesPerSecond, AddToVideoOutputs: false);
+
+            if (createFFmpegTask)
+            {
+                // Add the task to the list of tasks
+                if (minterpolationActive)
+                {
+                    FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseOne,
+                        FfmpegTaskSortOrder.ReverseMinterpolateVideo,
+                        calculatedFrameBasedDuration,
+                        videoFilenames,
+                        ffmpegCommandList));
+                }
+                else
+                {
+                    FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseTwo,
+                        FfmpegTaskSortOrder.ReverseVideo,
+                        calculatedFrameBasedDuration,
+                        videoFilenames,
+                        ffmpegCommandList));
+                }
+            }
 
             return true;
         }

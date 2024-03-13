@@ -329,16 +329,19 @@ namespace RSPro2Video
         /// <param name="Phase">The phase for this ffmpeg task.</param>
         /// <param name="SortOrder">The sort order for this ffmpeg task.</param>
         /// <param name="EstimatedDuration">The best guess for the clipEntry duration (for sorting purposes).</param>
-        /// <param name="AddToVideo">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
+        /// <param name="AddToVideoOutputs">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool CreateFfmpegTask(String Filename,
             String FfmpegCommand, FfmpegPhase Phase, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, Boolean AddToVideoOutputs = true)
         {
-            // Add the task to the list of tasks
-            FFmpegTasks.Add(new FFmpegTask(Phase, SortOrder, EstimatedDuration, Filename, FfmpegCommand));
-
             // Add the file to the list of clips to create.
-            AddToClips(Filename, EstimatedDuration, AddToVideoOutputs);
+            Boolean createFFmpegTask = AddToClips(Filename, EstimatedDuration, AddToVideoOutputs);
+
+            // Add the task to the list of tasks
+            if (createFFmpegTask)
+            {
+                FFmpegTasks.Add(new FFmpegTask(Phase, SortOrder, EstimatedDuration, Filename, FfmpegCommand));
+            }
 
             return true;
         }
@@ -379,36 +382,49 @@ namespace RSPro2Video
         /// Stores the FFmpeg command as an FFmpegTask.
         /// </summary>
         /// <param name="Filenames">The name of the output file without an extension.</param>
-        /// <param name="FfmpegCommand">The ffmpeg commands.</param>
+        /// <param name="FfmpegCommands">The ffmpeg commands.</param>
         /// <param name="Phase">The phase for this ffmpeg task.</param>
         /// <param name="SortOrder">The sort order for this ffmpeg task.</param>
         /// <param name="EstimatedDuration">The best guess for the clipEntry duration (for sorting purposes).</param>
-        /// <param name="AddToVideo">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
+        /// <param name="AddToVideoOutputs">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool CreateFfmpegTask(List<String> Filenames,
             List<String> FfmpegCommands, FfmpegPhase Phase, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, Boolean AddToVideoOutputs = true)
         {
-            // Add the task to the list of tasks
-            FFmpegTasks.Add(new FFmpegTask(Phase, SortOrder, EstimatedDuration, Filenames, FfmpegCommands));
+            // If true, a FFmpegTask should be created for this clip.
+            Boolean createFFmpegTask = true;
 
             // Add the file to the list of clips to create.
             if (SortOrder == FfmpegTaskSortOrder.ReverseVideo)
             {
                 // For reverse videos, Until I implement the .png reversal method (Filenames[1] and Filenames[2]), take only the first filename.
-                AddToClips(Filenames[0], EstimatedDuration, AddToVideoOutputs);
+                createFFmpegTask = AddToClips(Filenames[0], EstimatedDuration, AddToVideoOutputs);
             }
             else if (SortOrder == FfmpegTaskSortOrder.TransitionVideo || SortOrder == FfmpegTaskSortOrder.ForwardBookmarkVideo)
             {
                 // For transition videos that come to this overload (ie., they have an image overlay), use the [1]th filename.
-                AddToClips(Filenames[1], EstimatedDuration, AddToVideoOutputs);
+                createFFmpegTask = AddToClips(Filenames[1], EstimatedDuration, AddToVideoOutputs);
             }
             else
             {
                 // Put every filename into the list of clips to create.
                 foreach (string filename in Filenames)
                 {
-                    AddToClips(filename, EstimatedDuration, AddToVideoOutputs);
+                    Boolean retval = AddToClips(filename, EstimatedDuration, AddToVideoOutputs);
+
+                    // If any of the files is a duplicate, assume they all are duplicates (or they will envetually create a duplicate).
+                    if (retval == false)
+                    {
+                        createFFmpegTask = false;
+                    }
                 }
+            }
+
+            // If appropriate, add the task to the list of tasks.
+            if (createFFmpegTask)
+            {
+                // Add the task to the list of tasks
+                FFmpegTasks.Add(new FFmpegTask(Phase, SortOrder, EstimatedDuration, Filenames, FfmpegCommands));
             }
 
             return true;
@@ -421,9 +437,12 @@ namespace RSPro2Video
         /// <param name="Filename">The name of the output file without an extension.</param>
         /// <param name="EstimatedDuration">The best guess for the clipEntry duration (for sorting purposes).</param>
         /// <param name="AddToVideoOutputs">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
-        /// <returns>The updated filename of the clipEntry to write (since some clips must be duplicated).</returns>
-        private String AddToClips (String Filename, double EstimatedDuration = 0.0d, Boolean AddToVideoOutputs = true)
+        /// <returns>Retuns true if the filename is new/unique and needs an FFmpegTask to create it; returns false 
+        /// if this file will be a duplicate.</returns>
+        private Boolean AddToClips (String Filename, double EstimatedDuration = 0.0d, Boolean AddToVideoOutputs = true)
         {
+            Boolean retval = true;
+
             // Add the extension to the filename.
             String FilenameWithExtension = Filename + OutputVideoInterimExtension;
 
@@ -432,12 +451,19 @@ namespace RSPro2Video
             {
                 // Add the filename and estimated duration to the list of created clips.
                 ClipsToCreate.Add(FilenameWithExtension, EstimatedDuration);
+
+                // Declare that this video needs an FFmpegTask.
+                retval = true;
             }
             else
             {
+                // Declare that this video does not need an FFmpegTask.
+                retval = false;
+
                 // Create the new filename.
                 String newFilename;
 
+                // If this file is not in the list of clips to duplicate, add it.
                 if (!ClipsToDuplicate.ContainsKey(FilenameWithExtension))
                 {
                     // Create the new filename.
@@ -466,7 +492,7 @@ namespace RSPro2Video
                 VideoOutputs[VideoOutputIndex].Clips.Add(new ClipEntry(FilenameWithExtension));
             }
 
-            return FilenameWithExtension;
+            return retval;
         }
 
         /// <summary>

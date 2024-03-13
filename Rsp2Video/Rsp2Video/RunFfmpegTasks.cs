@@ -123,7 +123,8 @@ namespace RSPro2Video
         {
             RemoveFailedClips();
             DuplicateClips();
-            CalculateClipStarts();
+            CalculateClipStartTimes();
+            SetClipStartTimes();
         }
 
         /// <summary>
@@ -204,35 +205,127 @@ namespace RSPro2Video
             }
         }
 
-
-        public void CalculateClipStarts()
+        /// <summary>
+        /// Calculates eacy clip start time based on the previous clip durations.
+        /// </summary>
+        public void CalculateClipStartTimes()
         {
-            // A new list without the missing clips.
-            List<ClipEntry> newClips = new List<ClipEntry>();
-
-            // The start time of the clip.
-            Double startTime = 0.0d;
-
-            foreach (ClipEntry clip in VideoOutputs[VideoOutputIndex].Clips)
+            // Run through all of the video outputs.
+            for (int index = 0; index < VideoOutputs.Count; ++index)
             {
-                // Add the duration of this clip to the start time.
-                if (ClipDuration.ContainsKey(clip.ClipFilename))
-                {
-                    // Add a new entry with the start time.
-                    newClips.Add(new ClipEntry(clip.ClipFilename, startTime));
+                // A new list without the missing clips.
+                List<ClipEntry> newClips = new List<ClipEntry>();
 
-                    // Add the current clip duration to the start time for the next clip.
-                    startTime += ClipDuration[clip.ClipFilename];
-                }
-                else
+                // The start time of the clip.
+                Double startTime = 0.0d;
+
+                foreach (ClipEntry clip in VideoOutputs[index].Clips)
                 {
-                    // If the clip is not in the duration list, log an error and do not add it to the new list.
-                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: ClipDuration does not contain an entry for \"{clip.ClipFilename}\".\r\n\r\n");
+                    // Add the duration of this clip to the start time.
+                    if (ClipDuration.ContainsKey(clip.ClipFilename))
+                    {
+                        // Add a new entry with the start time.
+                        newClips.Add(new ClipEntry(clip.ClipFilename, startTime));
+
+                        // Add the current clip duration to the start time for the next clip.
+                        startTime += ClipDuration[clip.ClipFilename];
+                    }
+                    else
+                    {
+                        // If the clip is not in the duration list, log an error and do not add it to the new list.
+                        File.AppendAllText(LogFile, $"\r\n\r\n***Error: ClipDuration does not contain an entry for \"{clip.ClipFilename}\".\r\n\r\n");
+                    }
+                }
+
+                // Update the list of clips.
+                VideoOutputs[index].Clips = newClips;
+            }
+        }
+
+        // Sets all clip start times based on the values in VideoOutputs.
+        public void SetClipStartTimes()
+        {
+            // Create a flat list of clips.
+            List<ClipEntry> clipEntries = new List<ClipEntry>();
+
+            for (int index = 0; index < VideoOutputs.Count; ++index)
+            {
+                foreach (ClipEntry clipEntry in VideoOutputs[index].Clips)
+                {
+                    clipEntries.Add(clipEntry);
                 }
             }
 
-            // Update the list of clips.
-            VideoOutputs[VideoOutputIndex].Clips = newClips;
+            SetClipStartTime(clipEntries);
+        }
+
+        private Boolean SetClipStartTime(List<ClipEntry> clipEntries)
+        {
+            foreach (ClipEntry clipEntry in clipEntries)
+            {
+                // Create a random filename.
+                String randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + OutputVideoFinalExtension;
+
+                // Get the starting timecode for this clip.
+                String timecode = ConvertToTimecode(clipEntry.StartTime);
+
+                // Rename the clip to the random filename.
+                try { File.Move(clipEntry.ClipFilename, randomFileName); }
+                catch (Exception e)
+                {
+                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to rename {clipEntry.ClipFilename} to {randomFileName}, {e.Message}\r\n\r\n");
+                    return false;
+                }
+
+                // Create the ffmpeg command to add timecode and output to the correct filename.
+                String command = $"-y -hide_banner -i {randomFileName} -map 0 -map -0:d -c copy -timecode {timecode} {clipEntry.ClipFilename}";
+
+                // Execute the ffmpeg command.
+                RunFfmpegRaw(command);
+
+                // Delete the previous file.
+                try { File.Delete(randomFileName); }
+                catch (Exception e)
+                {
+                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {randomFileName}, {e.Message}\r\n\r\n");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Converts a double to a timecode of {hours}:{minutes}:{seconds}:{frames}.
+        /// </summary>
+        /// <param name="TimeToConvert">The time in seconds to convert into a timecode string.</param>
+        /// <returns>The time value in timecode string form.</returns>
+        private string ConvertToTimecode(double TimeToConvert)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            // TODO: Should this be Math.Floor, Math.Ceiling, or something else?
+
+            // Hours.
+            double timeValue = Math.Floor(TimeToConvert / 3600.0d);
+            sb.Append($"{timeValue:00}:");
+            TimeToConvert -= timeValue * 3600.0d;
+
+            // Minutes.
+            timeValue = Math.Floor(TimeToConvert / 60.0d);
+            sb.Append($"{timeValue:00}:");
+            TimeToConvert -= timeValue * 60.0d;
+
+            // Seconds.
+            timeValue = Math.Floor(TimeToConvert);
+            sb.Append($"{timeValue:00}:");
+            TimeToConvert -= timeValue;
+
+            // Frames.
+            timeValue = Math.Round(TimeToConvert * FramesPerSecond, 6);
+            sb.Append($"{timeValue:00}");
+
+            return sb.ToString();
         }
 
         /// <summary>
@@ -381,26 +474,14 @@ namespace RSPro2Video
             // Set the value for the ffmpeg "-threads" parameter.
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
-            // Because separate threads could want to write to a file ("Black.0.5.mp4" for example), I lock the
-            // destinationFfilename until everything is done. When the locked thread gets access, it will discover the 
-            // file already exists and will not attempt to create the file.
-            lock (FilenameWithExtension)
+            // Run the command.
+            if (RunFfmpegRaw(ffmpegCommand) == false)
             {
-                // If the file exists, then I don't need to create it.
-                if (File.Exists(FilenameWithExtension))
-                {
-                    return true;
-                }
-
-                // Run the command.
-                if (RunFfmpegRaw(ffmpegCommand) == false)
-                {
-                    return false;
-                }
-
-                // Get the clip duration and set that duration in the ClipDuration dictionary.
-                GetProgressDuration(videoFilename);
+                return false;
             }
+
+            // Get the clip duration and set that duration in the ClipDuration dictionary.
+            GetProgressDuration(videoFilename);
 
             return true;
         }
@@ -419,26 +500,14 @@ namespace RSPro2Video
             // Set the value for the ffmpeg "-threads" parameter.
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
-            // Because separate threads could want to write to a file ("Black.0.5.mp4" for example), I lock the
-            // destinationFfilename until everything is done. When the locked thread gets access, it will discover the 
-            // file already exists and will not attempt to create the file.
-            lock (FilenameWithExtension)
+            // Run the command.
+            if (RunFfmpegRaw(ffmpegCommand) == false)
             {
-                // If the file exists, then I don't need to create it.
-                if (File.Exists(FilenameWithExtension))
-                {
-                    return true;
-                }
-
-                // Run the command.
-                if (RunFfmpegRaw(ffmpegCommand) == false)
-                {
-                    return false;
-                }
-
-                // Get the clip duration and set that duration in the ClipDuration dictionary.
-                GetProgressDuration(videoFilename);
+                return false;
             }
+
+            // Get the clip duration and set that duration in the ClipDuration dictionary.
+            GetProgressDuration(videoFilename);
 
             return true;
         }
@@ -463,26 +532,14 @@ namespace RSPro2Video
                 // Set the value for the ffmpeg "-threads" parameter.
                 String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
-                // Because separate threads could want to write to a file ("Black.0.5.mp4" for example), I lock the
-                // destinationFfilename until everything is done. When the locked thread gets access, it will discover the 
-                // file already exists and will not attempt to create the file.
-                lock (FilenameWithExtension)
+                // Run the command.
+                if (RunFfmpegRaw(ffmpegCommand) == false)
                 {
-                    // If the file exists, then I don't need to create it.
-                    if (File.Exists(FilenameWithExtension))
-                    {
-                        return true;
-                    }
-
-                    // Run the command.
-                    if (RunFfmpegRaw(ffmpegCommand) == false)
-                    {
-                        return false;
-                    }
-
-                    // Get the clip duration and set that duration in the ClipDuration dictionary.
-                    GetProgressDuration(videoFilename);
+                    return false;
                 }
+
+                // Get the clip duration and set that duration in the ClipDuration dictionary.
+                GetProgressDuration(videoFilename);
             }
             else
             {
