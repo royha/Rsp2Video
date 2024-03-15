@@ -79,7 +79,8 @@ namespace RSPro2Video
                 ProjectSettings.ReplayForwardVideo = false;
                 ProjectSettings.PlayForwardBookmarkCompletely = true;
                 ProjectSettings.IncludeBookmarkNameInTextOverlays = false;
-                ProjectSettings.TransitionType = TransitionType.CrossFade;
+                ProjectSettings.TransitionType = TransitionType.XFade;
+                ProjectSettings.XFadeTransitionType = "fade";
                 ProjectSettings.IncludeOpeningCard = true;
                 ProjectSettings.IncludeClosingCard = true;
                 ProjectSettings.IncludeForwardExplanations = true;

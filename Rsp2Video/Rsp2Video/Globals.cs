@@ -51,6 +51,9 @@ namespace RSPro2Video
         String WorkingDirectory;                                        // The directory of the _tmp directory under the output video file (settings.OutputFile).
         String FramesDirectory;                                         // The directory of the _frames directory under the WorkingDirectory.
         String WorkingInputVideoFile;                                   // The working input file. Typically "v.mp4" in the working directory.
+        String WorkingInputVideoFileWithoutExtension;                   // The working input file without extension. Typically "v" in the working directory.
+        String RelativePathToWorkingInputVideoFile;
+        String RelativePathToWorkingInputVideoFileWithoutExtension;
         DirectoryInfo diPngDirectory;                                   // Stores information for the TEMP_DIR directory.
         DirectoryInfo fiTmpDirectory;                                   // Stores information for the FRAMES_DIR directory.
         IProgress<string> Progress;                                     // Allows the long-running process to update the UI.
@@ -112,7 +115,6 @@ namespace RSPro2Video
         String OutputVideoFinalExtension = String.Empty;
         String OutputAudioInterimExtension = String.Empty;
 
-        String RelativePathToWorkingInputVideoFile;
         String TransitionFromFrame = String.Empty;
         String TransitionToFrame = String.Empty;
 

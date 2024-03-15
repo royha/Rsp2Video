@@ -322,7 +322,7 @@ namespace RSPro2Video
             TimeToConvert -= timeValue;
 
             // Frames.
-            timeValue = Math.Round(TimeToConvert * FramesPerSecond, 6);
+            timeValue = Math.Round(TimeToConvert * FramesPerSecond);
             sb.Append($"{timeValue:00}");
 
             return sb.ToString();
@@ -447,12 +447,6 @@ namespace RSPro2Video
             // Get the clip duration of the final destinationFfilename and set that duration in the ClipDuration dictionary.
             ClipDuration clipDuration = GetProgressDuration(videoFilename);
             if (clipDuration.FrameCount < 0)
-            {
-                return false;
-            }
-
-            // Get the first and last frame of the clip.
-            if (CreateFirstAndLastFrameFromClip(videoFilename, clipDuration.Duration) == false)
             {
                 return false;
             }

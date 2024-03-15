@@ -603,8 +603,7 @@ namespace RSPro2Video
             // Then delete the directory.
 
             // Add the video clip to the list of clips.
-            Boolean createFFmpegTask = AddToClips(videoFilename + OutputVideoInterimExtension,
-                calculatedFrameBasedDuration / FramesPerSecond, AddToVideoOutputs: false);
+            Boolean createFFmpegTask = AddToClips(videoFilename, calculatedFrameBasedDuration / FramesPerSecond, AddToVideoOutputs: false);
 
             if (createFFmpegTask)
             {

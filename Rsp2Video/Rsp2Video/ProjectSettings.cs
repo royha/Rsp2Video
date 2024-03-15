@@ -149,6 +149,7 @@ namespace RSPro2Video
         public Boolean PlayForwardBookmarkCompletely { get; set; }
         public Boolean IncludeBookmarkNameInTextOverlays { get; set; }
         public TransitionType TransitionType { get; set; }
+        public String XFadeTransitionType { get; set;}
         public Boolean IncludeOpeningCard { get; set; }
         public Boolean IncludeClosingCard { get; set; }
         public Boolean IncludeForwardExplanations { get; set; }
@@ -246,6 +247,6 @@ namespace RSPro2Video
     public enum OutputType { None, VideoFile, VideoProject }
     public enum BookmarkFileType { None, FmBok, bok, RSVideo, Text, RTF }
     public enum VideoQuality { Fast, YouTube, High }
-    public enum TransitionType { None, CrossFade, HoldLastFrame }
+    public enum TransitionType { None, XFade, HoldLastFrame }
     public enum MotionInterpolation { None, BlendFrames, MotionGood, MotionBest }
 }
