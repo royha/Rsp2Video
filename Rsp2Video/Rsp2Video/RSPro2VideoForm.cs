@@ -591,70 +591,56 @@ namespace RSPro2Video
             RelativePathToWorkingInputVideoFile = Path.GetFileName(WorkingInputVideoFile);
             RelativePathToWorkingInputVideoFileWithoutExtension = Path.GetFileNameWithoutExtension(WorkingInputVideoFile);
 
-            // If there is no video delay, copy the file and return.
-            //if (ProjectSettings.VideoDelay == 0)
-            //{
-            //    // Copy the source video to the working directory.
-            //    try { File.Copy(ProjectSettings.SourceVideoFile, WorkingInputVideoFile, true); }
-            //    catch (Exception e)
-            //    {
-            //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to copy {ProjectSettings.SourceVideoFile} to {WorkingInputVideoFile}\r\nError message: {e.Message}\r\n\r\n");
-            //        return false;
-            //    }
-            //}
-            //else
+            // Create the Process to call the external program.
+            Process process = new Process();
+
+            // Create the arguments string.
+            //String arguments = String.Format("-y -hide_banner -i \"{0}\" -itsoffset {1:0.#######} -i \"{0}\" -map 1:v -map 0:a -c copy \"{2}\"",
+            //    ProjectSettings.SourceVideoFile,
+            //    ProjectSettings.VideoDelay / FramesPerSecond,
+            //    WorkingInputVideoFile);
+
+            String arguments = String.Format($"-y -hide_banner -i \"{ProjectSettings.SourceVideoFile}\" "
+                + $"-itsoffset {ProjectSettings.VideoDelay / FramesPerSecond:0.#######} "
+                + $"-i \"{ProjectSettings.SourceVideoFile}\" -map 1:v -map 0:a -c copy "
+                + $"-progress \"{WorkingInputVideoFileWithoutExtension}.progress\" "
+                + $"\"{WorkingInputVideoFile}\"",
+                ProjectSettings.SourceVideoFile,
+                ProjectSettings.VideoDelay / FramesPerSecond,
+                WorkingInputVideoFile);
+
+            // Configure the process using the StartInfo properties.
+            process.StartInfo = new ProcessStartInfo
             {
-                // Create the Process to call the external program.
-                Process process = new Process();
+                FileName = FfmpegApp,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Maximized
+            };
 
-                // Create the arguments string.
-                //String arguments = String.Format("-y -hide_banner -i \"{0}\" -itsoffset {1:0.#######} -i \"{0}\" -map 1:v -map 0:a -c copy \"{2}\"",
-                //    ProjectSettings.SourceVideoFile,
-                //    ProjectSettings.VideoDelay / FramesPerSecond,
-                //    WorkingInputVideoFile);
+            // Log the ffmpeg command line options.
+            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
-                String arguments = String.Format($"-y -hide_banner -i \"{ProjectSettings.SourceVideoFile}\" "
-                    + $"-itsoffset {ProjectSettings.VideoDelay / FramesPerSecond:0.#######} "
-                    + $"-i \"{ProjectSettings.SourceVideoFile}\" -map 1:v -map 0:a -c copy "
-                    + $"-progress \"{WorkingInputVideoFileWithoutExtension}.progress\" "
-                    + $"\"{WorkingInputVideoFile}\"",
-                    ProjectSettings.SourceVideoFile,
-                    ProjectSettings.VideoDelay / FramesPerSecond,
-                    WorkingInputVideoFile);
+            // Start ffmpeg to extract the frames.
+            process.Start();
 
-                // Configure the process using the StartInfo properties.
-                process.StartInfo = new ProcessStartInfo
-                {
-                    FileName = FfmpegApp,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Maximized
-                };
+            // Read the output of ffmpeg.
+            String FfmpegOutput = process.StandardError.ReadToEnd();
 
-                // Log the ffmpeg command line options.
-                File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            // Log the ffmpeg output.
+            File.AppendAllText(LogFile, FfmpegOutput);
 
-                // Start ffmpeg to extract the frames.
-                process.Start();
+            // Wait here for the process to exit.
+            process.WaitForExit();
+            int ExitCode = process.ExitCode;
+            process.Close();
 
-                // Read the output of ffmpeg.
-                String FfmpegOutput = process.StandardError.ReadToEnd();
-
-                // Log the ffmpeg output.
-                File.AppendAllText(LogFile, FfmpegOutput);
-
-                // Wait here for the process to exit.
-                process.WaitForExit();
-                int ExitCode = process.ExitCode;
-                process.Close();
-
-                // Return success or failure.
-                if (!(ExitCode == 0))
-                {
-                    return false;
-                }
+            // Return success or failure.
+            if (!(ExitCode == 0))
+            {
+                return false;
             }
 
             // Get the working video duration.
