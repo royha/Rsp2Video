@@ -230,6 +230,7 @@ namespace RSPro2Video
             OutputInterimSettings = OutputOptionsInterimSettings[(int)ProjectSettings.VideoQuality];
             OutputImageSequenceSettings = OutputOptionsImageSequenceSettings[(int)ProjectSettings.VideoQuality];
             OutputFinalSettings = OutputOptionsFinalSettings[(int)ProjectSettings.VideoQuality];
+            OutputHighSettings = OutputOptionsHighSettings[(int)ProjectSettings.VideoQuality];
             OutputVideoInterimExtension = OutputOptionsVideoInterimExtension[(int)ProjectSettings.VideoQuality];
             OutputVideoFinalExtension = OutputOptionsVideoFinalExtension[(int)ProjectSettings.VideoQuality];
             OutputAudioInterimExtension = OutputOptionsAudioInterimExtension[(int)ProjectSettings.VideoQuality];

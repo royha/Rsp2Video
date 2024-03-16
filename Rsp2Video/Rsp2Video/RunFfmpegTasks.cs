@@ -41,7 +41,7 @@ namespace RSPro2Video
 
                 switch (ffmpegTask.SortOrder)
                 {
-                    case FfmpegTaskSortOrder.ReverseMinterpolateVideo:
+                    case FfmpegTaskSortOrder.ReverseVideoPass1:
                         retval = RunReverseMinterpolateVideoTask(ffmpegThreads, ffmpegTask);
                         break;
                 }
@@ -66,7 +66,7 @@ namespace RSPro2Video
 
                 switch (ffmpegTask.SortOrder)
                 {
-                    case FfmpegTaskSortOrder.ReverseVideo:
+                    case FfmpegTaskSortOrder.ReverseVideoPass2:
                         retval = RunReverseVideoTask(ffmpegThreads, ffmpegTask);
                         break;
 

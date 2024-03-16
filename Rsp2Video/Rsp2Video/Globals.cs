@@ -104,6 +104,7 @@ namespace RSPro2Video
         List<String> OutputOptionsInterimSettings;
         List<String> OutputOptionsImageSequenceSettings;
         List<String> OutputOptionsFinalSettings;
+        List<String> OutputOptionsHighSettings;
         List<String> OutputOptionsVideoInterimExtension;
         List<String> OutputOptionsVideoFinalExtension;
         List<String> OutputOptionsAudioInterimExtension;
@@ -111,6 +112,7 @@ namespace RSPro2Video
         String OutputInterimSettings = String.Empty;
         String OutputImageSequenceSettings = String.Empty;
         String OutputFinalSettings = String.Empty;
+        String OutputHighSettings = String.Empty;
         String OutputVideoInterimExtension = String.Empty;
         String OutputVideoFinalExtension = String.Empty;
         String OutputAudioInterimExtension = String.Empty;

@@ -45,6 +45,10 @@ namespace RSPro2Video
                     "-qscale:v 2",
                     "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart",
                     "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart" });
+            OutputOptionsHighSettings = new List<String>(new String[] {
+                    "-qscale:v 2",
+                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 14 -c:a aac -q:a 1 -movflags +faststart",
+                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 14 -c:a aac -q:a 1 -movflags +faststart" });
             OutputOptionsVideoInterimExtension = new List<String>(new String[] { ".ts", ".mp4", ".mp4" });
             OutputOptionsVideoFinalExtension = new List<String>(new String[] { ".ts", ".mp4", ".mp4" });
             OutputOptionsAudioInterimExtension = new List<String>(new String[] { ".wav", ".wav", ".wav" });

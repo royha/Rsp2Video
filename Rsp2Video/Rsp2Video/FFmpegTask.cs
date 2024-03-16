@@ -100,5 +100,5 @@ namespace RSPro2Video
     }
 
     public enum FfmpegPhase { None = 0, PhaseOne, PhaseTwo, PhaseThree }
-    public enum FfmpegTaskSortOrder { None = 0, ReverseMinterpolateVideo, ReverseVideo, ForwardBookmarkVideo, ForwardVideo, CardVideo, TransitionVideo }
+    public enum FfmpegTaskSortOrder { None = 0, ReverseVideoPass1, ReverseVideoPass2, ForwardBookmarkVideo, ForwardVideo, CardVideo, TransitionVideo }
 }

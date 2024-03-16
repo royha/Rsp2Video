@@ -396,7 +396,7 @@ namespace RSPro2Video
             Boolean createFFmpegTask = true;
 
             // Add the file to the list of clips to create.
-            if (SortOrder == FfmpegTaskSortOrder.ReverseVideo)
+            if (SortOrder == FfmpegTaskSortOrder.ReverseVideoPass2)
             {
                 // For reverse videos, Until I implement the .png reversal method (Filenames[1] and Filenames[2]), take only the first filename.
                 createFFmpegTask = AddToClips(Filenames[0], EstimatedDuration, AddToVideoOutputs);
@@ -1992,7 +1992,7 @@ namespace RSPro2Video
             }
 
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.ReverseVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegPhase.PhaseTwo, FfmpegTaskSortOrder.ReverseVideoPass2, duration);
         }
 
         private bool AddBackAndForthTransition(Bookmark reverseBookmark, Double TransitionLength)
