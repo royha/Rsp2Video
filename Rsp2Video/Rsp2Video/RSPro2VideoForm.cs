@@ -480,7 +480,7 @@ namespace RSPro2Video
             // TODO: The _frames directory needs to go away.
             RemoveFrames_DirDirectory();
 
-            // Run MELT to output the video.
+            // Create the task objects.
             CreateFfmpegTasks();
 
             // Create text files from the bookmark data.
@@ -492,11 +492,7 @@ namespace RSPro2Video
             // Assemble the clips into a video (or videos).
             AssembleVideo();
 
-            // Move the completed video to the destination directory.
-            // MoveVideoToDestinationDirectory();
-
             // Remove the temp directory.
-
             RemoveTemp_DirDirectory();
         }
 

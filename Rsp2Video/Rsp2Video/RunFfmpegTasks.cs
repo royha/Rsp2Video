@@ -649,7 +649,7 @@ namespace RSPro2Video
             // Store the reverse video clip duration.
             if (ClipDuration.TryAdd($"{videoFilename}{OutputVideoInterimExtension}", duration) == false)
             {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {progressFile} already exists in ClipDuration.\r\n\r\n");
+                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {videoFilename}{OutputVideoInterimExtension} already exists in ClipDuration.\r\n\r\n");
                 return new ClipDuration(-1, -1.0d);
             }
 
@@ -779,90 +779,90 @@ namespace RSPro2Video
         /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
         /// <returns>Returns true if successful; otherwise, false.</returns>
 
-        private Boolean RunReverseVideoTaskPngMethod(int ffmpegThreads, FFmpegTask ffmpegTask)
-        {
-            // If the memory requirements for this reversal video are too great to use reverseFiltergraph method, output a
-            // series of .png files for the video.
+        //private Boolean RunReverseVideoTaskPngMethod(int ffmpegThreads, FFmpegTask ffmpegTask)
+        //{
+        //    // If the memory requirements for this reversal video are too great to use reverseFiltergraph method, output a
+        //    // series of .png files for the video.
 
-            DirectoryInfo diPngDirectory;
+        //    DirectoryInfo diPngDirectory;
 
-            // Create a directory to store the .png files.
-            String PngDirectory = Path.Combine(WorkingDirectory, ffmpegTask.VideoFilenames[0]);
+        //    // Create a directory to store the .png files.
+        //    String PngDirectory = Path.Combine(WorkingDirectory, ffmpegTask.VideoFilenames[0]);
 
-            // Create the directory for the .png files.
-            try { diPngDirectory = Directory.CreateDirectory(PngDirectory); }
-            catch (Exception e)
-            {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to create directory {PngDirectory}, {e.Message}\r\n\r\n");
-                return false;
-            }
+        //    // Create the directory for the .png files.
+        //    try { diPngDirectory = Directory.CreateDirectory(PngDirectory); }
+        //    catch (Exception e)
+        //    {
+        //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to create directory {PngDirectory}, {e.Message}\r\n\r\n");
+        //        return false;
+        //    }
 
-            // Output the clip as a series of .png files.
-            if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[1], ffmpegThreads)) == false) { return false; }
+        //    // Output the clip as a series of .png files.
+        //    if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[1], ffmpegThreads)) == false) { return false; }
 
-            // Rename the .png files to reverse their order.
-            String[] newFrames = ReorderFrames(ffmpegTask.VideoFilenames[0]);
+        //    // Rename the .png files to reverse their order.
+        //    String[] newFrames = ReorderFrames(ffmpegTask.VideoFilenames[0]);
 
-            // Assemble the reversed .png files and add the reversed audio to create the reversal clip.
-            if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[2], ffmpegThreads)) == false) { return false; }
+        //    // Assemble the reversed .png files and add the reversed audio to create the reversal clip.
+        //    if (RunFfmpegRaw(String.Format(ffmpegTask.FFmpegCommands[2], ffmpegThreads)) == false) { return false; }
 
-            // Move and rename the last .png file to the VideoFilenames.First.png.
-            String imageFilename = Path.Combine(WorkingDirectory, $"{ffmpegTask.VideoFilenames[0]}.First.png");
+        //    // Move and rename the last .png file to the VideoFilenames.First.png.
+        //    String imageFilename = Path.Combine(WorkingDirectory, $"{ffmpegTask.VideoFilenames[0]}.First.png");
 
-            if (File.Exists(imageFilename))
-            {
-                try { File.Delete(imageFilename); }
-                catch (Exception e)
-                {
-                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
-                    return false;
-                }
-            }
+        //    if (File.Exists(imageFilename))
+        //    {
+        //        try { File.Delete(imageFilename); }
+        //        catch (Exception e)
+        //        {
+        //            File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
+        //            return false;
+        //        }
+        //    }
 
-            try { File.Move(Path.Combine(PngDirectory, newFrames[newFrames.Length - 1]), imageFilename); }
-            catch (Exception e)
-            {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
-                return false;
-            }
+        //    try { File.Move(Path.Combine(PngDirectory, newFrames[newFrames.Length - 1]), imageFilename); }
+        //    catch (Exception e)
+        //    {
+        //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
+        //        return false;
+        //    }
 
-            // Move and rename the first .png file to the VideoFilenames.Last.png
-            imageFilename = Path.Combine(WorkingDirectory, $"{ffmpegTask.VideoFilenames}.Last.png");
+        //    // Move and rename the first .png file to the VideoFilenames.Last.png
+        //    imageFilename = Path.Combine(WorkingDirectory, $"{ffmpegTask.VideoFilenames}.Last.png");
 
-            if (File.Exists(imageFilename))
-            {
-                try { File.Delete(imageFilename); }
-                catch (Exception e)
-                {
-                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
-                    return false;
-                }
-            }
+        //    if (File.Exists(imageFilename))
+        //    {
+        //        try { File.Delete(imageFilename); }
+        //        catch (Exception e)
+        //        {
+        //            File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
+        //            return false;
+        //        }
+        //    }
 
-            try { File.Move(Path.Combine(PngDirectory, newFrames[0]), imageFilename); }
-            catch (Exception e)
-            {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
-                return false;
-            }
+        //    try { File.Move(Path.Combine(PngDirectory, newFrames[0]), imageFilename); }
+        //    catch (Exception e)
+        //    {
+        //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
+        //        return false;
+        //    }
 
-            // Delete the directory for the .png files.
-            try { diPngDirectory.Delete(true); }
-            catch
-            {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete directory {PngDirectory}\r\n\r\n");
-                // return false; 
-            }
+        //    // Delete the directory for the .png files.
+        //    try { diPngDirectory.Delete(true); }
+        //    catch
+        //    {
+        //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete directory {PngDirectory}\r\n\r\n");
+        //        // return false; 
+        //    }
 
-            // Store the reverse video clip duration.
-            if (ClipDuration.TryAdd($"{ffmpegTask.VideoFilenames}{OutputVideoInterimExtension}", (double)newFrames.Length * FramesPerSecond) == false)
-            {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {ffmpegTask.VideoFilenames} already exists in ClipDuration.\r\n\r\n");
-                return false;
-            }
+        //    // Store the reverse video clip duration.
+        //    if (ClipDuration.TryAdd($"{ffmpegTask.VideoFilenames}{OutputVideoInterimExtension}", (double)newFrames.Length * FramesPerSecond) == false)
+        //    {
+        //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {ffmpegTask.VideoFilenames}{OutputVideoInterimExtension} already exists in ClipDuration.\r\n\r\n");
+        //        return false;
+        //    }
 
-            return true;
-        }
+        //    return true;
+        //}
 
         /// <summary>
         /// Runs the ffmpeg program with the specified commands to produce the output file.

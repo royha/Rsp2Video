@@ -589,10 +589,6 @@ namespace RSPro2Video
             // directory, naming the first "{videoFilename1}.First.png" and the last "{videoFilename1}.Last.png".
             // Then delete the directory.
 
-            // Add the video clips to the list of clips.
-            AddToClips(videoFilename1, calculatedFrameBasedDuration / FramesPerSecond, AddToVideoOutputs: false);
-            AddToClips(videoFilename2, calculatedFrameBasedDuration / FramesPerSecond, AddToVideoOutputs: true);
-
             // Add the task to the list of tasks
             FfmpegTaskSortOrder sortOrder;
             if (minterpolationActive)
@@ -604,15 +600,8 @@ namespace RSPro2Video
                 sortOrder = FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate;
             }
 
-            FFmpegTasks.Add(new FFmpegTask(sortOrder,
-                calculatedFrameBasedDuration,
-                videoFilename1,
-                command1));
-
-            FFmpegTasks.Add(new FFmpegTask(FfmpegTaskSortOrder.ReverseVideoPass2,
-                calculatedFrameBasedDuration,
-                videoFilename2,
-                command2));
+            CreateFfmpegTask(videoFilename1, command1, sortOrder, calculatedFrameBasedDuration, false);
+            CreateFfmpegTask(videoFilename2, command2, FfmpegTaskSortOrder.ReverseVideoPass2, calculatedFrameBasedDuration, true);
 
             return true;
         }

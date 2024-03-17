@@ -28,7 +28,7 @@ namespace RSPro2Video
             InitMeltString();
 
             // Create all of the reversal tasks.
-            CreateAllReverseVideoTasks();
+            //CreateAllReverseVideoTasks();
 
             // If Forward and Reverse selected.
             if (ProjectSettings.BookmarkTypeFnR)
@@ -325,30 +325,6 @@ namespace RSPro2Video
 
 
         /// <summary>
-        /// Stores the FFmpeg command as an FFmpegTask.
-        /// </summary>
-        /// <param name="Filename">The name of the output file without an extension.</param>
-        /// <param name="FfmpegCommand">The ffmpeg commands.</param>
-        /// <param name="SortOrder">The sort order for this ffmpeg task.</param>
-        /// <param name="EstimatedDuration">The best guess for the clipEntry duration (for sorting purposes).</param>
-        /// <param name="AddToVideoOutputs">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
-        /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool CreateFfmpegTask(String Filename,
-            String FfmpegCommand, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, Boolean AddToVideoOutputs = true)
-        {
-            // Add the file to the list of clips to create.
-            Boolean createFFmpegTask = AddToClips(Filename, EstimatedDuration, AddToVideoOutputs);
-
-            // Add the task to the list of tasks
-            if (createFFmpegTask)
-            {
-                FFmpegTasks.Add(new FFmpegTask(SortOrder, EstimatedDuration, Filename, FfmpegCommand));
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Optionally adds the -progress strings. Adds -threads, OutputInterimSettings, and the output filename.
         /// </summary>
         /// <param name="BaseFfmpegCommand">The base ffmpeg command string.</param>
@@ -378,6 +354,30 @@ namespace RSPro2Video
 
             // Return completed string.
             return newCommand.ToString();
+        }
+
+        /// <summary>
+        /// Stores the FFmpeg command as an FFmpegTask.
+        /// </summary>
+        /// <param name="Filename">The name of the output file without an extension.</param>
+        /// <param name="FfmpegCommand">The ffmpeg commands.</param>
+        /// <param name="SortOrder">The sort order for this ffmpeg task.</param>
+        /// <param name="EstimatedDuration">The best guess for the clipEntry duration (for sorting purposes).</param>
+        /// <param name="AddToVideoOutputs">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
+        /// <returns>Returns true if successful; otherwise false.</returns>
+        private bool CreateFfmpegTask(String Filename,
+            String FfmpegCommand, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, Boolean AddToVideoOutputs = true)
+        {
+            // Add the file to the list of clips to create.
+            Boolean createFFmpegTask = AddToClips(Filename, EstimatedDuration, AddToVideoOutputs);
+
+            // Add the task to the list of tasks
+            if (createFFmpegTask)
+            {
+                FFmpegTasks.Add(new FFmpegTask(SortOrder, EstimatedDuration, Filename, FfmpegCommand));
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -1902,34 +1902,9 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool AddReverseVideo(Bookmark reverseBookmark, int reversalNumber, ReversalRate reversalRate)
         {
-            // Find the specific reverse video clipEntry.
-            String reverseVideoFilename = (reversalRate.ReversalSpeed == reversalRate.ReversalTone) ?
-                $"{reverseBookmark.Name}.{reversalNumber}.{reversalRate.ReversalSpeed}" :
-                $"{reverseBookmark.Name}.{reversalNumber}.{reversalRate.ReversalSpeed}-{reversalRate.ReversalTone}";
+            CreateReverseVideoTask(reverseBookmark, reversalNumber, reversalRate);
 
-            // Create the filename for this clipEntry.
-            String filename = reverseVideoFilename + ".Text";
-
-            // Create the inner commands for ffmpeg.
-            String command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
-                filename,
-                OutputVideoInterimExtension,
-                reverseBookmark.Name);
-
-            // Get the clipEntry duration.
-            double duration = 0.0d;
-            if (ClipsToCreate.ContainsKey(filename + OutputVideoInterimExtension))
-            {
-                duration = ClipsToCreate[filename + OutputVideoInterimExtension];
-            }
-            else
-            {
-                File.AppendAllText(LogFile, $"\r\n\r\n***File not in ClipsToCreate: {filename}. (AddReverseVideo)\r\n\r\n");
-                return false;
-            }
-
-            // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.ReverseVideoPass2, duration);
+            return true;
         }
 
         private bool AddBackAndForthTransition(Bookmark reverseBookmark, Double TransitionLength)
@@ -1989,11 +1964,6 @@ namespace RSPro2Video
 
         private bool AddBackAndForth(Bookmark reverseBookmark)
         {
-            // TODO: Make this happen in one ffmpeg command.
-
-            List<String> FfmpegCommands = new List<String>();
-            List<String> Filenames = new List<String>();
-            
             // Find the first selected reverse video.
             ReversalRate reversalRate;
             int reversalNumber;
@@ -2023,50 +1993,24 @@ namespace RSPro2Video
             }
 
             //
-            // Extract the forward clipEntry from the source video.
+            // Overlay the forward text overlay image.
             //
 
             // Calculate the start time and duration.
             double startTime = (double)reverseBookmark.SampleStart / (double)SampleRate;
             double duration = ((double)reverseBookmark.SampleEnd / (double)SampleRate) - startTime;
-
+            
             // Create the filename for this clipEntry.
-            String filename = String.Format("v{0:0.######}-{1:0.######}", startTime, duration);
-            Filenames.Add(filename);
+            String filename = reverseBookmark.Name + ".Forward.Text";
 
             // Create the inner commands for ffmpeg.
-            String command = String.Format("-ss {0:0.######} -i \"{1}\" -t {2:0.######}",
-                startTime,
-                RelativePathToWorkingInputVideoFile,
-                duration);
+            String command = $"-ss {startTime:0.###############} -t {duration:0.######} -i \"{RelativePathToWorkingInputVideoFile}\" "
+                + $"-i \"{reverseBookmark.Name}.Text.png\" -filter_complex \"[0:a] asetpts=PTS-STARTPTS, volume=volume=0 [a]; "
+                + $"[0:v] [1:v] overlay [v]\" -map [v] -map [a]";
             command = AddFfmpegOutputStrings(command, filename);
-
-            // Add this command to the list of commands.
-            FfmpegCommands.Add(command);
-
-            //
-            // Overlay the forward text overlay image.
-            //
-
-            // Create the filename for this clipEntry.
-            filename = reverseBookmark.Name + ".Forward.Text";
-            Filenames.Add(filename);
-
-            // Create the inner commands for ffmpeg.
-            command = String.Format("-i \"{0}{1}\" -i \"{2}.Text.png\" -filter_complex \"[0:v][1:v]overlay\"",
-                Filenames[0],
-                OutputVideoInterimExtension,
-                reverseBookmark.Name);
-            command = AddFfmpegOutputStrings(command, filename);
-
-            // Add this command to the list of commands.
-            FfmpegCommands.Add(command);
 
             // Create the ffmpeg task for this clipEntry.
-            CreateFfmpegTask(Filenames: Filenames,
-                FfmpegCommands: FfmpegCommands,
-                SortOrder: FfmpegTaskSortOrder.TransitionVideo,
-                EstimatedDuration: duration);
+            CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, duration);
 
             // Add the reverse clipEntry.
             return AddReverseVideo(reverseBookmark, reversalNumber, reversalRate);
