@@ -437,19 +437,14 @@ namespace RSPro2Video
             //temp = Math.Round(temp, 15);
             //calculatedFrameBasedEndSeconds = temp;
 
-
-            // The list of FFMpeg commands to add to the task.
-            List<String> ffmpegCommandList1 = new List<String>();
-            List<String> ffmpegCommandList2 = new List<String>();
-            List<String> videoFilenames1 = new List<String>();
-            List<String> videoFilenames2 = new List<String>();
-
-            // Create the filter_complex filtergraphs.
             String videoFilename1;
             String videoFilename2;
+            String command1;
+            String command2;
+
+            // Create the filter_complex filtergraphs.
             String audioFiltergraph1;
             String interpolationFiltergraph1 = String.Empty;
-            String reverseVideoFiltergraph = "[OverlayedV]reverse[v]";
             // String reverseAudioFiltergraph = "[SlowAudio]areverse[a]";
             Boolean minterpolationActive = false;
 
@@ -466,27 +461,28 @@ namespace RSPro2Video
                 audioFiltergraph1 = $"[0:a] atrim=0:{silentAudioBeforeDuration:0.############}, asetpts=PTS-STARTPTS, "
                     + $"volume=volume=0 [SilentAudioBefore];"
                     + $"[0:a] atrim={silentAudioBeforeDuration:0.############}:duration={sampleBasedDuration:0.############}, "
-                    + $"asetpts=PTS-STARTPTS [SelectedAudio];"
+                    + $"asetpts=PTS-STARTPTS [SelectedAudio]; "
                     + $"[0:a] atrim={silentAudioBeforeDuration + sampleBasedDuration:0.############}:"
                     + $"duration={originalFrameBasedEndSeconds - sampleBasedEndSeconds:0.############}, asetpts=PTS-STARTPTS, "
                     + $"volume=volume=0 [SilentAudioAfter];"
-                    + $"[SilentAudioBefore] [SelectedAudio] [SilentAudioAfter] concat=n=3:v=0:a=1, asetpts=PTS-STARTPTS [AllAudio];"
-                    + $"[AllAudio] asetpts=PTS-STARTPTS, asetrate={SampleRate}*{reversalSpeed:0.###}, aresample={SampleRate} [a]";
+                    + $"[SilentAudioBefore] [SelectedAudio] [SilentAudioAfter] concat=n=3:v=0:a=1, asetpts=PTS-STARTPTS [AllAudio]; "
+                    + $"[AllAudio] asetpts=PTS-STARTPTS, "
+                    + $"asetrate={SampleRate}*{reversalSpeed:0.###}, aresample={SampleRate} [a]";
             }
             else
             {
                 // Rubberband audio slowdown.
 
-                videoFilename1 = $"{reversal.Name}.{reversalNumber}.{reversalRate.ReversalSpeed}-{reversalRate.ReversalTone}.Text";
+                videoFilename1 = $"{reversal.Name}.{reversalNumber}.{reversalRate.ReversalSpeed}-{reversalRate.ReversalTone}";
 
                 audioFiltergraph1 = $"[0:a] atrim=0:{silentAudioBeforeDuration:0.############}, asetpts=PTS-STARTPTS, "
-                    + $"volume=volume=0,areverse [SilentAudioBefore]; "
+                    + $"volume=volume=0 [SilentAudioBefore]; "
                     + $"[0:a] atrim={silentAudioBeforeDuration:0.############}:duration={sampleBasedDuration:0.############}, "
-                    + $"asetpts=PTS-STARTPTS [SelectedAudio];"
+                    + $"asetpts=PTS-STARTPTS [SelectedAudio]; "
                     + $"[0:a] atrim={silentAudioBeforeDuration + sampleBasedDuration:0.############}:"
                     + $"duration={originalFrameBasedEndSeconds - sampleBasedEndSeconds:0.############}, asetpts=PTS-STARTPTS, "
-                    + $"volume=volume=0, areverse [SilentAudioAfter];"
-                    + $"[SilentAudioBefore] [SelectedAudio] [SilentAudioAfter] concat=n=3:v=0:a=1[AllAudio], asetpts=PTS-STARTPTS;"
+                    + $"volume=volume=0 [SilentAudioAfter];"
+                    + $"[SilentAudioBefore] [SelectedAudio] [SilentAudioAfter] concat=n=3:v=0:a=1 [AllAudio]; "
                     + $"[AllAudio] asetpts=PTS-STARTPTS, "
                     + $"rubberband=pitch={reversalTone:0.######}:tempo={reversalSpeed:0.######}:pitchq=quality [a]";
             }
@@ -500,11 +496,11 @@ namespace RSPro2Video
             {
                 // No motion interpolation requested (MotionInterpolation.None) or required (reversalRate.ReversalSpeed == 100).
 
-                interpolationFiltergraph1 = $"[0:v]trim=0:{originalFrameBasedDuration}, "
+                interpolationFiltergraph1 = $"[0:v] trim=0:{originalFrameBasedDuration}, "
                     + $"setpts=PTS-STARTPTS, "
                     + $"setpts=PTS/{reversalSpeed:0.#######}, "
-                    + $"fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV]; "
-                    + $"[SlowForwardV] split [v] [SlowForwardV1] ";
+                    + $"fps=fps={FramesPerSecond:0.############}:eof_action=pass [SlowForwardV]; "
+                    + $"[SlowForwardV] split [v] [SlowForwardV1]";
             }
             else
             {
@@ -513,24 +509,24 @@ namespace RSPro2Video
                 switch (ProjectSettings.MotionInterpolation)
                 {
                     case MotionInterpolation.BlendFrames:
-                        interpolationFiltergraph1 = $"[0:v]trim=0:{originalFrameBasedDuration}, "
+                        interpolationFiltergraph1 = $"[0:v] trim=0:{originalFrameBasedDuration}, "
                             + $"setpts=PTS-STARTPTS, setpts=PTS/{reversalSpeed:0.######}, "
-                            + $"tblend=all_mode=average,fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV]; "
+                            + $"tblend=all_mode=average,fps=fps={FramesPerSecond:0.############}:eof_action=pass [SlowForwardV]; "
                             + $"[SlowForwardV] split [v] [SlowForwardV1]";
                         break;
 
                     case MotionInterpolation.MotionGood:
-                        interpolationFiltergraph1 = $"[0:v]trim=0:{originalFrameBasedDuration}, "
+                        interpolationFiltergraph1 = $"[0:v] trim=0:{originalFrameBasedDuration}, "
                             + $"setpts=PTS-STARTPTS, "
                             + $"minterpolate=me=hexbs:fps={FramesPerSecond:0.############}/{reversalSpeed:0.######}, "
-                            + $"setpts=PTS/{reversalSpeed:0.######},fps=fps={FramesPerSecond:0.############}:eof_action=pass[SlowForwardV];"
+                            + $"setpts=PTS/{reversalSpeed:0.######},fps=fps={FramesPerSecond:0.############}:eof_action=pass [SlowForwardV];"
                             + $"[SlowForwardV] split [v] [SlowForwardV1]";
                         break;
 
                     case MotionInterpolation.MotionBest:
                         interpolationFiltergraph1 = $"[0:v] trim=0:{originalFrameBasedDuration}, "
                             + $"setpts=PTS-STARTPTS, "
-                            + $"minterpolate=mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1:fps={FramesPerSecond:0.############}/{reversalSpeed:0.###}, "
+                            + $"minterpolate=mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1:fps={FramesPerSecond:0.############}/{reversalSpeed:0.######}, "
                             + $"setpts=PTS/{reversalSpeed:0.######}, fps=fps={FramesPerSecond:0.############}:eof_action=pass [SlowForwardV]; "
                             + $"[SlowForwardV] split [v] [SlowForwardV1]";
                         break;
@@ -539,16 +535,14 @@ namespace RSPro2Video
 
             // The command to use when memory requirements allow the reverseFiltergraph method.
             // TODO: calculatedFrameBasedStartSeconds is way off and needs fixing.
-            ffmpegCommandList1.Add($"-y -hide_banner "
-                + $"-ss {originalFrameBasedStartSeconds:0.############} -i \"{RelativePathToWorkingInputVideoFile}\" -i \"{reversal.Name}.Text.png\" -loop 1 "
+            command1 = $"-y -hide_banner "
+                + $"-ss {originalFrameBasedStartSeconds:0.############} -i \"{RelativePathToWorkingInputVideoFile}\" "
                 + $"-filter_complex \"{interpolationFiltergraph1}; {audioFiltergraph1}\" "
                 + $"-map [v] -map [a] -progress \"{videoFilename1}.progress\" -threads {{0}} {OutputHighSettings} "
                 + $"\"{videoFilename1}{OutputVideoInterimExtension}\" "
-                + $"-map [SlowForwardV1] -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename1}.Last.png\"");
+                + $"-map [SlowForwardV1] -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename1}.Last.png\"";
             
-            videoFilenames1.Add(videoFilename1);
-
-            ffmpegCommandList2.Add($"-y -hide_banner "
+            command2 = $"-y -hide_banner "
                 + $"-i \"{videoFilename1}{OutputVideoInterimExtension}\" -i \"{reversal.Name}.Text.png\" -loop 1 "
                 + $"-filter_complex \"[0:v] reverse [ReversedV]; "
                 + $"[ReversedV] split [ReversedV1] [ReversedV2]; "
@@ -556,7 +550,7 @@ namespace RSPro2Video
                 + $"[0:a] areverse [a]\" "
                 + $"-map [v] -map [a] -progress \"{videoFilename2}.progress\" -threads {{0}} {OutputInterimSettings} "
                 + $"\"{videoFilename2}{OutputVideoInterimExtension}\" "
-                + $"-map [ReversedV1] -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename1}.First.png\"");
+                + $"-map [ReversedV1] -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename1}.First.png\"";
 
             // TODO: I am postponing the .png-based reversal video creation.
 
@@ -596,36 +590,29 @@ namespace RSPro2Video
             // Then delete the directory.
 
             // Add the video clips to the list of clips.
-            Boolean createFFmpegTask = 
-                AddToClips(videoFilename1, calculatedFrameBasedDuration / FramesPerSecond, AddToVideoOutputs: false) &&
-                AddToClips(videoFilename2, calculatedFrameBasedDuration / FramesPerSecond, AddToVideoOutputs: true);
+            AddToClips(videoFilename1, calculatedFrameBasedDuration / FramesPerSecond, AddToVideoOutputs: false);
+            AddToClips(videoFilename2, calculatedFrameBasedDuration / FramesPerSecond, AddToVideoOutputs: true);
 
-            if (createFFmpegTask)
+            // Add the task to the list of tasks
+            FfmpegTaskSortOrder sortOrder;
+            if (minterpolationActive)
             {
-                // Add the task to the list of tasks
-                if (minterpolationActive)
-                {
-                    FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseOne,
-                        FfmpegTaskSortOrder.ReverseVideoPass1,
-                        calculatedFrameBasedDuration,
-                        videoFilenames1,
-                        ffmpegCommandList1));
-                }
-                else
-                {
-                    FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseTwo,
-                        FfmpegTaskSortOrder.ReverseVideoPass1,
-                        calculatedFrameBasedDuration,
-                        videoFilenames1,
-                        ffmpegCommandList1));
-                }
+                sortOrder = FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate;
+            }
+            else
+            {
+                sortOrder = FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate;
             }
 
-            FFmpegTasks.Add(new FFmpegTask(FfmpegPhase.PhaseOne,
-                FfmpegTaskSortOrder.ReverseVideoPass2,
+            FFmpegTasks.Add(new FFmpegTask(sortOrder,
                 calculatedFrameBasedDuration,
-                videoFilenames2,
-                ffmpegCommandList2));
+                videoFilename1,
+                command1));
+
+            FFmpegTasks.Add(new FFmpegTask(FfmpegTaskSortOrder.ReverseVideoPass2,
+                calculatedFrameBasedDuration,
+                videoFilename2,
+                command2));
 
             return true;
         }

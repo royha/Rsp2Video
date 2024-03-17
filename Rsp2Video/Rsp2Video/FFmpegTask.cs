@@ -12,21 +12,7 @@ namespace RSPro2Video
     public class FFmpegTask
     {
         /// <summary>
-        /// The phase of the multiprocessing process this task is in.
-        /// 1 = Reverse, Forward bookmark, Forward video creation.
-        /// 2 = Explanation and Transition video creation.
-        /// </summary>
-        public FfmpegPhase Phase { get; set; }
-
-        /// <summary>
-        /// The sort order within a phase.
-        /// PhaseTwo:
-        ///   1 = Reverse videos.
-        ///   2 = Forward bookmark videos.
-        ///   3 = Forward videos.
-        /// PhaseThree:
-        ///   4 = Card videos.
-        ///   5 = Transition videos.
+        /// The sort order for the FFmpegTask.
         /// </summary>
         public FfmpegTaskSortOrder SortOrder { get; set; }
 
@@ -62,9 +48,8 @@ namespace RSPro2Video
         /// <param name="estimatedDuration"></param>
         /// <param name="videoFilenames"></param>
         /// <param name="ffmpegCommand"></param>
-        public FFmpegTask(FfmpegPhase phase, FfmpegTaskSortOrder sortOrder, double estimatedDuration, string videoFilename, String ffmpegCommand)
+        public FFmpegTask(FfmpegTaskSortOrder sortOrder, double estimatedDuration, string videoFilename, String ffmpegCommand)
         {
-            this.Phase = phase;
             this.SortOrder = sortOrder;
             this.EstimatedDuration = estimatedDuration;
             this.VideoFilenames = new List<String>()
@@ -89,9 +74,8 @@ namespace RSPro2Video
         /// <param name="estimatedDuration"></param>
         /// <param name="videoFilenames"></param>
         /// <param name="ffmpegCommands"></param>
-        public FFmpegTask(FfmpegPhase phase, FfmpegTaskSortOrder sortOrder, double estimatedDuration, List<String> videoFilenames, List<String> ffmpegCommands)
+        public FFmpegTask(FfmpegTaskSortOrder sortOrder, double estimatedDuration, List<String> videoFilenames, List<String> ffmpegCommands)
         {
-            this.Phase = phase;
             this.SortOrder = sortOrder;
             this.EstimatedDuration = estimatedDuration;
             this.VideoFilenames = videoFilenames;
@@ -100,5 +84,15 @@ namespace RSPro2Video
     }
 
     public enum FfmpegPhase { None = 0, PhaseOne, PhaseTwo, PhaseThree }
-    public enum FfmpegTaskSortOrder { None = 0, ReverseVideoPass1, ReverseVideoPass2, ForwardBookmarkVideo, ForwardVideo, CardVideo, TransitionVideo }
+    public enum FfmpegTaskSortOrder 
+    { 
+        None = 0, 
+        ReverseVideoPass1Minterpolate, 
+        ReverseVideoPass1NonMinterpolate, 
+        ReverseVideoPass2, 
+        ForwardBookmarkVideo, 
+        ForwardVideo, 
+        CardVideo, 
+        TransitionVideo 
+    }
 }

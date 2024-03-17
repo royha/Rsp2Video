@@ -27,22 +27,24 @@ namespace RSPro2Video
         {
             int ffmpegThreads = 0;
 
-            // Get a list of Phase 1 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
-            List<FFmpegTask> phaseOneTasks = FFmpegTasks
-                .FindAll(f => f.Phase == FfmpegPhase.PhaseOne)
+            // Get a list of reverse video pass 1 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
+            List<FFmpegTask> reverseVideoPass1Tasks = FFmpegTasks
+                .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate
+                    || f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate))
                 .OrderBy(o => o.SortOrder)
                 .ThenByDescending(t => t.EstimatedDuration)
                 .ToList();
 
-            // Run all of the Phase 1 tasks in order.
-            foreach (FFmpegTask ffmpegTask in phaseOneTasks)
+            // Run all of the in order.
+            foreach (FFmpegTask ffmpegTask in reverseVideoPass1Tasks)
             {
                 Boolean retval = true;
 
                 switch (ffmpegTask.SortOrder)
                 {
-                    case FfmpegTaskSortOrder.ReverseVideoPass1:
-                        retval = RunReverseMinterpolateVideoTask(ffmpegThreads, ffmpegTask);
+                    case FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate:
+                    case FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate:
+                        retval = RunReverseVideoTaskPass1(ffmpegThreads, ffmpegTask);
                         break;
                 }
 
@@ -52,24 +54,47 @@ namespace RSPro2Video
                 }
             }
 
-            // Get a list of Phase 2 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
-            List<FFmpegTask> phaseTwoTasks = FFmpegTasks
-                .FindAll(f => f.Phase == FfmpegPhase.PhaseTwo)
+            // Get a list of reverse video pass 2 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
+            // Note: These are the memory intensive tasks.
+            List<FFmpegTask> reverseVideoPass2Tasks = FFmpegTasks
+                .FindAll(f => f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass2)
                 .OrderBy(o => o.SortOrder)
                 .ThenByDescending(t => t.EstimatedDuration)
                 .ToList();
 
-            // Run all of the Phase 2 tasks in order.
-            foreach (FFmpegTask ffmpegTask in phaseTwoTasks)
+            // Run all of the in order.
+            foreach (FFmpegTask ffmpegTask in reverseVideoPass2Tasks)
             {
                 Boolean retval = true;
 
                 switch (ffmpegTask.SortOrder)
                 {
                     case FfmpegTaskSortOrder.ReverseVideoPass2:
-                        retval = RunReverseVideoTask(ffmpegThreads, ffmpegTask);
+                        retval = RunReverseVideoTaskPass2(ffmpegThreads, ffmpegTask);
                         break;
+                }
 
+                if (retval == false)
+                {
+                    AddToFailedClips(ffmpegTask);
+                }
+            }
+
+            // Get a list of ForwardBookmark and forward clips, ordered by SortOrder, followed by EstimatedDuration in decending order.
+            List<FFmpegTask> phaseThreeTasks = FFmpegTasks
+                .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.ForwardBookmarkVideo
+                    || f.SortOrder == FfmpegTaskSortOrder.ForwardVideo))
+                .OrderBy(o => o.SortOrder)
+                .ThenByDescending(t => t.EstimatedDuration)
+                .ToList();
+
+            // Run all of the Phase 2 tasks in order.
+            foreach (FFmpegTask ffmpegTask in phaseThreeTasks)
+            {
+                Boolean retval = true;
+
+                switch (ffmpegTask.SortOrder)
+                {
                     case FfmpegTaskSortOrder.ForwardBookmarkVideo:
                         retval = RunForwardBookmarkVideoTask(ffmpegThreads, ffmpegTask);
                         break;
@@ -86,14 +111,15 @@ namespace RSPro2Video
             }
 
             // Get a list of Phase 3 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
-            List<FFmpegTask> phaseThreeTasks = FFmpegTasks
-                .FindAll(f => f.Phase == FfmpegPhase.PhaseThree)
+            List<FFmpegTask> phaseFourTasks = FFmpegTasks
+                .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.CardVideo
+                    || f.SortOrder == FfmpegTaskSortOrder.TransitionVideo))
                 .OrderBy(o => o.SortOrder)
                 .ThenByDescending(t => t.EstimatedDuration)
                 .ToList();
 
             // Run all of the Phase 3 tasks in order.
-            foreach (FFmpegTask ffmpegTask in phaseThreeTasks)
+            foreach (FFmpegTask ffmpegTask in phaseFourTasks)
             {
                 Boolean retval = true;
 
@@ -356,7 +382,7 @@ namespace RSPro2Video
         /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
         /// <returns>Returns true if successful; otherwise, false.</returns>
         /// <remarks>Used when available memory is sufficient to use the filtergraph reverse method.</remarks>
-        private Boolean RunReverseMinterpolateVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
+        private Boolean RunReverseVideoTaskPass1(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
             String videoFilename = ffmpegTask.VideoFilenames[0];
 
@@ -376,8 +402,32 @@ namespace RSPro2Video
                 return false;
             }
 
-            // Get the first and last frame of the clip.
-            if (CreateFirstAndLastFrameFromClip(videoFilename, clipDuration.Duration) == false)
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a minterpolated reverse bookmark video clip based on the specified FFmpegTask.
+        /// </summary>
+        /// <param name="ffmpegThreads">The value for the ffmpeg -threads FfmpegCommand.</param>
+        /// <param name="ffmpegTask">The FFmpegTask that contains the data to create the clip.</param>
+        /// <returns>Returns true if successful; otherwise, false.</returns>
+        /// <remarks>Used when available memory is sufficient to use the filtergraph reverse method.</remarks>
+        private Boolean RunReverseVideoTaskPass2(int ffmpegThreads, FFmpegTask ffmpegTask)
+        {
+            String videoFilename = ffmpegTask.VideoFilenames[0];
+
+            // Set the value for the ffmpeg "-threads" parameter.
+            String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
+
+            // Run the command.
+            if (RunFfmpegRaw(ffmpegCommand) == false)
+            {
+                return false;
+            }
+
+            // Get the clip duration and set that duration in the ClipDuration dictionary.
+            ClipDuration clipDuration = GetProgressDuration(videoFilename);
+            if (clipDuration.FrameCount < 0)
             {
                 return false;
             }
@@ -891,7 +941,7 @@ namespace RSPro2Video
 
             // Log the ffmpeg FfmpegCommand line options.
             File.AppendAllText(LogFile, $"\r\n\r\n***Command line: {process.StartInfo.FileName} " 
-                + "{process.StartInfo.Arguments}\r\n\r\n");
+                + $"{process.StartInfo.Arguments}\r\n\r\n");
 
             // Start ffmpeg to extract the imageFiles.
             process.Start();
