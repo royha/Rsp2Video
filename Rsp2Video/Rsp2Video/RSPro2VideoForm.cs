@@ -492,6 +492,13 @@ namespace RSPro2Video
             // Assemble the clips into a video (or videos).
             AssembleVideo();
 
+            StringBuilder sb = new StringBuilder();
+            foreach (ClipEntry clipEntry in VideoOutputs[0].Clips)
+            {
+                sb.Append($"\"{clipEntry.ClipFilename}\", {clipEntry.StartTime}\r\n");
+            }
+            String s = sb.ToString();
+
             // Remove the temp directory.
             RemoveTemp_DirDirectory();
         }

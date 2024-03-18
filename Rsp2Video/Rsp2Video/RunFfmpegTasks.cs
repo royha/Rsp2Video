@@ -215,18 +215,26 @@ namespace RSPro2Video
                     {
                         try 
                         { 
-                            File.Copy(clipToDuplicate.Key, destinationFfilename); 
+                            File.Copy(clipToDuplicate.Key, destinationFfilename, true); 
                         }
                         catch (Exception e)
                         {
                             File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to copy {clipToDuplicate.Key} to {destinationFfilename}\r\nError message: {e.Message}\r\n\r\n");
-                        }
 
+                            // An error occurred. Remove the file in error from the list of video files to include in the video.
+                            for (int i = 0; i < VideoOutputs[VideoOutputIndex].Clips.Count; ++i)
+                            {
+                                if (VideoOutputs[VideoOutputIndex].Clips[i].ClipFilename == destinationFfilename)
+                                {
+                                    VideoOutputs[VideoOutputIndex].Clips.RemoveAt(i);
+                                }
+                            }
+                        }
                     }
                 }
                 else
                 {
-                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: File not available to copy {clipToDuplicate.Key}.\r\n\r\n");
+                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: File does not exist when trying to copy {clipToDuplicate.Key}.\r\n\r\n");
                 }
             }
         }

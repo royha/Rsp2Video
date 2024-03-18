@@ -489,6 +489,9 @@ namespace RSPro2Video
 
             videoFilename2 = videoFilename1 + ".Text";
 
+            // Now that the filename is known, set the transition from frame.
+            TransitionFromFrame = videoFilename1 + ".Last";
+
             //
             // Video filtergraphs, without reverse.
             //
@@ -1048,9 +1051,6 @@ namespace RSPro2Video
             //    OpeningCard = TxtOpeningCard;
             //    ClosingCard = TxtClosingCard;
             //}
-
-            OpeningCard = BokOpeningCard;
-            ClosingCard = BokClosingCard;
 
             if (String.IsNullOrWhiteSpace(OpeningCard) == false)
             {

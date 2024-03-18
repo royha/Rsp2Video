@@ -565,6 +565,9 @@ namespace RSPro2Video
                 RsvReverseBookmarks.Add(newBookmark);
             }
 
+            OpeningCard = BokOpeningCard;
+            ClosingCard = BokClosingCard;
+
             return true;
         }
 
@@ -1094,6 +1097,9 @@ namespace RSPro2Video
 
             // Sort the bookmarks.
             BokBookmarks = BokBookmarks.OrderBy(o => o.SampleStart).ToList();
+
+            OpeningCard = BokOpeningCard;
+            ClosingCard = BokClosingCard;
 
             return true;
         }
