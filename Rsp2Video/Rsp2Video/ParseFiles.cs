@@ -565,6 +565,9 @@ namespace RSPro2Video
                 RsvReverseBookmarks.Add(newBookmark);
             }
 
+            OpeningCard = BokOpeningCard;
+            ClosingCard = BokClosingCard;
+
             return true;
         }
 
@@ -950,6 +953,12 @@ namespace RSPro2Video
                     ++x;
                 }
 
+                // Special case for a bookmark name that is 6 characters in length.
+                if (len == 6)
+                {
+                    x += 4;
+                }
+
                 // Skip the Unknown Int32.
                 x += 4;
 
@@ -1089,6 +1098,9 @@ namespace RSPro2Video
             // Sort the bookmarks.
             BokBookmarks = BokBookmarks.OrderBy(o => o.SampleStart).ToList();
 
+            OpeningCard = BokOpeningCard;
+            ClosingCard = BokClosingCard;
+
             return true;
         }
 
@@ -1224,11 +1236,11 @@ namespace RSPro2Video
                         reverseBookmark.ReferencedBookmarks.Add(forwardBookmark);
 
                         // Add them if they don't already exist.
-                        //if (FindBookmarkByName(BokForwardBookmarks, forwardBookmark.Name) == null)
+                        //if (FindBookmarkByName(BokForwardBookmarks, forwardBookmark.ClipFilename) == null)
                         //{
                         //    BokForwardBookmarks.Add(forwardBookmark);
                         //}
-                        //if (FindBookmarkByName(BokReverseBookmarks, reverseBookmark.Name) == null)
+                        //if (FindBookmarkByName(BokReverseBookmarks, reverseBookmark.ClipFilename) == null)
                         //{
                         //    BokReverseBookmarks.Add(reverseBookmark);
                         //}
@@ -1252,11 +1264,11 @@ namespace RSPro2Video
                             reverseBookmark.ReferencedBookmarks.Add(forwardBookmark);
 
                             //// Add them if they don't already exist.
-                            //if (FindBookmarkByName(BokForwardBookmarks, forwardBookmark.Name) == null)
+                            //if (FindBookmarkByName(BokForwardBookmarks, forwardBookmark.ClipFilename) == null)
                             //{
                             //    BokForwardBookmarks.Add(forwardBookmark);
                             //}
-                            //if (FindBookmarkByName(BokReverseBookmarks, reverseBookmark.Name) == null)
+                            //if (FindBookmarkByName(BokReverseBookmarks, reverseBookmark.ClipFilename) == null)
                             //{
                             //    BokReverseBookmarks.Add(reverseBookmark);
                             //}
@@ -1280,11 +1292,11 @@ namespace RSPro2Video
                             reverseBookmark.ReferencedBookmarks.Add(forwardBookmark);
 
                             //// Add them if they don't already exist.
-                            //if (FindBookmarkByName(BokForwardBookmarks, forwardBookmark.Name) == null)
+                            //if (FindBookmarkByName(BokForwardBookmarks, forwardBookmark.ClipFilename) == null)
                             //{
                             //    BokForwardBookmarks.Add(forwardBookmark);
                             //}
-                            //if (FindBookmarkByName(BokReverseBookmarks, reverseBookmark.Name) == null)
+                            //if (FindBookmarkByName(BokReverseBookmarks, reverseBookmark.ClipFilename) == null)
                             //{
                             //    BokReverseBookmarks.Add(reverseBookmark);
                             //}
@@ -1647,7 +1659,7 @@ namespace RSPro2Video
         //        if (forwardBookmark == null)
         //        {
         //            forwardBookmark = new Bookmark();
-        //            forwardBookmark.Name = forwardName;
+        //            forwardBookmark.ClipFilename = forwardName;
 
         //            // Separate transcript text from explanatory text. Explanatory text is separated from transcript text by a blank line.
         //            Match match = Regex.Match(forwardText, @"\r\n\s*\r\n");
@@ -1684,7 +1696,7 @@ namespace RSPro2Video
         //        if (reverseBookmark == null)
         //        {
         //            reverseBookmark = new Bookmark();
-        //            reverseBookmark.Name = reverseName;
+        //            reverseBookmark.ClipFilename = reverseName;
 
         //            // Separate transcript text from explanatory text. Explanatory text is separated from transcript text by a blank line.
         //            Match match = Regex.Match(reverseText, @"\r\n\s*\r\n");

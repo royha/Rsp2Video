@@ -79,7 +79,8 @@ namespace RSPro2Video
                 ProjectSettings.ReplayForwardVideo = false;
                 ProjectSettings.PlayForwardBookmarkCompletely = true;
                 ProjectSettings.IncludeBookmarkNameInTextOverlays = false;
-                ProjectSettings.TransitionType = TransitionType.CrossFade;
+                ProjectSettings.TransitionType = TransitionType.XFade;
+                ProjectSettings.XFadeTransitionType = "fade";
                 ProjectSettings.IncludeOpeningCard = true;
                 ProjectSettings.IncludeClosingCard = true;
                 ProjectSettings.IncludeForwardExplanations = true;
@@ -229,6 +230,7 @@ namespace RSPro2Video
             OutputInterimSettings = OutputOptionsInterimSettings[(int)ProjectSettings.VideoQuality];
             OutputImageSequenceSettings = OutputOptionsImageSequenceSettings[(int)ProjectSettings.VideoQuality];
             OutputFinalSettings = OutputOptionsFinalSettings[(int)ProjectSettings.VideoQuality];
+            OutputHighSettings = OutputOptionsHighSettings[(int)ProjectSettings.VideoQuality];
             OutputVideoInterimExtension = OutputOptionsVideoInterimExtension[(int)ProjectSettings.VideoQuality];
             OutputVideoFinalExtension = OutputOptionsVideoFinalExtension[(int)ProjectSettings.VideoQuality];
             OutputAudioInterimExtension = OutputOptionsAudioInterimExtension[(int)ProjectSettings.VideoQuality];

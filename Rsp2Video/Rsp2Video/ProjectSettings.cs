@@ -32,7 +32,7 @@ namespace RSPro2Video
         // public String RspTranscriptFile { get; set; }
 
         /// <summary>
-        /// Name of the output file. Either a video file, or a video project file as indicated by OutputType.
+        /// ClipFilename of the output file. Either a video file, or a video project file as indicated by OutputType.
         /// </summary>
         public String OutputVideoFile { get; set; }
 
@@ -149,6 +149,7 @@ namespace RSPro2Video
         public Boolean PlayForwardBookmarkCompletely { get; set; }
         public Boolean IncludeBookmarkNameInTextOverlays { get; set; }
         public TransitionType TransitionType { get; set; }
+        public String XFadeTransitionType { get; set;}
         public Boolean IncludeOpeningCard { get; set; }
         public Boolean IncludeClosingCard { get; set; }
         public Boolean IncludeForwardExplanations { get; set; }
@@ -188,10 +189,64 @@ namespace RSPro2Video
         public int ReversalTone { get; set; }
     }
 
+    /// <summary>
+    /// The locations of the starting square bracet and the ending square bracket in a forward bookmark.
+    /// </summary>
+    public class BracketPair
+    {
+        /// <summary>
+        /// The location of the opening square bracket.
+        /// </summary>
+        public int BracketOpen { get; set; }
+
+        /// <summary>
+        /// The location of the Closing square bracket.
+        /// </summary>
+        public int BracketClose { get; set; }
+
+        /// <summary>
+        /// Constructs a new object with the specified values.
+        /// </summary>
+        /// <param name="open">The index of the opening square bracket.</param>
+        /// <param name="close">The index of the closing square bracket.</param>
+        public BracketPair(int open, int close)
+        {
+            this.BracketOpen = open;
+            this.BracketClose = close;
+        }
+    }
+
+    /// <summary>
+    /// Clip duration determined by reading the ffmpeg .progress file.
+    /// </summary>
+    public class ClipDuration
+    {
+        /// <summary>
+        /// The final "frame=" value from the ffmpeg .progress file.
+        /// </summary>
+        public int FrameCount { get; set; }
+
+        /// <summary>
+        /// The duration in seconds calculated from the frame count in the ffmpeg .progress file.
+        /// </summary>
+        public double Duration { get; set; }
+
+        /// <summary>
+        /// Constructs a new ClipDuration object with the specified values.
+        /// </summary>
+        /// <param name="frameCount">The frame count.</param>
+        /// <param name="duration">The duration in seconds.</param>
+        public ClipDuration(int frameCount, double duration)
+        {
+            this.FrameCount = frameCount;
+            this.Duration = duration;
+        }
+    }
+
     public enum VideoContents { None, FullVideo, BookmarksOnly, SeparateVideos }
     public enum OutputType { None, VideoFile, VideoProject }
     public enum BookmarkFileType { None, FmBok, bok, RSVideo, Text, RTF }
     public enum VideoQuality { Fast, YouTube, High }
-    public enum TransitionType { None, CrossFade, HoldLastFrame }
+    public enum TransitionType { None, XFade, HoldLastFrame }
     public enum MotionInterpolation { None, BlendFrames, MotionGood, MotionBest }
 }

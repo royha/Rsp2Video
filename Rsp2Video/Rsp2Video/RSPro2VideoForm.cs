@@ -33,9 +33,9 @@ namespace RSPro2Video
         {
             OutputOptionsInterimSettings = new List<String>(new String[] {
                     "-qscale:v 2",
-                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart -reset_timestamps 1",
-                    // "-c:v h264_nvenc -preset p2 -profile:v high -b:v 5M -bufsize 5M -c:a aac -b:a 384k -movflags +faststart -reset_timestamps 1",
-                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart -reset_timestamps 1" });
+                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart",
+                    // "-c:v h264_nvenc -preset p2 -profile:v high -b:v 5M -bufsize 5M -c:a aac -b:a 384k -movflags +faststart",
+                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart" });
             OutputOptionsImageSequenceSettings = new List<String>(new String[] {
                     "-qscale:v 2",
                     "-c:v libx264 -preset ultrafast -crf 18 -threads 0 -c:a aac -q:a 1 -movflags +faststart",
@@ -45,6 +45,10 @@ namespace RSPro2Video
                     "-qscale:v 2",
                     "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart",
                     "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart" });
+            OutputOptionsHighSettings = new List<String>(new String[] {
+                    "-qscale:v 2",
+                    "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 14 -c:a aac -q:a 1 -movflags +faststart",
+                    "-pix_fmt yuv420p -c:v libx264 -preset slow -profile:v high -bf 2 -g 30 -coder 1 -crf 14 -c:a aac -q:a 1 -movflags +faststart" });
             OutputOptionsVideoInterimExtension = new List<String>(new String[] { ".ts", ".mp4", ".mp4" });
             OutputOptionsVideoFinalExtension = new List<String>(new String[] { ".ts", ".mp4", ".mp4" });
             OutputOptionsAudioInterimExtension = new List<String>(new String[] { ".wav", ".wav", ".wav" });
@@ -472,28 +476,30 @@ namespace RSPro2Video
             // Copies the source video to the working directory.
             if (CopySourceVideoToWorkingDirectory() == false) { return; }
 
+            // Remove the frames directory.
+            // TODO: The _frames directory needs to go away.
+            RemoveFrames_DirDirectory();
+
+            // Create the task objects.
+            CreateFfmpegTasks();
+
             // Create text files from the bookmark data.
             CreateTextImageFiles();
 
-            // Create the still images for the first and last frames of the forward video clips.
-            CreateForwardStills();
+            // The list of FFmepg tasks has been created. Execute the collected FFmpeg tasks.
+            RunAllFfmpegTasks();
 
-            // Create the reversal clips.
-            CreateReversalClips();
+            // Assemble the clips into a video (or videos).
+            AssembleVideo();
 
-            // Remove the frames directory.
-            RemoveFrames_DirDirectory();
-
-            progress.Report("Working: Creating text overlays.");
-
-            // Run MELT to output the video.
-            SaveVideo();
-
-            // Move the completed video to the destination directory.
-            // MoveVideoToDestinationDirectory();
+            StringBuilder sb = new StringBuilder();
+            foreach (ClipEntry clipEntry in VideoOutputs[0].Clips)
+            {
+                sb.Append($"\"{clipEntry.ClipFilename}\", {clipEntry.StartTime}\r\n");
+            }
+            String s = sb.ToString();
 
             // Remove the temp directory.
-            
             RemoveTemp_DirDirectory();
         }
 
@@ -560,7 +566,7 @@ namespace RSPro2Video
             try
             {
                 // Try to create the directory.
-                diTmpDirectory = Directory.CreateDirectory(WorkingDirectory);
+                diPngDirectory = Directory.CreateDirectory(WorkingDirectory);
             }
             catch { return false; }
 
@@ -587,22 +593,25 @@ namespace RSPro2Video
         private Boolean CopySourceVideoToWorkingDirectory()
         {
             // Set the name of the working input file. Typically, "v.mp4".
-            WorkingInputVideoFile = Path.Combine(WorkingDirectory, "v" + Path.GetExtension(ProjectSettings.SourceVideoFile));
+            WorkingInputVideoFileWithoutExtension = Path.Combine(WorkingDirectory, "v");
+            WorkingInputVideoFile = WorkingInputVideoFileWithoutExtension + Path.GetExtension(ProjectSettings.SourceVideoFile);
             RelativePathToWorkingInputVideoFile = Path.GetFileName(WorkingInputVideoFile);
-
-            // If there is no video delay, copy the file and return.
-            if (ProjectSettings.VideoDelay == 0)
-            {
-                // Copy the source video to the working directory.
-                File.Copy(ProjectSettings.SourceVideoFile, WorkingInputVideoFile, true);
-                return true;
-            }
+            RelativePathToWorkingInputVideoFileWithoutExtension = Path.GetFileNameWithoutExtension(WorkingInputVideoFile);
 
             // Create the Process to call the external program.
             Process process = new Process();
 
             // Create the arguments string.
-            String arguments = String.Format("-y -hide_banner -i \"{0}\" -itsoffset {1:0.#######} -i \"{0}\" -map 1:v -map 0:a -c copy \"{2}\"",
+            //String arguments = String.Format("-y -hide_banner -i \"{0}\" -itsoffset {1:0.#######} -i \"{0}\" -map 1:v -map 0:a -c copy \"{2}\"",
+            //    ProjectSettings.SourceVideoFile,
+            //    ProjectSettings.VideoDelay / FramesPerSecond,
+            //    WorkingInputVideoFile);
+
+            String arguments = String.Format($"-y -hide_banner -i \"{ProjectSettings.SourceVideoFile}\" "
+                + $"-itsoffset {ProjectSettings.VideoDelay / FramesPerSecond:0.#######} "
+                + $"-i \"{ProjectSettings.SourceVideoFile}\" -map 1:v -map 0:a -c copy "
+                + $"-progress \"{WorkingInputVideoFileWithoutExtension}.progress\" "
+                + $"\"{WorkingInputVideoFile}\"",
                 ProjectSettings.SourceVideoFile,
                 ProjectSettings.VideoDelay / FramesPerSecond,
                 WorkingInputVideoFile);
@@ -641,6 +650,19 @@ namespace RSPro2Video
                 return false;
             }
 
+            // Get the working video duration.
+            ClipDuration clipDuration = GetProgressDuration(RelativePathToWorkingInputVideoFileWithoutExtension);
+            if (clipDuration.FrameCount < 0)
+            {
+                return false;
+            }
+
+            // Get the first and last frame of the working video.
+            if (CreateFirstAndLastFrameFromClip(RelativePathToWorkingInputVideoFileWithoutExtension, clipDuration.Duration) == false)
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -658,7 +680,7 @@ namespace RSPro2Video
                 try
                 {
                     // Delete the directory and any files and directories in that directory.
-                    diTmpDirectory.Delete(true);
+                    diPngDirectory.Delete(true);
                 }
                 catch { return false; }
 
