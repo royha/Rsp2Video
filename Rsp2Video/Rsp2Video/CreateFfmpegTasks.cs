@@ -280,10 +280,7 @@ namespace RSPro2Video
                 Process process = new Process();
 
                 // Create the arguments string.
-                String arguments = String.Format("-y -hide_banner -framerate {0:0.###############} -f concat -safe 0 -i filelist.txt {1} \"..\\{2}\"",
-                    FramesPerSecond,
-                    OutputFinalSettings,
-                    videoOutput.Filename);
+                String arguments = $"-y -hide_banner -f concat -safe 0 -i filelist.txt -c copy \"..\\{videoOutput.Filename}\"";
 
                 // Configure the process using the StartInfo properties.
                 process.StartInfo = new ProcessStartInfo
@@ -665,9 +662,6 @@ namespace RSPro2Video
 
                             // Add the back and forth.
                             AddBackAndForth(reverseBookmark);
-
-                            // Prepare for the next transition.
-                            TransitionFromFrame = firstTransitionFromFrame;
                         }
 
                         // If there is a reverse explanation.
