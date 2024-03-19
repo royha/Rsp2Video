@@ -149,8 +149,8 @@ namespace RSPro2Video
         {
             RemoveFailedClips();
             DuplicateClips();
-            CalculateClipStartTimes();
-            SetClipStartTimes();
+            // CalculateClipStartTimes();
+            // SetClipStartTimes();
         }
 
         /// <summary>
@@ -669,13 +669,18 @@ namespace RSPro2Video
         /// <summary>
         /// Creates the {videoFilename}.First.png and {videoFilename}.Last.png for the specified video clip.
         /// </summary>
-        /// <param name="videoFilename"></param>
+        /// <param name="videoFilename">The filename, without extension, of the clip from which to extract the image files.</param>
+        /// <param name="duration">The duration of the clip in seconds.</param>
+        /// <param name="fileExtension">The file extension of the file. Optional if equal to OutputVideoInterimExtension.</param>
         /// <returns>Returns true if successful; otherwise, false.</returns>
-        private Boolean CreateFirstAndLastFrameFromClip(string videoFilename, double duration)
+        private Boolean CreateFirstAndLastFrameFromClip(string videoFilename, 
+            double duration, 
+            String fileExtension = null, 
+            double firstFrameOffeset = 0.0d)
         {
-            String videoFilenameWithExtension = videoFilename + OutputVideoInterimExtension;
+            // Some files, the source file in particular, may not have the same file extension as OutputVideoInterimExtension.
+            String videoFilenameWithExtension = (fileExtension == null) ? videoFilename + OutputVideoInterimExtension : videoFilename + fileExtension;
             Boolean retval = false;
-
 
             // Create the .Last.png file.
 
@@ -692,7 +697,7 @@ namespace RSPro2Video
             // Output the last few imageFiles of the clip in the temp directory.
 
             String fileOutputString = Path.Combine(frameStorageDirectory, videoFilename);
-            for (int i = 0; retval == false; ++i)
+            for (int i = 0; i < LastFrameSeekBack.Length && retval == false; ++i)
             {
                 // Get the time to see back from EOF.
                 double sseofValue = LastFrameSeekBack[i];
@@ -768,7 +773,7 @@ namespace RSPro2Video
             // Create the ffmpeg command to write the .First.png file.
             // TODO: Single first frame:
             // ffmpeg -y -hide_banner -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 -imageFiles:v 1 "output.First.png" 
-            String getFirst = $"-y -hide_banner -i \"{videoFilenameWithExtension}\" "
+            String getFirst = $"-y -hide_banner -ss {firstFrameOffeset / FramesPerSecond} -i \"{videoFilenameWithExtension}\" "
                 + $"-pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename}.First.png\"";
 
             // Run the ffmpeg command.

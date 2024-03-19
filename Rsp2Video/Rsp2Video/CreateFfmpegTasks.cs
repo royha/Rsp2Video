@@ -2067,17 +2067,17 @@ namespace RSPro2Video
             double startTimeOfNextBookmark = 864000.0d;
             double duration = 0.0d;
 
-            // If the end time of this bookmark is beyond the start time of the next bookmark, this clipEntry is not necessary.
-            if (endTime >= startTimeOfNextBookmark)
-            {
-                return true;
-            }
-
             // If this is not the last forward bookmark.
             if (index < ForwardBookmarks.Count - 1)
             {
                 // Calculate the next start time.
                 startTimeOfNextBookmark = ForwardBookmarks[index + 1].SampleStart / (double)SampleRate;
+
+                // If the end time of this bookmark is beyond the start time of the next bookmark, this clipEntry is not necessary.
+                if (endTime >= startTimeOfNextBookmark)
+                {
+                    return true;
+                }
 
                 // Calculate the duration.
                 duration = startTimeOfNextBookmark - ((double)ForwardBookmarks[index].SampleEnd / (double)SampleRate);
@@ -2096,6 +2096,8 @@ namespace RSPro2Video
 
                 // There is no need to add a time, since we are taking the video file from endTime of this bookmark to the end.
                 command = $"-ss {endTime:0.######} -i \"{RelativePathToWorkingInputVideoFile}\"";
+
+                TransitionFromFrame = "v.Last";
             }
 
             // Add progress, output settings, and output filename.
