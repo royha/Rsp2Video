@@ -10,7 +10,7 @@ global_settings {
  #include "textures.inc"
  #include "shapes.inc"   
 
-///*
+/*
 // Overview camera.
 camera {
     location <0, 200, -1>
@@ -18,9 +18,9 @@ camera {
     right x*image_width/image_height // keep propotions with any aspect ratio
     look_at <-10, 2.2, 0>
 }
-//*/
+*/
 
-/*
+
 // View camera.
 camera {
     location <-11.5, 5, -12.5>
@@ -28,7 +28,7 @@ camera {
     right x*image_width/image_height // keep propotions with any aspect ratio
     look_at <-10, 2.17, 0>
 }
-*/
+
 
 light_source { 
     < 0, 200, -1> 

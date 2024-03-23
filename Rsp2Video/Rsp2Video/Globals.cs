@@ -131,5 +131,7 @@ namespace RSPro2Video
         TimeSpan timeToRun;
 
         String[] VideoQualityString = { "Fast / Draft quality", "Slow / YouTube upload quality", "Slowest / High quality" };
+
+        Object LogFileLock = new Object();
     }
 }

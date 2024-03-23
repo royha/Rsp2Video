@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -152,7 +153,7 @@ namespace RSPro2Video
                 };
 
                 // Log the command line options.
-                File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
                 // Start the copy command to combine the clips.
                 process.Start();
@@ -161,7 +162,7 @@ namespace RSPro2Video
                 String cmdOutput = process.StandardError.ReadToEnd();
 
                 // Log the output.
-                File.AppendAllText(LogFile, cmdOutput);
+                WriteLog(MethodBase.GetCurrentMethod().Name, cmdOutput);
 
                 // Wait here for the process to exit.
                 process.WaitForExit();
@@ -223,7 +224,7 @@ namespace RSPro2Video
         //        };
 
         //        // Log the ffmpeg command line options.
-        //        File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+        //        WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
         //        // Start ffmpeg to extract the frames.
         //        process.Start();
@@ -232,7 +233,7 @@ namespace RSPro2Video
         //        String FfmpegOutput = process.StandardError.ReadToEnd();
 
         //        // Log the ffmpeg output.
-        //        File.AppendAllText(LogFile, FfmpegOutput);
+        //        WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
         //        // Wait here for the process to exit.
         //        process.WaitForExit();
@@ -294,7 +295,7 @@ namespace RSPro2Video
                 };
 
                 // Log the ffmpeg command line options.
-                File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
                 // Start ffmpeg to extract the frames.
                 process.Start();
@@ -303,7 +304,7 @@ namespace RSPro2Video
                 String FfmpegOutput = process.StandardError.ReadToEnd();
 
                 // Log the ffmpeg output.
-                File.AppendAllText(LogFile, FfmpegOutput);
+                WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
                 // Wait here for the process to exit.
                 process.WaitForExit();
@@ -363,7 +364,7 @@ namespace RSPro2Video
         /// <param name="AddToVideoOutputs">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool CreateFfmpegTask(String Filename,
-            String FfmpegCommand, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, Boolean AddToVideoOutputs = true)
+            String FfmpegCommand, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, String CreatorMethod, Boolean AddToVideoOutputs = true)
         {
             // Add the file to the list of clips to create.
             Boolean createFFmpegTask = AddToClips(Filename, EstimatedDuration, AddToVideoOutputs);
@@ -371,7 +372,7 @@ namespace RSPro2Video
             // Add the task to the list of tasks
             if (createFFmpegTask)
             {
-                FFmpegTasks.Add(new FFmpegTask(SortOrder, EstimatedDuration, Filename, FfmpegCommand));
+                FFmpegTasks.Add(new FFmpegTask(SortOrder, EstimatedDuration, Filename, FfmpegCommand, CreatorMethod));
             }
 
             return true;
@@ -387,7 +388,7 @@ namespace RSPro2Video
         /// <param name="AddToVideoOutputs">Use true to add this video to VideoOutputs list of clips. Use false to not add this video to VideoOutputs.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool CreateFfmpegTask(List<String> Filenames,
-            List<String> FfmpegCommands, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, Boolean AddToVideoOutputs = true)
+            List<String> FfmpegCommands, FfmpegTaskSortOrder SortOrder, double EstimatedDuration, String CreatorMethod, Boolean AddToVideoOutputs = true)
         {
             // If true, a FFmpegTask should be created for this clip.
             Boolean createFFmpegTask = true;
@@ -422,7 +423,7 @@ namespace RSPro2Video
             if (createFFmpegTask)
             {
                 // Add the task to the list of tasks
-                FFmpegTasks.Add(new FFmpegTask(SortOrder, EstimatedDuration, Filenames, FfmpegCommands));
+                FFmpegTasks.Add(new FFmpegTask(SortOrder, EstimatedDuration, Filenames, FfmpegCommands, CreatorMethod));
             }
 
             return true;
@@ -474,7 +475,7 @@ namespace RSPro2Video
                     // Add this new file to the ClipDuration dictionary.
                     if (ClipDuration.TryAdd(newFilename, EstimatedDuration) == false)
                     {
-                        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {newFilename} already exists in ClipDuration.\r\n\r\n");
+                        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Video file {newFilename} already exists in ClipDuration.\r\n\r\n");
                     }
                 }
                 else
@@ -488,7 +489,7 @@ namespace RSPro2Video
                     // Add this new file to the ClipDuration dictionary.
                     if (ClipDuration.TryAdd(newFilename, EstimatedDuration) == false)
                     {
-                        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {newFilename} already exists in ClipDuration.\r\n\r\n");
+                        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Video file {newFilename} already exists in ClipDuration.\r\n\r\n");
                     }
                 }
 
@@ -510,8 +511,8 @@ namespace RSPro2Video
         /// </summary>
         private void AssembleClipListFnRFullVideo()
         {
-            // Add 1/2 second of black.
-            AddBlack(0.5d);
+            // Add four frames of black.
+            AddBlack(4/FramesPerSecond);
 
             // Add the opening card.
             AddOpeningCard();
@@ -534,7 +535,7 @@ namespace RSPro2Video
                 if (ProjectSettings.IncludeForwardExplanations && String.IsNullOrWhiteSpace(forwardBookmark.Explanation) == false)
                 {
                     // Add fade to black.
-                    AddTransitionToBlack(forwardBookmark.Name + ".First", ProjectSettings.TransitionLengthCard);
+                    AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
 
                     // Add the forward explanation.
                     AddExplanationCard(forwardBookmark);
@@ -546,16 +547,14 @@ namespace RSPro2Video
                 // Add the forward video with text overlay.
                 AddForwardBookmarkVideo(forwardBookmark);
 
-                // Set the frame to transition from and initial transition length.
-                TransitionFromFrame = forwardBookmark.Name + ".Last";
+                // Set the initial transition length.
                 double TransitionLength = ProjectSettings.TransitionLengthMajor;
 
                 if (forwardBookmark.ReferencedBookmarks.Count > 0)
                 {
-                    foreach (Bookmark reverseBookmark in forwardBookmark.ReferencedBookmarks)
+                    for (int j = 0; j < forwardBookmark.ReferencedBookmarks.Count; j++)
                     {
-                        String firstTransitionFromFrame = null;
-                        String lastTransitionFromFrame = null;
+                        Bookmark reverseBookmark = forwardBookmark.ReferencedBookmarks[j];
 
                         // Add the four reversal rates.
                         if (ProjectSettings.ReversalRate1.UseThisRate == true)
@@ -566,20 +565,6 @@ namespace RSPro2Video
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 1, ProjectSettings.ReversalRate1);
-
-                            // Prepare for the next transition.
-                            TransitionFromFrame = 
-                                (ProjectSettings.ReversalRate1.ReversalSpeed == ProjectSettings.ReversalRate1.ReversalTone) ?
-                                $"{reverseBookmark.Name}.1.{ProjectSettings.ReversalRate1.ReversalSpeed}.Last" :
-                                $"{reverseBookmark.Name}.1.{ProjectSettings.ReversalRate1.ReversalSpeed}-"
-                                + $"{ProjectSettings.ReversalRate1.ReversalTone}.Last";
-
-                            if (firstTransitionFromFrame == null)
-                            {
-                                firstTransitionFromFrame = TransitionFromFrame;
-                            }
-
-                            lastTransitionFromFrame = TransitionFromFrame;
                         }
 
                         if (ProjectSettings.ReversalRate2.UseThisRate == true)
@@ -590,20 +575,6 @@ namespace RSPro2Video
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 2, ProjectSettings.ReversalRate2);
-
-                            // Prepare for the next transition.
-                            TransitionFromFrame =
-                                (ProjectSettings.ReversalRate2.ReversalSpeed == ProjectSettings.ReversalRate2.ReversalTone) ?
-                                $"{reverseBookmark.Name}.2.{ProjectSettings.ReversalRate2.ReversalSpeed}.Last" :
-                                $"{reverseBookmark.Name}.2.{ProjectSettings.ReversalRate2.ReversalSpeed}-"
-                                + $"{ProjectSettings.ReversalRate2.ReversalTone}.Last";
-
-                            if (firstTransitionFromFrame == null)
-                            {
-                                firstTransitionFromFrame = TransitionFromFrame;
-                            }
-
-                            lastTransitionFromFrame = TransitionFromFrame;
                         }
 
                         if (ProjectSettings.ReversalRate3.UseThisRate == true)
@@ -614,20 +585,6 @@ namespace RSPro2Video
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 3, ProjectSettings.ReversalRate3);
-
-                            // Prepare for the next transition.
-                            TransitionFromFrame =
-                                (ProjectSettings.ReversalRate3.ReversalSpeed == ProjectSettings.ReversalRate3.ReversalTone) ?
-                                $"{reverseBookmark.Name}.3.{ProjectSettings.ReversalRate3.ReversalSpeed}.Last" :
-                                $"{reverseBookmark.Name}.3.{ProjectSettings.ReversalRate3.ReversalSpeed}-"
-                                + $"{ProjectSettings.ReversalRate3.ReversalTone}.Last";
-
-                            if (firstTransitionFromFrame == null)
-                            {
-                                firstTransitionFromFrame = TransitionFromFrame;
-                            }
-
-                            lastTransitionFromFrame = TransitionFromFrame;
                         }
 
                         if (ProjectSettings.ReversalRate4.UseThisRate == true)
@@ -638,25 +595,17 @@ namespace RSPro2Video
 
                             // Play the reverse bookmark.
                             AddReverseVideo(reverseBookmark, 4, ProjectSettings.ReversalRate4);
-
-                            // Prepare for the next transition.
-                            TransitionFromFrame =
-                                (ProjectSettings.ReversalRate4.ReversalSpeed == ProjectSettings.ReversalRate4.ReversalTone) ?
-                                $"{reverseBookmark.Name}.4.{ProjectSettings.ReversalRate4.ReversalSpeed}.Last" :
-                                $"{reverseBookmark.Name}.4.{ProjectSettings.ReversalRate4.ReversalSpeed}-"
-                                + $"{ProjectSettings.ReversalRate4.ReversalTone}.Last";
-
-                            if (firstTransitionFromFrame == null)
-                            {
-                                firstTransitionFromFrame = TransitionFromFrame;
-                            }
-
-                            lastTransitionFromFrame = TransitionFromFrame;
                         }
 
                         // If a back and forth was requested, add it.
                         if (ProjectSettings.IncludeBackAndForth)
                         {
+                            // Choose the correct "to" frame for the last reversal.
+                            //if (ProjectSettings.PlayForwardBookmarkCompletely && j == forwardBookmark.ReferencedBookmarks.Count - 1)
+                            //{
+                            //    TransitionToFrame = forwardBookmark.Name + ".Last";
+                            //}
+
                             // Add the transition to the back and forth.
                             AddBackAndForthTransition(reverseBookmark, ProjectSettings.TransitionLengthMajor);
 
@@ -670,14 +619,10 @@ namespace RSPro2Video
                             if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
                             {
                                 // Add fade to black.
-                                AddTransitionToBlack(lastTransitionFromFrame, ProjectSettings.TransitionLengthCard);
+                                AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
 
                                 // Add the forward explanation.
                                 AddExplanationCard(reverseBookmark);
-
-                                // Prepare for the next transition.
-                                TransitionFromFrame = "Black";
-                                lastTransitionFromFrame = TransitionFromFrame;
                             }
                         }
 
@@ -686,27 +631,10 @@ namespace RSPro2Video
                     }
                 }
 
-                // If the forward replay was requested, play it.
-                //if (ProjectSettings.ReplayForwardVideo)
-                //{
-                //    // Transition to the first frame of this forward bookmark.
-                //    AddTransitionFromFrameToForwardTransition(forwardBookmark);
-
-                //    // Add the forward video again.
-                //    AddForwardBookmarkVideo(forwardBookmark: forwardBookmark, HideTextOverlay: true);
-
-                //    // Prepare for the next transition.
-                //    TransitionFromFrame = forwardBookmark.ClipFilename + ".Last";
-                //}
-
-                //
-                // All reversals for this forward forwardBookmark have been added. 
-                //
-
                 // Transition to normal video, unless replaying the forward video.
                 if (ProjectSettings.ReplayForwardVideo == false)
                 {
-                    AddTransitionToNormalVideo(forwardBookmark.Name + ".Last", ProjectSettings.TransitionLengthMajor);
+                    AddTransitionToNormalVideo(ProjectSettings.TransitionLengthMajor);
                 }
 
                 // Add the normal video between forward bookmarks.
@@ -714,7 +642,7 @@ namespace RSPro2Video
             }
 
             // Add fade to black.
-            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+            AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
             
             // Add the closing card.
             AddClosingCard();
@@ -755,7 +683,7 @@ namespace RSPro2Video
                     // Add fade to black if this is not the first forward bookmark.
                     if (i > 0)
                     {
-                        AddTransitionToBlack(forwardBookmark.Name + ".First", ProjectSettings.TransitionLengthCard);
+                        AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
                     }
 
                     AddExplanationCard(forwardBookmark);
@@ -847,7 +775,7 @@ namespace RSPro2Video
                             if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
                             {
                                 // Add fade to black.
-                                AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+                                AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
 
                                 // Add the forward explanation.
                                 AddExplanationCard(reverseBookmark);
@@ -859,25 +787,12 @@ namespace RSPro2Video
                     }
                 }
 
-                // If the forward replay was requested, play it.
-                //if (ProjectSettings.ReplayForwardVideo)
-                //{
-                //    // Transition to the first frame of this forward bookmark.
-                //    AddTransitionFromFrameToForwardTransition(forwardBookmark);
-
-                //    // Add the forward video again.
-                //    AddForwardBookmarkVideo(forwardBookmark: forwardBookmark, HideTextOverlay: true);
-
-                //    // Prepare for the next transition.
-                //    TransitionFromFrame = forwardBookmark.ClipFilename + ".Last";
-                //}
-
                 // Transition from the end of this reversal to the beginning of the next.
                 AddTransitionToNextForward(i, ProjectSettings.TransitionLengthMajor);
             }
 
             // Add fade to black.
-            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+            AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
 
             // Add the closing card.
             AddClosingCard();
@@ -1018,7 +933,7 @@ namespace RSPro2Video
                         if (ProjectSettings.IncludeReverseExplanations && String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
                         {
                             // Add fade to black.
-                            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+                            AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
 
                             // Add the forward explanation.
                             AddExplanationCard(reverseBookmark);
@@ -1030,7 +945,7 @@ namespace RSPro2Video
                         else
                         {
                             // Add fade to black.
-                            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+                            AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
                         }
 
                         // Add 1/2 second of black.
@@ -1142,7 +1057,7 @@ namespace RSPro2Video
                             if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
                             {
                                 // Add fade to black.
-                                AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+                                AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
 
                                 // Add the forward explanation.
                                 AddExplanationCard(reverseBookmark);
@@ -1159,7 +1074,7 @@ namespace RSPro2Video
                 //
 
                 // Transition to normal video.
-                AddTransitionToNormalVideo(forwardBookmark.Name + ".Last", ProjectSettings.TransitionLengthMajor);
+                AddTransitionToNormalVideo(ProjectSettings.TransitionLengthMajor);
 
                 // Add the normal video between forward bookmarks.
                 AddForwardVideo(ForwardBookmarks, i);
@@ -1268,7 +1183,7 @@ namespace RSPro2Video
                             if (String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
                             {
                                 // Add fade to black.
-                                AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+                                AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
 
                                 // Add the forward explanation.
                                 AddExplanationCard(reverseBookmark);
@@ -1411,7 +1326,7 @@ namespace RSPro2Video
                         if (ProjectSettings.IncludeReverseExplanations && String.IsNullOrWhiteSpace(reverseBookmark.Explanation) == false)
                         {
                             // Add fade to black.
-                            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+                            AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
 
                             // Add the forward explanation.
                             AddExplanationCard(reverseBookmark);
@@ -1423,7 +1338,7 @@ namespace RSPro2Video
                         else
                         {
                             // Add fade to black.
-                            AddTransitionToBlack(TransitionFromFrame, ProjectSettings.TransitionLengthCard);
+                            AddTransitionToBlack(ProjectSettings.TransitionLengthCard);
                         }
 
                         // Add 1/2 second of black.
@@ -1470,8 +1385,11 @@ namespace RSPro2Video
 
             command = AddFfmpegOutputStrings(command, filename);
 
+            // Set the new "transition from" frame for the next transition.
+            TransitionFromFrame = "Black";
+
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.ForwardVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.ForwardVideo, duration, MethodBase.GetCurrentMethod().Name);
         }
 
 
@@ -1503,9 +1421,12 @@ namespace RSPro2Video
                     command = AddFfmpegOutputStrings(command, filename);
 
                     // Create the ffmpeg task for this clipEntry.
-                    retval = CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.CardVideo, duration);
+                    retval = CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.CardVideo, duration, MethodBase.GetCurrentMethod().Name);
                 }
             }
+
+            // Set the new "transition from" frame for the next transition.
+            TransitionFromFrame = "Black";
 
             return retval;
         }
@@ -1538,9 +1459,12 @@ namespace RSPro2Video
                     command = AddFfmpegOutputStrings(command, filename);
 
                     // Create the ffmpeg task for this clipEntry.
-                    retval = CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.CardVideo, duration);
+                    retval = CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.CardVideo, duration, MethodBase.GetCurrentMethod().Name);
                 }
             }
+
+            // Set the new "transition from" frame for the next transition.
+            TransitionFromFrame = "Black";
 
             return retval;
         }
@@ -1567,7 +1491,7 @@ namespace RSPro2Video
             command = AddFfmpegOutputStrings(command, filename);
 
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.ForwardVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.ForwardVideo, duration, MethodBase.GetCurrentMethod().Name);
         }
 
         /// <summary>
@@ -1590,8 +1514,11 @@ namespace RSPro2Video
                 + $"-map [v] -map [a]";
             command = AddFfmpegOutputStrings(command, filename);
 
+            // Set the new "transition from" frame for the next transition.
+            TransitionFromFrame = "Black";
+
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command,  FfmpegTaskSortOrder.CardVideo, duration);
+            return CreateFfmpegTask(filename, command,  FfmpegTaskSortOrder.CardVideo, duration, MethodBase.GetCurrentMethod().Name);
         }
 
         /// <summary>
@@ -1618,17 +1545,19 @@ namespace RSPro2Video
                 + $"-map [v] -map [a]";
             command = AddFfmpegOutputStrings(command, filename);
 
+            // Set the new "transition from" frame for the next transition.
+            TransitionFromFrame = ImageName;
+
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, duration, MethodBase.GetCurrentMethod().Name);
         }
 
         /// <summary>
         /// Adds a transition from the specified image to black.
         /// </summary>
-        /// <param name="ImageName">The image to fade to, without an extension.</param>
         /// <param name="duration">Length in time for the transition.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool AddTransitionToBlack(String ImageName, Double duration)
+        private bool AddTransitionToBlack(Double duration)
         {
             // If the transition length is less than the time of a single frame, return.
             if (duration < 1.0d / FramesPerSecond)
@@ -1637,17 +1566,20 @@ namespace RSPro2Video
             }
 
             // Set the video output filename.
-            String filename = ImageName + "-Black";
+            String filename = TransitionFromFrame + "-Black";
 
             // Create the inner commands for ffmpeg.
-            String command = $"-framerate {FramesPerSecond:0.###############} -loop 1 -i \"{ImageName}.png\" "
+            String command = $"-framerate {FramesPerSecond:0.###############} -loop 1 -i \"{TransitionFromFrame}.png\" "
                 + $"-i \"{RelativePathToWorkingInputVideoFile}\" -t {duration:0.######} "
                 + $"-filter_complex \"[1:a] asetpts=PTS-STARTPTS, volume=0.0 [a]; [0:v] setpts=PTS-STARTPTS, fade=t=out:d={duration:0.######} [v]\" "
                 + $"-map [v] -map [a]";
             command = AddFfmpegOutputStrings(command, filename);
 
+            // Set the new "transition from" frame for the next transition.
+            TransitionFromFrame = "Black";
+
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, duration, MethodBase.GetCurrentMethod().Name);
         }
 
         /// <summary>
@@ -1676,8 +1608,8 @@ namespace RSPro2Video
                     + $"-ss {startTime + duration:0.######} -t {duration:0.######} -i \"{RelativePathToWorkingInputVideoFile}\" "
                     + $"-filter_complex \"[0:a] asetpts=PTS-STARTPTS [a]; [0:v] setpts=PTS-STARTPTS [v]\" "
                     + $"-map [v] -map [a] -progress \"{filename}.progress\" -t {duration:0.######} {OutputInterimSettings} \"{filename}{OutputVideoInterimExtension}\" "
-                    + $"-map 1:v -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{forwardBookmark.Name + ".First.png"}\" "
-                    + $"-map 2:v -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{forwardBookmark.Name + ".Last.png"}\"";
+                    + $"-map 1:v -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{forwardBookmark.Name}.First.png\" "
+                    + $"-map 2:v -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{forwardBookmark.Name}.Last.png\"";
             }
             else
             {
@@ -1692,12 +1624,15 @@ namespace RSPro2Video
                     + $"-ss {startTime + duration:0.######} -i \"{RelativePathToWorkingInputVideoFile}\" "
                     + $"-filter_complex \"[0:a] asetpts=PTS-STARTPTS [a]; [0:v] [1:v] overlay, setpts=PTS-STARTPTS [v]\" "
                     + $"-map [v] -map [a] -progress \"{filename}.progress\" -t {duration:0.######} {OutputInterimSettings} \"{filename}{OutputVideoInterimExtension}\" "
-                    + $"-map 2:v -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{forwardBookmark.Name + ".First.png"}\" "
-                    + $"-map 3:v -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{forwardBookmark.Name + ".Last.png"}\"";
+                    + $"-map 2:v -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{forwardBookmark.Name}.First.png\" "
+                    + $"-map 3:v -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{forwardBookmark.Name}.Last.png\"";
             }
 
+            // Set the new "transition from" frame for the next transition.
+            TransitionFromFrame = $"{forwardBookmark.Name}.Last";
+
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.ForwardBookmarkVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.ForwardBookmarkVideo, duration, MethodBase.GetCurrentMethod().Name);
         }
 
         /// <summary>
@@ -1742,6 +1677,9 @@ namespace RSPro2Video
                     + $"-filter_complex \"[0:a] asetpts=PTS-STARTPTS, volume=0.0, atrim=duration={TransitionLength:0.######} [a]; "
                     + $"[1:v][2:v]xfade=transition={ProjectSettings.XFadeTransitionType}:duration={TransitionLength:0.######}, setpts=PTS-STARTPTS [xsition]; "
                     + $"[xsition][3:v] overlay, setpts=PTS-STARTPTS [v]\" -map [v] -map [a]";
+
+                // Set the new "transition from" frame for the next transition.
+                TransitionFromFrame = TransitionToFrame;
             }
             else if (ProjectSettings.TransitionType == TransitionType.HoldLastFrame)
             {
@@ -1750,6 +1688,8 @@ namespace RSPro2Video
                     + $"-i \"{reverseBookmark.Name}.Text.png\" "
                     + $"-filter_complex \"[0:a] asetpts=PTS-STARTPTS, volume=0.0,atrim=duration={TransitionLength:0.######} [a]; "
                     + $"[1:v][2:v] overlay, setpts=PTS-STARTPTS [v]\" -map [v] -map [a]";
+
+                // TransitionFromFrame has the correct value.
             }
             else
             {
@@ -1759,7 +1699,7 @@ namespace RSPro2Video
             command = AddFfmpegOutputStrings(command, filename);
 
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, TransitionLength);
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, TransitionLength, MethodBase.GetCurrentMethod().Name);
         }
 
         /// <summary>
@@ -1816,8 +1756,11 @@ namespace RSPro2Video
 
             command = AddFfmpegOutputStrings(command, filename);
 
+            // Set the new "transition from" frame for the next transition.
+            TransitionFromFrame = TransitionToFrame;
+
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, TransitionLength);
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, TransitionLength, MethodBase.GetCurrentMethod().Name);
         }
 
         /// <summary>
@@ -1843,17 +1786,41 @@ namespace RSPro2Video
             }
 
             // Create the filename for this video clipEntry.
-            String filename = TransitionFromFrame + ".Text";
+            String filename = TransitionFromFrame + "-" + TransitionToFrame;
+            String command;
 
-            String command = $"-i \"{RelativePathToWorkingInputVideoFile}\" "
-                + $"-framerate {FramesPerSecond:0.###############} -loop 1 -t {TransitionLength:0.######} -i \"{TransitionFromFrame}.png\" "
-                + $"-i \"{reverseBookmark.Name}.Text.png\" "
-                + $"-filter_complex \"[0:a] asetpts=PTS-STARTPTS, volume=0.0,atrim=duration={TransitionLength:0.######} [a]; "
-                + $"[1:v][2:v] overlay, setpts=PTS-STARTPTS [v]\" -map [v] -map [a]";
+            if (ProjectSettings.TransitionType == TransitionType.XFade)
+            {
+                command = $"-i \"{RelativePathToWorkingInputVideoFile}\" "
+                    + $"-framerate {FramesPerSecond:0.###############} -loop 1 -t {TransitionLength:0.######} -i \"{TransitionFromFrame}.png\" "
+                    + $"-framerate {FramesPerSecond:0.###############} -loop 1 -t {TransitionLength:0.######} -i \"{TransitionToFrame}.png\" "
+                    + $"-i \"{reverseBookmark.Name}.Text.png\" "
+                    + $"-filter_complex \"[0:a] asetpts=PTS-STARTPTS, volume=0.0, atrim=duration={TransitionLength:0.######} [a]; "
+                    + $"[1:v][2:v]xfade=transition={ProjectSettings.XFadeTransitionType}:duration={TransitionLength:0.######}, setpts=PTS-STARTPTS [xsition]; "
+                    + $"[xsition][3:v] overlay, setpts=PTS-STARTPTS [v]\" -map [v] -map [a]";
+
+                // Set the new "transition from" frame for the next transition.
+                TransitionFromFrame = TransitionToFrame;
+            }
+            else if (ProjectSettings.TransitionType == TransitionType.HoldLastFrame)
+            {
+                command = $"-i \"{RelativePathToWorkingInputVideoFile}\" "
+                    + $"-framerate {FramesPerSecond:0.###############} -loop 1 -t {TransitionLength:0.######} -i \"{TransitionFromFrame}.png\" "
+                    + $"-i \"{reverseBookmark.Name}.Text.png\" "
+                    + $"-filter_complex \"[0:a] asetpts=PTS-STARTPTS, volume=0.0,atrim=duration={TransitionLength:0.######} [a]; "
+                    + $"[1:v][2:v] overlay, setpts=PTS-STARTPTS [v]\" -map [v] -map [a]";
+
+                // TransitionFromFrame has the correct value.
+            }
+            else
+            {
+                return true;
+            }
+
             command = AddFfmpegOutputStrings(command, filename);
 
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, TransitionLength);
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, TransitionLength, MethodBase.GetCurrentMethod().Name);
         }
 
         private bool AddBackAndForth(Bookmark reverseBookmark)
@@ -1904,7 +1871,7 @@ namespace RSPro2Video
             command = AddFfmpegOutputStrings(command, filename);
 
             // Create the ffmpeg task for this clipEntry.
-            CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, duration);
+            CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, duration, MethodBase.GetCurrentMethod().Name);
 
             // Add the reverse clipEntry.
             return AddReverseVideo(reverseBookmark, reversalNumber, reversalRate);
@@ -1916,7 +1883,7 @@ namespace RSPro2Video
         /// <param name="transitionToFrame">The frame to transition to.</param>
         /// <param name="TransitionLength">Length in time for the transition.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool AddTransitionToNormalVideo(String transitionToFrame, Double TransitionLength)
+        private bool AddTransitionToNormalVideo(Double TransitionLength)
         {
             // If the transition length is less than the time of a single frame, return.
             if (TransitionLength < 1.0d / FramesPerSecond)
@@ -1928,11 +1895,11 @@ namespace RSPro2Video
             if (TransitionFromFrame == "Black")
             {
                 // Use the method that performs this function.
-                return AddTransitionFromBlack(transitionToFrame, TransitionLength);
+                return AddTransitionFromBlack(TransitionToFrame, TransitionLength);
             }
 
             // Set the video output filename.
-            String filename = TransitionFromFrame + "-" + transitionToFrame;
+            String filename = TransitionFromFrame + "-" + TransitionToFrame;
             String command = String.Empty;
 
             // Create the inner commands for ffmpeg.
@@ -1955,8 +1922,11 @@ namespace RSPro2Video
 
             command = AddFfmpegOutputStrings(command, filename);
 
+            // Set the new "transition from" frame for the next transition.
+            TransitionFromFrame = TransitionToFrame;
+
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, TransitionLength);
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, TransitionLength, MethodBase.GetCurrentMethod().Name);
         }
 
         private bool AddTransitionToNextForward(int index, double TransitionLength)
@@ -1996,6 +1966,9 @@ namespace RSPro2Video
                     + $"-filter_complex \"[0:a] asetpts=PTS-STARTPTS, volume=0.0, atrim=duration={TransitionLength:0.######} [a]; "
                     + $"[1:v] [2:v] xfade=transition={ProjectSettings.XFadeTransitionType}:duration={TransitionLength:0.######}, setpts=PTS-STARTPTS [v];\" "
                     + $"-map [v] -map [a]";
+
+                // Set the new "transition from" frame for the next transition.
+                TransitionFromFrame = TransitionToFrame;
             }
             else if (ProjectSettings.TransitionType == TransitionType.HoldLastFrame)
             {
@@ -2003,52 +1976,14 @@ namespace RSPro2Video
                     + $"-framerate {FramesPerSecond:0.###############} -loop 1 -t {TransitionLength:0.######} -i \"{TransitionFromFrame}.png\" "
                     + $"-filter_complex \"[0:a] asetpts=PTS-STARTPTS, volume=0.0, atrim=duration={TransitionLength:0.######} [a]; "
                     + $"[1:v] setpts=PTS-STARTPTS [v]\" -map [v] -map [a]";
+
+                // TransitionFromFrame has the correct value.
             }
 
             command = AddFfmpegOutputStrings(command, filename);
 
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, TransitionLength);
-
-            //// Create the inner commands for ffmpeg.
-            //// -framerate {0}                           # Frame rate.
-            //// -loop 1 -t {3:0.######} -i \"{1}.png\"   # Loop this first input image for {3} seconds.
-            //// -loop 1 -t {3:0.######} -i \"{2}.png\"   # Loop this second input iamge for {3} seconds.
-            //// -i \"{4}\"                               # Use this input stream (will be used to create silent audio channel).
-            //// -filter_complex                          # Pass the following string to the ffmpeg filter_complex.
-            //// [2:a]                                    # From the third input, select the audio channel.
-            //// volume=0.0,                              # Multiply the audio value by 0 (silence).
-            //// atrim=duration={2:0.######}              # Set the audio duration to {3}.
-            //// [a];                                     # ClipFilename this stream "a" for audio.
-            //// [1]format=yuva444p,                      # Format the first image as yuva444p.
-            //// fade=d={3:0.######}:                     # Set the fade duration.
-            //// t=in:                                    # Set the fade type to "fade in".
-            //// alpha=1,                                 # Fade only the alpha channel.
-            //// setpts=                                  # Set the presentation timestamp
-            //// PTS-STARTPTS/TB                          # PTS is he presentation timestamp in input
-            ////                                          #   STARTPTS is the PTS of the first frame.
-            ////                                          #   TB is the timebase of the input timestamps.
-            //// [f0];                                    # ClipFilename this stream "f0".
-            //// [0][f0]overlay,                          # Overlay stream 0 and f0.
-            //// format=yuv420p                           # Format the overlayed video as yuv420p
-            //// [v]\"                                    # ClipFilename the overlayed video "v" for video.
-            //// -map \"[v]\"                             # Put the video stream into stream 0:0.
-            //// -map \"[a]\"                             # Put the audio stream into stream 0:1.
-            //String command = String.Format("-framerate {0} -loop 1 -t {3:0.######} -i \"{1}.png\" -loop 1 -t {3:0.######} -i \"{2}.png\" -i \"{4}\"  -filter_complex \"[2:a]volume=0.0,atrim=duration={3:0.######}[a];[1]format=yuva444p,fade=d={3:0.######}:t=in:alpha=1,setpts=PTS-STARTPTS/TB[f0]; [0][f0]overlay,format=yuv420p[v]\" -map \"[v]\" -map \"[a]\"",
-            //    FramesPerSecond,
-            //    TransitionFromFrame,
-            //    TransitionToFrame,
-            //    TransitionLength,
-            //    RelativePathToWorkingInputVideoFile);
-            //command = AddFfmpegOutputStrings(command, filename);
-
-            //// Create the ffmpeg task for this clipEntry.
-            //CreateFfmpegTask(filename,
-            //    command, 
-            //    FfmpegTaskSortOrder.TransitionVideo, 
-            //    TransitionLength);
-
-            //return true;
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.TransitionVideo, TransitionLength, MethodBase.GetCurrentMethod().Name);
         }
 
         /// <summary>
@@ -2097,6 +2032,7 @@ namespace RSPro2Video
                 // There is no need to add a time, since we are taking the video file from endTime of this bookmark to the end.
                 command = $"-ss {endTime:0.######} -i \"{RelativePathToWorkingInputVideoFile}\"";
 
+                // Set the new "transition from" frame for the next transition.
                 TransitionFromFrame = "v.Last";
             }
 
@@ -2104,7 +2040,7 @@ namespace RSPro2Video
             command = AddFfmpegOutputStrings(command, filename);
 
             // Create the ffmpeg task for this clipEntry.
-            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.ForwardVideo, duration);
+            return CreateFfmpegTask(filename, command, FfmpegTaskSortOrder.ForwardVideo, duration, MethodBase.GetCurrentMethod().Name);
         }
     }
 }

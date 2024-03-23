@@ -53,9 +53,8 @@ namespace RSPro2Video
         public double StartTime { get; set; }
 
         /// <summary>
-        /// Constructor. Creates a clip entry with the specific filename and a start time of zero.
+        /// The C# method that created this clip.
         /// </summary>
-        /// <param name="name">The filename of the clip.</param>
         public ClipEntry(String name)
         {
             this.ClipFilename = name;

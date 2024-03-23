@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -499,6 +500,14 @@ namespace RSPro2Video
             }
             String s = sb.ToString();
 
+            StringBuilder sb2 = new StringBuilder();
+            List <FFmpegTask> taskList = FFmpegTasks.OrderBy(t => t.VideoFilenames[t.VideoFilenames.Count - 1]).ToList();
+            foreach (FFmpegTask task in taskList)
+            {
+                sb2.Append($"\"{task.VideoFilenames[task.VideoFilenames.Count - 1]}\", \"{task.CreatorMethod}\"\r\n");
+            }
+            String s2 = sb2.ToString();
+
             // Remove the temp directory.
             RemoveTemp_DirDirectory();
         }
@@ -628,7 +637,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
             // Start ffmpeg to extract the frames.
             process.Start();
@@ -637,7 +646,7 @@ namespace RSPro2Video
             String FfmpegOutput = process.StandardError.ReadToEnd();
 
             // Log the ffmpeg output.
-            File.AppendAllText(LogFile, FfmpegOutput);
+            WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -660,8 +669,7 @@ namespace RSPro2Video
             // Get the first and last frame of the working video.
             if (CreateFirstAndLastFrameFromClip(RelativePathToWorkingInputVideoFileWithoutExtension, 
                 clipDuration.Duration, 
-                Path.GetExtension(RelativePathToWorkingInputVideoFile),
-                ProjectSettings.VideoDelay) == false)
+                Path.GetExtension(RelativePathToWorkingInputVideoFile)) == false)
             {
                 return false;
             }

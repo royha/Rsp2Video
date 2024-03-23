@@ -32,6 +32,11 @@ namespace RSPro2Video
         public List<String> FFmpegCommands { get; set; }
 
         /// <summary>
+        /// The C# method where this task was created.
+        /// </summary>
+        public String CreatorMethod { get; set; }
+
+        /// <summary>
         /// Parameterless constructor.
         /// </summary>
         public FFmpegTask()
@@ -43,12 +48,15 @@ namespace RSPro2Video
         /// Constructor for a single ffmpeg command. Used for forward bookmark videos, forward videos, transition videos and 
         /// card videos.
         /// </summary>
-        /// <param name="phase"></param>
         /// <param name="sortOrder></param>
         /// <param name="estimatedDuration"></param>
         /// <param name="videoFilenames"></param>
         /// <param name="ffmpegCommand"></param>
-        public FFmpegTask(FfmpegTaskSortOrder sortOrder, double estimatedDuration, string videoFilename, String ffmpegCommand)
+        public FFmpegTask(FfmpegTaskSortOrder sortOrder, 
+            double estimatedDuration, 
+            String videoFilename, 
+            String ffmpegCommand, 
+            String creatorMethod)
         {
             this.SortOrder = sortOrder;
             this.EstimatedDuration = estimatedDuration;
@@ -60,6 +68,7 @@ namespace RSPro2Video
             {
                 ffmpegCommand
             };
+            this.CreatorMethod = creatorMethod;
         }
 
         /// <summary>
@@ -69,17 +78,21 @@ namespace RSPro2Video
         /// The next two commands in the List ffmpegCommands extracts frames as .PNG files, then assembles the reversed .PNG
         /// file sequence and combines it with the reversed audio.
         /// </summary>
-        /// <param name="phase"></param>
         /// <param name="sortOrder></param>
         /// <param name="estimatedDuration"></param>
         /// <param name="videoFilenames"></param>
         /// <param name="ffmpegCommands"></param>
-        public FFmpegTask(FfmpegTaskSortOrder sortOrder, double estimatedDuration, List<String> videoFilenames, List<String> ffmpegCommands)
+        public FFmpegTask(FfmpegTaskSortOrder sortOrder, 
+            double estimatedDuration, 
+            List<String> videoFilenames, 
+            List<String> ffmpegCommands, 
+            String creatorMethod)
         {
             this.SortOrder = sortOrder;
             this.EstimatedDuration = estimatedDuration;
             this.VideoFilenames = videoFilenames;
             this.FFmpegCommands = ffmpegCommands;
+            this.CreatorMethod = creatorMethod;
         }
     }
 

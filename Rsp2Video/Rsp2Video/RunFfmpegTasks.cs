@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -25,7 +26,10 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunAllFfmpegTasks()
         {
-            int ffmpegThreads = 0;
+            int maxDegree1, ffmpegThreads1;
+            int maxDegree2, ffmpegThreads2;
+            int maxDegree3, ffmpegThreads3;
+            int maxDegree4, ffmpegThreads4;
 
             // Get a list of reverse video pass 1 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
             List<FFmpegTask> reverseVideoPass1Tasks = FFmpegTasks
@@ -35,8 +39,25 @@ namespace RSPro2Video
                 .ThenByDescending(t => t.EstimatedDuration)
                 .ToList();
 
-            // Run all of the in order.
-            foreach (FFmpegTask ffmpegTask in reverseVideoPass1Tasks)
+            // Alter CPU usage if there are minterpolate tasks.
+            if (reverseVideoPass1Tasks[0].SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate)
+            {
+                maxDegree1 = 6; ffmpegThreads1 = 4;
+                maxDegree2 = 4; ffmpegThreads2 = 6;
+                maxDegree3 = 4; ffmpegThreads3 = 6;
+                maxDegree4 = 4; ffmpegThreads4 = 6;
+            }
+            else
+            {
+                maxDegree1 = 4; ffmpegThreads1 = 6;
+                maxDegree2 = 4; ffmpegThreads2 = 6;
+                maxDegree3 = 4; ffmpegThreads3 = 6;
+                maxDegree4 = 4; ffmpegThreads4 = 6;
+            }
+
+            // Run all of the tasks in order.
+            //foreach (FFmpegTask ffmpegTask in reverseVideoPass1Tasks)
+            Parallel.ForEach(reverseVideoPass1Tasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree1 }, ffmpegTask =>
             {
                 Boolean retval = true;
 
@@ -44,7 +65,7 @@ namespace RSPro2Video
                 {
                     case FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate:
                     case FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate:
-                        retval = RunReverseVideoTaskPass1(ffmpegThreads, ffmpegTask);
+                        retval = RunReverseVideoTaskPass1(ffmpegThreads1, ffmpegTask);
                         break;
                 }
 
@@ -52,7 +73,8 @@ namespace RSPro2Video
                 {
                     AddToFailedClips(ffmpegTask);
                 }
-            }
+            //}
+            });
 
             // Get a list of reverse video pass 2 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
             // Note: These are the memory intensive tasks.
@@ -62,15 +84,16 @@ namespace RSPro2Video
                 .ThenByDescending(t => t.EstimatedDuration)
                 .ToList();
 
-            // Run all of the in order.
-            foreach (FFmpegTask ffmpegTask in reverseVideoPass2Tasks)
+            // Run all of the tasks in order.
+            //foreach (FFmpegTask ffmpegTask in reverseVideoPass2Tasks)
+            Parallel.ForEach(reverseVideoPass2Tasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree2 }, ffmpegTask =>
             {
                 Boolean retval = true;
 
                 switch (ffmpegTask.SortOrder)
                 {
                     case FfmpegTaskSortOrder.ReverseVideoPass2:
-                        retval = RunReverseVideoTaskPass2(ffmpegThreads, ffmpegTask);
+                        retval = RunReverseVideoTaskPass2(ffmpegThreads2, ffmpegTask);
                         break;
                 }
 
@@ -78,7 +101,8 @@ namespace RSPro2Video
                 {
                     AddToFailedClips(ffmpegTask);
                 }
-            }
+            //}
+            });
 
             // Get a list of ForwardBookmark and forward clips, ordered by SortOrder, followed by EstimatedDuration in decending order.
             List<FFmpegTask> phaseThreeTasks = FFmpegTasks
@@ -88,19 +112,20 @@ namespace RSPro2Video
                 .ThenByDescending(t => t.EstimatedDuration)
                 .ToList();
 
-            // Run all of the Phase 2 tasks in order.
-            foreach (FFmpegTask ffmpegTask in phaseThreeTasks)
+            // Run all of the Phase 3 tasks in order.
+            //foreach (FFmpegTask ffmpegTask in phaseThreeTasks)
+            Parallel.ForEach(phaseThreeTasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree3 }, ffmpegTask =>
             {
                 Boolean retval = true;
 
                 switch (ffmpegTask.SortOrder)
                 {
                     case FfmpegTaskSortOrder.ForwardBookmarkVideo:
-                        retval = RunForwardBookmarkVideoTask(ffmpegThreads, ffmpegTask);
+                        retval = RunForwardBookmarkVideoTask(ffmpegThreads3, ffmpegTask);
                         break;
 
                     case FfmpegTaskSortOrder.ForwardVideo:
-                        retval = RunForwardVideoTask(ffmpegThreads, ffmpegTask);
+                        retval = RunForwardVideoTask(ffmpegThreads3, ffmpegTask);
                         break;
                 }
 
@@ -108,9 +133,10 @@ namespace RSPro2Video
                 {
                     AddToFailedClips(ffmpegTask);
                 }
-            }
+            //}
+            });
 
-            // Get a list of Phase 3 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
+            // Get a list of Phase 4 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
             List<FFmpegTask> phaseFourTasks = FFmpegTasks
                 .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.CardVideo
                     || f.SortOrder == FfmpegTaskSortOrder.TransitionVideo))
@@ -118,19 +144,20 @@ namespace RSPro2Video
                 .ThenByDescending(t => t.EstimatedDuration)
                 .ToList();
 
-            // Run all of the Phase 3 tasks in order.
-            foreach (FFmpegTask ffmpegTask in phaseFourTasks)
+            // Run all of the Phase 4 tasks in order.
+            //foreach (FFmpegTask ffmpegTask in phaseFourTasks)
+            Parallel.ForEach(phaseFourTasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree4 }, ffmpegTask =>
             {
                 Boolean retval = true;
 
                 switch (ffmpegTask.SortOrder)
                 {
                     case FfmpegTaskSortOrder.CardVideo:
-                        retval = RunCardVideoTask(ffmpegThreads, ffmpegTask);
+                        retval = RunCardVideoTask(ffmpegThreads4, ffmpegTask);
                         break;
 
                     case FfmpegTaskSortOrder.TransitionVideo:
-                        retval = RunTransitionVideoTask(ffmpegThreads, ffmpegTask);
+                        retval = RunTransitionVideoTask(ffmpegThreads4, ffmpegTask);
                         break;
                 }
 
@@ -138,7 +165,8 @@ namespace RSPro2Video
                 {
                     AddToFailedClips(ffmpegTask);
                 }
-            }
+            //}
+            });
 
             AfterAllFfmpegTasks();
 
@@ -219,7 +247,7 @@ namespace RSPro2Video
                         }
                         catch (Exception e)
                         {
-                            File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to copy {clipToDuplicate.Key} to {destinationFfilename}\r\nError message: {e.Message}\r\n\r\n");
+                            WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to copy {clipToDuplicate.Key} to {destinationFfilename}\r\nError message: {e.Message}\r\n\r\n");
 
                             // An error occurred. Remove the file in error from the list of video files to include in the video.
                             for (int i = 0; i < VideoOutputs[VideoOutputIndex].Clips.Count; ++i)
@@ -234,7 +262,7 @@ namespace RSPro2Video
                 }
                 else
                 {
-                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: File does not exist when trying to copy {clipToDuplicate.Key}.\r\n\r\n");
+                    WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: File does not exist when trying to copy {clipToDuplicate.Key}.\r\n\r\n");
                 }
             }
         }
@@ -267,7 +295,7 @@ namespace RSPro2Video
                     else
                     {
                         // If the clip is not in the duration list, log an error and do not add it to the new list.
-                        File.AppendAllText(LogFile, $"\r\n\r\n***Error: ClipDuration does not contain an entry for \"{clip.ClipFilename}\".\r\n\r\n");
+                        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: ClipDuration does not contain an entry for \"{clip.ClipFilename}\".\r\n\r\n");
                     }
                 }
 
@@ -307,7 +335,7 @@ namespace RSPro2Video
                 try { File.Move(clipEntry.ClipFilename, randomFileName); }
                 catch (Exception e)
                 {
-                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to rename {clipEntry.ClipFilename} to {randomFileName}, {e.Message}\r\n\r\n");
+                    WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to rename {clipEntry.ClipFilename} to {randomFileName}, {e.Message}\r\n\r\n");
                     return false;
                 }
 
@@ -321,7 +349,7 @@ namespace RSPro2Video
                 try { File.Delete(randomFileName); }
                 catch (Exception e)
                 {
-                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {randomFileName}, {e.Message}\r\n\r\n");
+                    WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to delete {randomFileName}, {e.Message}\r\n\r\n");
                     return false;
                 }
             }
@@ -369,18 +397,22 @@ namespace RSPro2Video
         public void AddToFailedClips(FFmpegTask ffmpegTask)
         {
             // Log the error.
-            File.AppendAllText(LogFile, "\r\n\r\n***Error creatinging the following clips:\r\n");
+            StringBuilder sb = new StringBuilder();
+            sb.Append("***Error creatinging the following clips:\r\n");
 
             // Write the error to the log and add to the list.
+
             foreach (String filename in ffmpegTask.VideoFilenames)
             {
-                File.AppendAllText(LogFile, filename);
-                File.AppendAllText(LogFile, "\r\n");
+                sb.Append(filename);
+                sb.Append("\r\n");
 
                 FailedClips.Add(filename);
             }
 
-            File.AppendAllText(LogFile, "\r\n");
+            sb.Append("\r\n");
+
+            WriteLog(MethodBase.GetCurrentMethod().Name, sb.ToString());
         }
 
         /// <summary>
@@ -627,20 +659,22 @@ namespace RSPro2Video
             try { progressFileContents = File.ReadAllText(progressFile); }
             catch (Exception e)
             {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error opening {progressFile}. {e.Message}\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error opening {progressFile}. {e.Message}\r\n\r\n");
                 return new ClipDuration(-1, -1.0d);
             }
 
             // Log the .progress file.
-            File.AppendAllText(LogFile, $"{progressFile}:\r\n");
-            File.AppendAllText(LogFile, progressFileContents);
-            File.AppendAllText(LogFile, "\r\n");
+            StringBuilder sb = new StringBuilder();
+            sb.Append($"{progressFile}:\r\n");
+            sb.Append(progressFileContents);
+            sb.Append("\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, sb.ToString());
 
             // Find the last frame count.
             int i = progressFileContents.LastIndexOf(searchString);
             if (i < 0)
             {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to find frame count in {progressFile}. {progressFileContents}\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to find frame count in {progressFile}. {progressFileContents}\r\n\r\n");
                 return new ClipDuration(-1, -1.0d);
             }
 
@@ -649,7 +683,7 @@ namespace RSPro2Video
             frameCountString = frameCountString.Substring(0, frameCountString.IndexOf('\n'));
             if (Int32.TryParse(frameCountString, out int frameCount) == false)
             {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Error parsing frame count in {progressFile}. {progressFileContents}\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Error parsing frame count in {progressFile}. {progressFileContents}\r\n\r\n");
                 return new ClipDuration(-1, -1.0d);
             }
             double duration = Math.Round((double)frameCount / FramesPerSecond, 15);
@@ -657,7 +691,7 @@ namespace RSPro2Video
             // Store the reverse video clip duration.
             if (ClipDuration.TryAdd($"{videoFilename}{OutputVideoInterimExtension}", duration) == false)
             {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {videoFilename}{OutputVideoInterimExtension} already exists in ClipDuration.\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Video file {videoFilename}{OutputVideoInterimExtension} already exists in ClipDuration.\r\n\r\n");
                 return new ClipDuration(-1, -1.0d);
             }
 
@@ -675,8 +709,7 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean CreateFirstAndLastFrameFromClip(string videoFilename, 
             double duration, 
-            String fileExtension = null, 
-            double firstFrameOffeset = 0.0d)
+            String fileExtension = null)
         {
             // Some files, the source file in particular, may not have the same file extension as OutputVideoInterimExtension.
             String videoFilenameWithExtension = (fileExtension == null) ? videoFilename + OutputVideoInterimExtension : videoFilename + fileExtension;
@@ -690,7 +723,7 @@ namespace RSPro2Video
             try { diFrameStorageDirectory = Directory.CreateDirectory(frameStorageDirectory); }
             catch (Exception e)
             {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to create directory {frameStorageDirectory}, {e.Message}\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to create directory {frameStorageDirectory}, {e.Message}\r\n\r\n");
                 return false;
             }
 
@@ -745,7 +778,7 @@ namespace RSPro2Video
                 try { File.Delete(lastImageFilename); }
                 catch (Exception e)
                 {
-                    File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {lastImageFilename}, {e.Message}\r\n\r\n");
+                    WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to delete {lastImageFilename}, {e.Message}\r\n\r\n");
                     return false;
                 }
             }
@@ -755,7 +788,7 @@ namespace RSPro2Video
             try { File.Move(Path.Combine(frameStorageDirectory, imageFiles[imageFiles.Length - 1]), lastImageFilename); }
             catch (Exception e)
             {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {lastImageFilename}, {e.Message}\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to delete {lastImageFilename}, {e.Message}\r\n\r\n");
                 return false;
             }
 
@@ -763,7 +796,7 @@ namespace RSPro2Video
             try { diFrameStorageDirectory.Delete(true); }
             catch
             {
-                File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete directory {frameStorageDirectory}\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to delete directory {frameStorageDirectory}\r\n\r\n");
                 return false;
             }
 
@@ -773,7 +806,7 @@ namespace RSPro2Video
             // Create the ffmpeg command to write the .First.png file.
             // TODO: Single first frame:
             // ffmpeg -y -hide_banner -i "v.mp4" -pix_fmt rgb48 -an -q:v 1 -imageFiles:v 1 "output.First.png" 
-            String getFirst = $"-y -hide_banner -ss {firstFrameOffeset / FramesPerSecond} -i \"{videoFilenameWithExtension}\" "
+            String getFirst = $"-y -hide_banner -i \"{videoFilenameWithExtension}\" "
                 + $"-pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename}.First.png\"";
 
             // Run the ffmpeg command.
@@ -806,7 +839,7 @@ namespace RSPro2Video
         //    try { diPngDirectory = Directory.CreateDirectory(PngDirectory); }
         //    catch (Exception e)
         //    {
-        //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to create directory {PngDirectory}, {e.Message}\r\n\r\n");
+        //        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to create directory {PngDirectory}, {e.Message}\r\n\r\n");
         //        return false;
         //    }
 
@@ -827,7 +860,7 @@ namespace RSPro2Video
         //        try { File.Delete(imageFilename); }
         //        catch (Exception e)
         //        {
-        //            File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
+        //            WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
         //            return false;
         //        }
         //    }
@@ -835,7 +868,7 @@ namespace RSPro2Video
         //    try { File.Move(Path.Combine(PngDirectory, newFrames[newFrames.Length - 1]), imageFilename); }
         //    catch (Exception e)
         //    {
-        //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
+        //        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
         //        return false;
         //    }
 
@@ -847,7 +880,7 @@ namespace RSPro2Video
         //        try { File.Delete(imageFilename); }
         //        catch (Exception e)
         //        {
-        //            File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
+        //            WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
         //            return false;
         //        }
         //    }
@@ -855,7 +888,7 @@ namespace RSPro2Video
         //    try { File.Move(Path.Combine(PngDirectory, newFrames[0]), imageFilename); }
         //    catch (Exception e)
         //    {
-        //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
+        //        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to delete {imageFilename}, {e.Message}\r\n\r\n");
         //        return false;
         //    }
 
@@ -863,14 +896,14 @@ namespace RSPro2Video
         //    try { diPngDirectory.Delete(true); }
         //    catch
         //    {
-        //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Unable to delete directory {PngDirectory}\r\n\r\n");
+        //        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Unable to delete directory {PngDirectory}\r\n\r\n");
         //        // return false; 
         //    }
 
         //    // Store the reverse video clip duration.
         //    if (ClipDuration.TryAdd($"{ffmpegTask.VideoFilenames}{OutputVideoInterimExtension}", (double)newFrames.Length * FramesPerSecond) == false)
         //    {
-        //        File.AppendAllText(LogFile, $"\r\n\r\n***Error: Video file {ffmpegTask.VideoFilenames}{OutputVideoInterimExtension} already exists in ClipDuration.\r\n\r\n");
+        //        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Video file {ffmpegTask.VideoFilenames}{OutputVideoInterimExtension} already exists in ClipDuration.\r\n\r\n");
         //        return false;
         //    }
 
@@ -904,7 +937,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg FfmpegCommand line options.
-            File.AppendAllText(LogFile, $"\r\n\r\n***Command line: {process.StartInfo.FileName} {process.StartInfo.Arguments}\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"***Command line: {process.StartInfo.FileName} {process.StartInfo.Arguments}\r\n\r\n");
 
             // Start ffmpeg to extract the imageFiles.
             process.Start();
@@ -913,7 +946,7 @@ namespace RSPro2Video
             String FfmpegOutput = process.StandardError.ReadToEnd();
 
             // Log the ffmpeg output.
-            File.AppendAllText(LogFile, FfmpegOutput);
+            WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -923,7 +956,7 @@ namespace RSPro2Video
             // Return success or failure.
             if (!(ExitCode == 0))
             {
-                File.AppendAllText(LogFile, $"Error: ffmpeg exit code {ExitCode}\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"Error: ffmpeg exit code {ExitCode}\r\n");
                 return false;
             }
 
@@ -953,7 +986,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg FfmpegCommand line options.
-            File.AppendAllText(LogFile, $"\r\n\r\n***Command line: {process.StartInfo.FileName} " 
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"***Command line: {process.StartInfo.FileName} " 
                 + $"{process.StartInfo.Arguments}\r\n\r\n");
 
             // Start ffmpeg to extract the imageFiles.
@@ -963,7 +996,7 @@ namespace RSPro2Video
             String FfmpegOutput = process.StandardError.ReadToEnd();
 
             // Log the ffmpeg output.
-            File.AppendAllText(LogFile, FfmpegOutput);
+            WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -973,11 +1006,21 @@ namespace RSPro2Video
             // Return success or failure.
             if (!(ExitCode == 0))
             {
-                File.AppendAllText(LogFile, $"Error: ffmpeg exit code {ExitCode}\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"Error: ffmpeg exit code {ExitCode}\r\n");
                 return false;
             }
 
             return true;
+        }
+
+        void WriteLog(String CreatorMethod, String LogEntry)
+        {
+            String entry = $"Thread={Thread.CurrentThread.ManagedThreadId}, {CreatorMethod}: {LogEntry}\r\n";
+
+            lock (LogFileLock)
+            { 
+                File.AppendAllText(LogFile, entry);
+            }
         }
     }
 }

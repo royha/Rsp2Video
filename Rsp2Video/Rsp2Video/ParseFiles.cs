@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -276,7 +277,7 @@ namespace RSPro2Video
             String LogEntry = String.Format("***Log start time: {0}\r\nFilename: {1}\r\n\r\n",
                 DateTime.Now.ToString(), ProjectSettings.SourceVideoFile);
 
-            File.AppendAllText(LogFile, LogEntry);
+            WriteLog(MethodBase.GetCurrentMethod().Name, LogEntry);
 
             return true;
         }
@@ -1508,7 +1509,7 @@ namespace RSPro2Video
             };
 
             // Log the ffprobe command line options.
-            File.AppendAllText(LogFile, String.Format("\r\n\r\n***Command line: \"{0}\" {1}\r\n\r\n",
+            WriteLog(MethodBase.GetCurrentMethod().Name, String.Format("\r\n\r\n***Command line: \"{0}\" {1}\r\n\r\n",
                 process.StartInfo.FileName, process.StartInfo.Arguments));
 
             // Start ffmpeg to extract the frames.
@@ -1518,7 +1519,7 @@ namespace RSPro2Video
             String FfprobeOutput = process.StandardOutput.ReadToEnd();
 
             // Log the ffprobe output.
-            File.AppendAllText(LogFile, FfprobeOutput);
+            WriteLog(MethodBase.GetCurrentMethod().Name, FfprobeOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();

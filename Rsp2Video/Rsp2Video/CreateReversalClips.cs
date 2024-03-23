@@ -10,6 +10,7 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -105,7 +106,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
             // Run ffmpeg to create the .wav file.
             process.Start();
@@ -114,7 +115,7 @@ namespace RSPro2Video
             String FfmpegOutput = process.StandardError.ReadToEnd();
 
             // Log the ffmpeg output.
-            File.AppendAllText(LogFile, FfmpegOutput);
+            WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
             
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -148,7 +149,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
             // Run ffmpeg to create the .wav file.
             process.Start();
@@ -157,7 +158,7 @@ namespace RSPro2Video
             String FfmpegOutput = process.StandardError.ReadToEnd();
 
             // Log the ffmpeg output.
-            File.AppendAllText(LogFile, FfmpegOutput);
+            WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
             
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -236,7 +237,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
             // Start ffmpeg to extract the frames.
             process.Start();
@@ -245,7 +246,7 @@ namespace RSPro2Video
             String FfmpegOutput = process.StandardError.ReadToEnd();
 
             // Log the ffmpeg output.
-            File.AppendAllText(LogFile, FfmpegOutput);
+            WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -343,7 +344,7 @@ namespace RSPro2Video
         //    };
 
         //    // Log the ffmpeg command line options.
-        //    File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+        //    WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
         //    // Start ffmpeg to extract the frames.
         //    process.Start();
@@ -352,7 +353,7 @@ namespace RSPro2Video
         //    String FfmpegOutput = process.StandardError.ReadToEnd();
 
         //    // Log the ffmpeg output.
-        //    File.AppendAllText(LogFile, FfmpegOutput);
+        //    WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
         //    // Wait here for the process to exit.
         //    process.WaitForExit();
@@ -446,7 +447,7 @@ namespace RSPro2Video
             String audioFiltergraph1;
             String interpolationFiltergraph1 = String.Empty;
             // String reverseAudioFiltergraph = "[SlowAudio]areverse[a]";
-            Boolean minterpolationActive = false;
+            Boolean performingMinterpolation = false;
 
             //
             // Audio filtergraphs.
@@ -507,7 +508,7 @@ namespace RSPro2Video
             }
             else
             {
-                minterpolationActive = true;
+                performingMinterpolation = true;
 
                 switch (ProjectSettings.MotionInterpolation)
                 {
@@ -594,7 +595,7 @@ namespace RSPro2Video
 
             // Add the task to the list of tasks
             FfmpegTaskSortOrder sortOrder;
-            if (minterpolationActive)
+            if (performingMinterpolation)
             {
                 sortOrder = FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate;
             }
@@ -603,8 +604,12 @@ namespace RSPro2Video
                 sortOrder = FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate;
             }
 
-            CreateFfmpegTask(videoFilename1, command1, sortOrder, calculatedFrameBasedDuration, false);
-            CreateFfmpegTask(videoFilename2, command2, FfmpegTaskSortOrder.ReverseVideoPass2, calculatedFrameBasedDuration, true);
+            CreateFfmpegTask(videoFilename1, command1, sortOrder, calculatedFrameBasedDuration, 
+                MethodBase.GetCurrentMethod().Name, false);
+            CreateFfmpegTask(videoFilename2, command2, FfmpegTaskSortOrder.ReverseVideoPass2, calculatedFrameBasedDuration, 
+                MethodBase.GetCurrentMethod().Name, true);
+
+            TransitionFromFrame = $"{videoFilename1}.Last";
 
             return true;
         }
@@ -667,7 +672,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
             // Start ffmpeg to extract the frames.
             process.Start();
@@ -676,7 +681,7 @@ namespace RSPro2Video
             String FfmpegOutput = process.StandardError.ReadToEnd();
 
             // Log the ffmpeg output.
-            File.AppendAllText(LogFile, FfmpegOutput);
+            WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -719,7 +724,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
             // Start ffmpeg to extract the frames.
             process.Start();
@@ -728,7 +733,7 @@ namespace RSPro2Video
             String FfmpegOutput = process.StandardError.ReadToEnd();
 
             // Log the ffmpeg output.
-            File.AppendAllText(LogFile, FfmpegOutput);
+            WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -768,7 +773,7 @@ namespace RSPro2Video
                 };
 
                 // Log the ffmpeg command line options.
-                File.AppendAllText(LogFile, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
                 // Start ffmpeg to extract the frames.
                 process.Start();
@@ -777,7 +782,7 @@ namespace RSPro2Video
                 String FfmpegOutput = process.StandardError.ReadToEnd();
 
                 // Log the ffmpeg output.
-                File.AppendAllText(LogFile, FfmpegOutput);
+                WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
                 // Wait here for the process to exit.
                 process.WaitForExit();
@@ -818,8 +823,9 @@ namespace RSPro2Video
             String forwardOverlayText;
             String reverseOverlayText;
 
-            foreach (Bookmark forwardBookmark in ForwardBookmarks)
-            //Parallel.ForEach(ForwardBookmarks, forwardBookmark =>
+            //foreach (Bookmark forwardBookmark in ForwardBookmarks)
+            Parallel.ForEach(ForwardBookmarks, new ParallelOptions { MaxDegreeOfParallelism = 2 },
+                forwardBookmark =>
             {
                 // For Forward and Reverse, create a text overly from the forward bookmark text.
                 if (ProjectSettings.BookmarkTypeFnR)
@@ -912,8 +918,8 @@ namespace RSPro2Video
                         CreateCard(reverseBookmark.Name + ".Explanation.png", reverseBookmark.Explanation);
                     }
                 }
-            }
-            //});
+            //}
+            });
 
             return true;
         }
