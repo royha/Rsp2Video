@@ -59,10 +59,9 @@ namespace RSPro2Video
         IProgress<string> Progress;                                     // Allows the long-running process to update the UI.
         readonly double[] LastFrameSeekBack = { 0.15d, 0.25d, 0.5d, 1d, 3d };    // The -sseof value when seeking the last frame of a clip.
 
-        String SoxApp = @"C:\Program Files (x86)\sox-14-4-2\sox.exe";
+        // String SoxApp = @"C:\Program Files (x86)\sox-14-4-2\sox.exe";
         String FfmpegApp = @"C:\Program Files\ffmpeg\bin\ffmpeg.exe";
         String FfmprobeApp = @"C:\Program Files\ffmpeg\bin\ffprobe.exe";
-        String QmeltApp = @"C:\Program Files\Shotcut\qmelt.exe";
 
         String TEMP_DIR = "_tmp";                                       // The temp working directory to store intermediate files.
         String FRAMES_DIR = "_frames";                                  // The temp directory to store .png frames.
@@ -133,5 +132,13 @@ namespace RSPro2Video
         String[] VideoQualityString = { "Fast / Draft quality", "Slow / YouTube upload quality", "Slowest / High quality" };
 
         Object LogFileLock = new Object();
+
+        // %%% TimerStuff
+        int maxDegree1, ffmpegThreads1;
+        int maxDegree2, ffmpegThreads2;
+        int maxDegree3, ffmpegThreads3;
+        int maxDegree4, ffmpegThreads4;
+
+        StringBuilder TaskTimerData = new StringBuilder();
     }
 }

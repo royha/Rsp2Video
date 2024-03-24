@@ -99,8 +99,6 @@ namespace RSPro2Video
 
             Boolean ffmpegExists = false;
             Boolean ffprobeExists = false;
-            Boolean qmeltExists = false;
-            Boolean soxExists = false;
 
             FfmpegApp = Path.Combine(ProgramFiles, "ffmpeg\\bin", "ffmpeg.exe");
             ffmpegExists = File.Exists(FfmpegApp);
@@ -108,38 +106,29 @@ namespace RSPro2Video
             FfmprobeApp = Path.Combine(ProgramFiles, "ffmpeg\\bin", "ffprobe.exe");
             ffprobeExists = File.Exists(FfmprobeApp);
 
-            QmeltApp = Path.Combine(ProgramFiles, "Shotcut", "qmelt.exe");
-            qmeltExists = File.Exists(QmeltApp);
-
-            String[] soxApps = Directory.GetDirectories(ProgramFilesX86, "sox*");
-            soxApps = soxApps.OrderByDescending(c => c).ToArray();
-            if (soxApps.Length > 0)
+            if (ffmpegExists == false || ffprobeExists == false)
             {
-                SoxApp = Path.Combine(ProgramFilesX86, soxApps[0], @"sox.exe");
-                soxExists = File.Exists(SoxApp);
+                // ffmpeg needs to be installed.
+                MessageBox.Show("Unable to find ffmpeg. ffmpeg must be installed for RSPro2Video to work.\r\n\r\n" +
+                    "ffmpeg can be found at https://www.gyan.dev/ffmpeg/builds",
+                    "Required application not installed");
+                return false;
             }
 
-            if (soxExists == false && (ffmpegExists == false || ffprobeExists == false || qmeltExists == false))
-            {
-                // Sox and ShotCut need to be installed.
-                MessageBox.Show("Unable to find SoX or ShotCut. Both must be installed for RSPro2Video to work.\r\n\r\n" +
-                    "ShotCut can be downloaded at http://shotcut.org\r\nSoX can be downloaded at http://sox.sourceforge.net", "Required applications not installed");
-                return false;
-            }
-            else if (ffmpegExists == false || ffprobeExists == false || qmeltExists == false)
-            {
-                // ShotCut needs to be installed.
-                MessageBox.Show("Unable to find ShotCut. ShotCut must be installed for RSPro2Video to work.\r\n\r\n" +
-                    "ShotCut can be downloaded at http://shotcut.org", "Required application not installed");
-                return false;
-            }
-            else if (soxExists == false)
-            {
-                // SoX needs to be installed.
-                MessageBox.Show("Unable to find the Sound eXchange (SoX) program. SoX must be installed for RSPro2Video to work.\r\n\r\n" +
-                    "SoX can be downloaded at http://sox.sourceforge.net", "Required application not installed");
-                return false;
-            }
+            // %%% TimerStuff
+            // Add ".timer" to the end of the full path and filename of the source video file.
+
+            String cpuFile = Path.Combine(Path.GetDirectoryName(ProgramSettings.LastUsedFile), "cpuValues.txt");
+            String[] lines = File.ReadAllLines(cpuFile);
+
+            maxDegree1 = Int32.Parse(lines[0]);
+            ffmpegThreads1 = Int32.Parse(lines[1]);
+            maxDegree2 = Int32.Parse(lines[2]);
+            ffmpegThreads2 = Int32.Parse(lines[3]);
+            maxDegree3 = Int32.Parse(lines[4]);
+            ffmpegThreads3 = Int32.Parse(lines[5]);
+            maxDegree4 = Int32.Parse(lines[6]);
+            ffmpegThreads4 = Int32.Parse(lines[7]);
 
             return true;
         }
@@ -510,6 +499,12 @@ namespace RSPro2Video
 
             // Remove the temp directory.
             RemoveTemp_DirDirectory();
+
+            // %%% TimerStuff
+            // Add ".timer" to the end of the full path and filename of the source video file.
+            String timerFile = Path.Combine(Path.GetDirectoryName(textBoxMainFile.Text), "TaskTimerData.txt");
+
+            File.WriteAllText(timerFile, TaskTimerData.ToString());
         }
 
         /// <summary>
