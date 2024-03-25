@@ -133,12 +133,6 @@ namespace RSPro2Video
 
         Object LogFileLock = new Object();
 
-        // %%% TimerStuff
-        int maxDegree1, ffmpegThreads1;
-        int maxDegree2, ffmpegThreads2;
-        int maxDegree3, ffmpegThreads3;
-        int maxDegree4, ffmpegThreads4;
-
         StringBuilder TaskTimerData = new StringBuilder();
     }
 }

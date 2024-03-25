@@ -26,307 +26,203 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunAllFfmpegTasks()
         {
+            int tplThreads1, ffmpegThreads1;
+            int tplThreads2, ffmpegThreads2;
+            int tplThreads3, ffmpegThreads3;
             long phase1TaskTime;
             long phase2TaskTime;
             long phase3TaskTime;
-            long phase4TaskTime;
             List<FFmpegTask> phase1Tasks;
             List<FFmpegTask> phase2Tasks;
             List<FFmpegTask> phase3Tasks;
-            List<FFmpegTask> phase4Tasks;
 
-            // Get a list of minterpolate tasks.
-            phase1Tasks = FFmpegTasks.FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate)).ToList();
-
-            // %%% TimerStuff
-            // Performance measure.
-            Stopwatch taskTimer = new Stopwatch();
-
-            if (false /*phase1Tasks.Count > 0 && phase1Tasks[0].SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate*/)
+            if (Environment.ProcessorCount <= 8)
             {
-                //
-                // Minterpolation path.
-                //
-
-                // Get a list of reverse video pass 1 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
-                phase1Tasks = FFmpegTasks
-                    .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate
-                        || f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate
-                        || f.SortOrder == FfmpegTaskSortOrder.ForwardBookmarkVideo
-                        || f.SortOrder == FfmpegTaskSortOrder.ForwardVideo
-                        || f.SortOrder == FfmpegTaskSortOrder.CardVideo))
-                    .OrderBy(o => o.SortOrder)
-                    .ThenByDescending(t => t.EstimatedDuration)
-                    .ToList();
-
-                taskTimer.Restart();
-
-                // Run all of the tasks in order.
-                //foreach (FFmpegTask ffmpegTask in phase1Tasks)
-                Parallel.ForEach(phase1Tasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree1 }, ffmpegTask =>
-                {
-                    Boolean retval = true;
-
-                    switch (ffmpegTask.SortOrder)
-                    {
-                        case FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate:
-                        case FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate:
-                            retval = RunReverseVideoTaskPass1(ffmpegThreads1, ffmpegTask);
-                            break;
-
-                        case FfmpegTaskSortOrder.ForwardBookmarkVideo:
-                            retval = RunForwardBookmarkVideoTask(ffmpegThreads3, ffmpegTask);
-                            break;
-
-                        case FfmpegTaskSortOrder.ForwardVideo:
-                            retval = RunForwardVideoTask(ffmpegThreads3, ffmpegTask);
-                            break;
-
-                        case FfmpegTaskSortOrder.CardVideo:
-                            retval = RunCardVideoTask(ffmpegThreads4, ffmpegTask);
-                            break;
-                    }
-
-                    if (retval == false)
-                    {
-                        AddToFailedClips(ffmpegTask);
-                    }
-                    //}
-                });
-
-                taskTimer.Stop();
-                phase1TaskTime = taskTimer.ElapsedMilliseconds;
-
-                // Get a list of reverse video pass 2 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
-                // Note: These are the memory intensive tasks.
-                phase2Tasks = FFmpegTasks
-                    .FindAll(f => f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass2)
-                    .OrderBy(o => o.SortOrder)
-                    .ThenByDescending(t => t.EstimatedDuration)
-                    .ToList();
-
-                taskTimer.Restart();
-
-                // Run all of the tasks in order.
-                //foreach (FFmpegTask ffmpegTask in phase2Tasks)
-                Parallel.ForEach(phase2Tasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree2 }, ffmpegTask =>
-                {
-                    Boolean retval = true;
-
-                    switch (ffmpegTask.SortOrder)
-                    {
-                        case FfmpegTaskSortOrder.ReverseVideoPass2:
-                            retval = RunReverseVideoTaskPass2(ffmpegThreads2, ffmpegTask);
-                            break;
-                    }
-
-                    if (retval == false)
-                    {
-                        AddToFailedClips(ffmpegTask);
-                    }
-                    //}
-                });
-
-                taskTimer.Stop();
-                TaskTimerData.AppendLine(taskTimer.ElapsedMilliseconds.ToString());
-                phase2TaskTime = taskTimer.ElapsedMilliseconds;
-
-                // Get a list of Phase 3 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
-                phase3Tasks = FFmpegTasks
-                    .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.TransitionVideo))
-                    .OrderBy(o => o.SortOrder)
-                    .ThenByDescending(t => t.EstimatedDuration)
-                    .ToList();
-
-                taskTimer.Restart();
-
-                // Run all of the Phase 4 tasks in order.
-                //foreach (FFmpegTask ffmpegTask in phase3Tasks)
-                Parallel.ForEach(phase3Tasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree4 }, ffmpegTask =>
-                {
-                    Boolean retval = true;
-
-                    switch (ffmpegTask.SortOrder)
-                    {
-                        case FfmpegTaskSortOrder.TransitionVideo:
-                            retval = RunTransitionVideoTask(ffmpegThreads4, ffmpegTask);
-                            break;
-                    }
-
-                    if (retval == false)
-                    {
-                        AddToFailedClips(ffmpegTask);
-                    }
-                    //}
-                });
-
-                taskTimer.Stop();
-                phase3TaskTime = taskTimer.ElapsedMilliseconds;
-
-                // Write the performance data to the log.
-                WriteLog(MethodBase.GetCurrentMethod().Name, $"***Performance data:\r\n"
-                    + $"maxDegree1={maxDegree1}, ffmpegThreads1={ffmpegThreads1}\r\n"
-                    + $"maxDegree1={maxDegree2}, ffmpegThreads1={ffmpegThreads2}\r\n"
-                    + $"maxDegree1={maxDegree3}, ffmpegThreads1={ffmpegThreads3}\r\n"
-                    + $"phase1TaskTime={phase1TaskTime}\r\n"
-                    + $"phase1TaskTime={phase2TaskTime}\r\n"
-                    + $"phase1TaskTime={phase3TaskTime}\r\n");
+                // If 8 or fewer processors are available, use one TPL thread for each processor,
+                // and use one thread per ffmpeg task.
+                tplThreads1 = Environment.ProcessorCount; ffmpegThreads1 = 1;
+                tplThreads2 = Environment.ProcessorCount; ffmpegThreads2 = 1;
             }
             else
             {
-                // Get a list of ForwardBookmark and forward clips, ordered by SortOrder, followed by EstimatedDuration in decending order.
-                phase1Tasks = FFmpegTasks
-                    .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate
-                        || f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate))
-                    .OrderBy(o => o.SortOrder)
-                    .ThenByDescending(t => t.EstimatedDuration)
-                    .ToList();
-                
-                // Run all of the tasks in order.
-                //foreach (FFmpegTask ffmpegTask in phase1Tasks)
-                Parallel.ForEach(phase1Tasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree1 }, ffmpegTask =>
+                // Max out at 8 threads so as not to overwhelm disk I/O.
+                int maxTplThreads = 8;
+
+                // ffmpeg defaults to 1.5 * the processor count, so I will follow that paradigm.
+                int maxFfmpegThreads = (int)(Environment.ProcessorCount * 1.5d);
+
+                // Special case to round down for a ratioRemainder that ends in .5
+                // (4 TPL * 1.5 = 6 ffmpeg threads, = 1.5 ffmpeg/tpl, works better with 4, 1 than 4, 2.
+                Double ratioRemainder = ((Double)maxFfmpegThreads % (Double)maxTplThreads) / (Double)maxTplThreads;
+                if (ratioRemainder <= 0.5d)
                 {
-                    Boolean retval = true;
-
-                    switch (ffmpegTask.SortOrder)
-                    {
-                        case FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate:
-                        case FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate:
-                            retval = RunReverseVideoTaskPass1(ffmpegThreads1, ffmpegTask);
-                            break;
-                    }
-
-                    if (retval == false)
-                    {
-                        AddToFailedClips(ffmpegTask);
-                    }
-                    //}
-                });
-
-                taskTimer.Stop();
-                phase1TaskTime = taskTimer.ElapsedMilliseconds;
-
-                // Get a list of reverse video pass 2 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
-                // Note: These are the memory intensive tasks.
-                phase2Tasks = FFmpegTasks
-                    .FindAll(f => f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass2)
-                    .OrderBy(o => o.SortOrder)
-                    .ThenByDescending(t => t.EstimatedDuration)
-                    .ToList();
-
-                taskTimer.Restart();
-
-                // Run all of the tasks in order.
-                //foreach (FFmpegTask ffmpegTask in phase2Tasks)
-                Parallel.ForEach(phase2Tasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree2 }, ffmpegTask =>
+                    // Round down.
+                    tplThreads1 = maxTplThreads; ffmpegThreads1 = (int)(Math.Floor((Double)maxFfmpegThreads / (Double)maxTplThreads));
+                    tplThreads2 = maxTplThreads; ffmpegThreads2 = (int)(Math.Floor((Double)maxFfmpegThreads / (Double)maxTplThreads));
+                }
+                else
                 {
-                    Boolean retval = true;
-
-                    switch (ffmpegTask.SortOrder)
-                    {
-                        case FfmpegTaskSortOrder.ReverseVideoPass2:
-                            retval = RunReverseVideoTaskPass2(ffmpegThreads2, ffmpegTask);
-                            break;
-                    }
-
-                    if (retval == false)
-                    {
-                        AddToFailedClips(ffmpegTask);
-                    }
-                    //}
-                });
-
-                taskTimer.Stop();
-                TaskTimerData.AppendLine(taskTimer.ElapsedMilliseconds.ToString());
-                phase2TaskTime = taskTimer.ElapsedMilliseconds;
-
-                // Get a list of ForwardBookmark and forward clips, ordered by SortOrder, followed by EstimatedDuration in decending order.
-                phase3Tasks = FFmpegTasks
-                    .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.ForwardBookmarkVideo
-                        || f.SortOrder == FfmpegTaskSortOrder.ForwardVideo))
-                    .OrderBy(o => o.SortOrder)
-                    .ThenByDescending(t => t.EstimatedDuration)
-                    .ToList();
-
-                taskTimer.Restart();
-
-                // Run all of the Phase 3 tasks in order.
-                //foreach (FFmpegTask ffmpegTask in phase3Tasks)
-                Parallel.ForEach(phase3Tasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree3 }, ffmpegTask =>
-                {
-                    Boolean retval = true;
-
-                    switch (ffmpegTask.SortOrder)
-                    {
-                        case FfmpegTaskSortOrder.ForwardBookmarkVideo:
-                            retval = RunForwardBookmarkVideoTask(ffmpegThreads3, ffmpegTask);
-                            break;
-
-                        case FfmpegTaskSortOrder.ForwardVideo:
-                            retval = RunForwardVideoTask(ffmpegThreads3, ffmpegTask);
-                            break;
-                    }
-
-                    if (retval == false)
-                    {
-                        AddToFailedClips(ffmpegTask);
-                    }
-                    //}
-                });
-
-                taskTimer.Stop();
-                TaskTimerData.AppendLine(taskTimer.ElapsedMilliseconds.ToString());
-                phase3TaskTime = taskTimer.ElapsedMilliseconds;
-
-                // Get a list of Phase 4 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
-                phase4Tasks = FFmpegTasks
-                    .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.CardVideo
-                        || f.SortOrder == FfmpegTaskSortOrder.TransitionVideo))
-                    .OrderBy(o => o.SortOrder)
-                    .ThenByDescending(t => t.EstimatedDuration)
-                    .ToList();
-
-                taskTimer.Restart();
-
-                // Run all of the Phase 4 tasks in order.
-                //foreach (FFmpegTask ffmpegTask in phase4Tasks)
-                Parallel.ForEach(phase4Tasks, new ParallelOptions { MaxDegreeOfParallelism = maxDegree4 }, ffmpegTask =>
-                {
-                    Boolean retval = true;
-
-                    switch (ffmpegTask.SortOrder)
-                    {
-                        case FfmpegTaskSortOrder.CardVideo:
-                            retval = RunCardVideoTask(ffmpegThreads4, ffmpegTask);
-                            break;
-
-                        case FfmpegTaskSortOrder.TransitionVideo:
-                            retval = RunTransitionVideoTask(ffmpegThreads4, ffmpegTask);
-                            break;
-                    }
-
-                    if (retval == false)
-                    {
-                        AddToFailedClips(ffmpegTask);
-                    }
-                    //}
-                });
-
-                taskTimer.Stop();
-                TaskTimerData.AppendLine(taskTimer.ElapsedMilliseconds.ToString());
-                phase4TaskTime = taskTimer.ElapsedMilliseconds;
-
-                // Write the performance data to the log.
-                WriteLog(MethodBase.GetCurrentMethod().Name, $"***Performance data:\r\n"
-                    + $"maxDegree1={maxDegree1}, ffmpegThreads1={ffmpegThreads1}\r\n"
-                    + $"maxDegree1={maxDegree2}, ffmpegThreads1={ffmpegThreads2}\r\n"
-                    + $"maxDegree1={maxDegree3}, ffmpegThreads1={ffmpegThreads3}\r\n"
-                    + $"maxDegree1={maxDegree4}, ffmpegThreads1={ffmpegThreads4}\r\n"
-                    + $"phase1TaskTime={phase1TaskTime}\r\n"
-                    + $"phase1TaskTime={phase2TaskTime}\r\n"
-                    + $"phase1TaskTime={phase3TaskTime}\r\n"
-                    + $"phase1TaskTime={phase4TaskTime}\r\n");
+                    // Round up.
+                    tplThreads1 = maxTplThreads; ffmpegThreads1 = (int)(Math.Ceiling((Double)maxFfmpegThreads / (Double)maxTplThreads));
+                    tplThreads2 = maxTplThreads; ffmpegThreads2 = (int)(Math.Ceiling((Double)maxFfmpegThreads / (Double)maxTplThreads));
+                }
             }
+
+            // Transition videos (phase 3) do better at 6 TPL threads.
+            if (Environment.ProcessorCount <= 6)
+            {
+                // If 6 or fewer processors are available, use one TPL thread for each processor, and use one thread per ffmpeg task.
+                tplThreads3 = Environment.ProcessorCount; ffmpegThreads3 = 1;
+            }
+            else
+            {
+                // Max out at 6 threads for phase 3 since that seems to work better.
+                int maxTplThreads = 6;
+
+                // ffmpeg defaults to 1.5 * the processor count, so I will follow that paradigm.
+                int maxFfmpegThreads = (int)(Environment.ProcessorCount * 1.5d);
+
+                // Special case to round down for a ratio that ends in .5
+                // (4 TPL * 1.5 = 6 ffmpeg threads, = 1.5 ffmpeg/tpl, works better with 4, 1 than 4, 2.
+                Double ratioRemainder = ((Double)maxFfmpegThreads % (Double)maxTplThreads) / (Double)maxTplThreads;
+                if (ratioRemainder <= 0.5d)
+                {
+                    // Round down.
+                    tplThreads3 = maxTplThreads; ffmpegThreads3 = (int)(Math.Floor((double)(Double)maxFfmpegThreads / (Double)maxTplThreads));
+                }
+                else
+                {
+                    // Round up.
+                    tplThreads3 = maxTplThreads; ffmpegThreads3 = (int)(Math.Ceiling((Double)maxFfmpegThreads / (Double)maxTplThreads));
+                }
+            }
+
+            // Measure performance.
+            Stopwatch taskTimer = new Stopwatch();
+
+            // Get a list of reverse video pass 1 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
+            phase1Tasks = FFmpegTasks
+                .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate
+                    || f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate
+                    || f.SortOrder == FfmpegTaskSortOrder.ForwardBookmarkVideo
+                    || f.SortOrder == FfmpegTaskSortOrder.ForwardVideo
+                    || f.SortOrder == FfmpegTaskSortOrder.CardVideo))
+                .OrderBy(o => o.SortOrder)
+                .ThenByDescending(t => t.EstimatedDuration)
+                .ToList();
+
+            taskTimer.Restart();
+
+            // Run all of the tasks in order.
+            //foreach (FFmpegTask ffmpegTask in phase1Tasks)
+            Parallel.ForEach(phase1Tasks, new ParallelOptions { MaxDegreeOfParallelism = tplThreads1 }, ffmpegTask =>
+            {
+                Boolean retval = true;
+
+                switch (ffmpegTask.SortOrder)
+                {
+                    case FfmpegTaskSortOrder.ReverseVideoPass1Minterpolate:
+                    case FfmpegTaskSortOrder.ReverseVideoPass1NonMinterpolate:
+                        retval = RunReverseVideoTaskPass1(ffmpegThreads1, ffmpegTask);
+                        break;
+
+                    case FfmpegTaskSortOrder.ForwardBookmarkVideo:
+                        retval = RunForwardBookmarkVideoTask(ffmpegThreads1, ffmpegTask);
+                        break;
+
+                    case FfmpegTaskSortOrder.ForwardVideo:
+                        retval = RunForwardVideoTask(ffmpegThreads1, ffmpegTask);
+                        break;
+
+                    case FfmpegTaskSortOrder.CardVideo:
+                        retval = RunCardVideoTask(ffmpegThreads1, ffmpegTask);
+                        break;
+                }
+
+                if (retval == false)
+                {
+                    AddToFailedClips(ffmpegTask);
+                }
+                //}
+            });
+
+            taskTimer.Stop();
+            phase1TaskTime = taskTimer.ElapsedMilliseconds;
+
+            // Get a list of reverse video pass 2 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
+            // Note: These are the memory intensive tasks.
+            phase2Tasks = FFmpegTasks
+                .FindAll(f => f.SortOrder == FfmpegTaskSortOrder.ReverseVideoPass2)
+                .OrderBy(o => o.SortOrder)
+                .ThenByDescending(t => t.EstimatedDuration)
+                .ToList();
+
+            taskTimer.Restart();
+
+            // Run all of the tasks in order.
+            //foreach (FFmpegTask ffmpegTask in phase2Tasks)
+            Parallel.ForEach(phase2Tasks, new ParallelOptions { MaxDegreeOfParallelism = tplThreads2 }, ffmpegTask =>
+            {
+                Boolean retval = true;
+
+                switch (ffmpegTask.SortOrder)
+                {
+                    case FfmpegTaskSortOrder.ReverseVideoPass2:
+                        retval = RunReverseVideoTaskPass2(ffmpegThreads2, ffmpegTask);
+                        break;
+                }
+
+                if (retval == false)
+                {
+                    AddToFailedClips(ffmpegTask);
+                }
+                //}
+            });
+
+            taskTimer.Stop();
+            TaskTimerData.AppendLine(taskTimer.ElapsedMilliseconds.ToString());
+            phase2TaskTime = taskTimer.ElapsedMilliseconds;
+
+            // Get a list of Phase 3 tasks, ordered by SortOrder, followed by EstimatedDuration in decending order.
+            phase3Tasks = FFmpegTasks
+                .FindAll(f => (f.SortOrder == FfmpegTaskSortOrder.TransitionVideo))
+                .OrderBy(o => o.SortOrder)
+                .ThenByDescending(t => t.EstimatedDuration)
+                .ToList();
+
+            taskTimer.Restart();
+
+            // Run all of the Phase 4 tasks in order.
+            //foreach (FFmpegTask ffmpegTask in phase3Tasks)
+            Parallel.ForEach(phase3Tasks, new ParallelOptions { MaxDegreeOfParallelism = tplThreads3 }, ffmpegTask =>
+            {
+                Boolean retval = true;
+
+                switch (ffmpegTask.SortOrder)
+                {
+                    case FfmpegTaskSortOrder.TransitionVideo:
+                        retval = RunTransitionVideoTask(ffmpegThreads3, ffmpegTask);
+                        break;
+                }
+
+                if (retval == false)
+                {
+                    AddToFailedClips(ffmpegTask);
+                }
+                //}
+            });
+
+            taskTimer.Stop();
+            phase3TaskTime = taskTimer.ElapsedMilliseconds;
+
+            // Write the performance data to the log.
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"***Performance data:\r\n"
+                + $"maxDegree1={tplThreads1}, ffmpegThreads1={ffmpegThreads1}\r\n"
+                + $"maxDegree1={tplThreads2}, ffmpegThreads1={ffmpegThreads2}\r\n"
+                + $"maxDegree1={tplThreads3}, ffmpegThreads1={ffmpegThreads3}\r\n"
+                + $"phase1TaskTime={phase1TaskTime}\r\n"
+                + $"phase1TaskTime={phase2TaskTime}\r\n"
+                + $"phase1TaskTime={phase3TaskTime}\r\n");
 
             AfterAllFfmpegTasks();
 

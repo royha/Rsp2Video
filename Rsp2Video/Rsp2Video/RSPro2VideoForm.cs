@@ -114,22 +114,6 @@ namespace RSPro2Video
                     "Required application not installed");
                 return false;
             }
-
-            // %%% TimerStuff
-            // Add ".timer" to the end of the full path and filename of the source video file.
-
-            String cpuFile = Path.Combine(Path.GetDirectoryName(ProgramSettings.LastUsedFile), "cpuValues.txt");
-            String[] lines = File.ReadAllLines(cpuFile);
-
-            maxDegree1 = Int32.Parse(lines[0]);
-            ffmpegThreads1 = Int32.Parse(lines[1]);
-            maxDegree2 = Int32.Parse(lines[2]);
-            ffmpegThreads2 = Int32.Parse(lines[3]);
-            maxDegree3 = Int32.Parse(lines[4]);
-            ffmpegThreads3 = Int32.Parse(lines[5]);
-            maxDegree4 = Int32.Parse(lines[6]);
-            ffmpegThreads4 = Int32.Parse(lines[7]);
-
             return true;
         }
 
@@ -499,12 +483,6 @@ namespace RSPro2Video
 
             // Remove the temp directory.
             RemoveTemp_DirDirectory();
-
-            // %%% TimerStuff
-            // Add ".timer" to the end of the full path and filename of the source video file.
-            String timerFile = Path.Combine(Path.GetDirectoryName(textBoxMainFile.Text), "TaskTimerData.txt");
-
-            File.WriteAllText(timerFile, TaskTimerData.ToString());
         }
 
         /// <summary>
