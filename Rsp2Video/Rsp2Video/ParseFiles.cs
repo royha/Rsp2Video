@@ -274,8 +274,7 @@ namespace RSPro2Video
             catch { }
 
             // Write the initial log entry.
-            String LogEntry = String.Format("***Log start time: {0}\r\nFilename: {1}\r\n\r\n",
-                DateTime.Now.ToString(), ProjectSettings.SourceVideoFile);
+            String LogEntry = $"\r\n***Log start time: {DateTime.Now}\r\nFilename: {ProjectSettings.SourceVideoFile}\r\n";
 
             WriteLog(MethodBase.GetCurrentMethod().Name, LogEntry);
 
@@ -1508,18 +1507,14 @@ namespace RSPro2Video
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
-            // Log the ffprobe command line options.
-            WriteLog(MethodBase.GetCurrentMethod().Name, String.Format("\r\n\r\n***Command line: \"{0}\" {1}\r\n\r\n",
-                process.StartInfo.FileName, process.StartInfo.Arguments));
-
             // Start ffmpeg to extract the frames.
             process.Start();
 
             // Read the output of ffmpeg.
             String FfprobeOutput = process.StandardOutput.ReadToEnd();
 
-            // Log the ffprobe output.
-            WriteLog(MethodBase.GetCurrentMethod().Name, FfprobeOutput);
+            // Log the ffprobe command line options and output.
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nComment: XML output from ffprobe for the source video.\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n{FfprobeOutput}\r\n");
 
             // Wait here for the process to exit.
             process.WaitForExit();

@@ -609,17 +609,11 @@ namespace RSPro2Video
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
-            // Log the ffmpeg command line options.
-            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
-
             // Start ffmpeg to extract the frames.
             process.Start();
 
             // Read the output of ffmpeg.
             String FfmpegOutput = process.StandardError.ReadToEnd();
-
-            // Log the ffmpeg output.
-            WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -629,8 +623,12 @@ namespace RSPro2Video
             // Return success or failure.
             if (!(ExitCode == 0))
             {
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nComment: Sync audio and video while copying the source video file to the working directory.\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n***Error: Exit code {ExitCode}\r\n\r\n{FfmpegOutput}\r\n");
                 return false;
             }
+
+            // Log the ffmpeg command line options and the ffmpeg output.
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nComment: Sync audio and video while copying the source video file to the working directory.\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n{FfmpegOutput}\r\n");
 
             // Get the working video duration.
             ClipDuration clipDuration = GetProgressDuration(RelativePathToWorkingInputVideoFileWithoutExtension);

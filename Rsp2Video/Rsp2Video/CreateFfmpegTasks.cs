@@ -153,7 +153,7 @@ namespace RSPro2Video
                 };
 
                 // Log the command line options.
-                WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
 
                 // Start the copy command to combine the clips.
                 process.Start();
@@ -224,7 +224,7 @@ namespace RSPro2Video
         //        };
 
         //        // Log the ffmpeg command line options.
-        //        WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+        //        WriteLog(MethodBase.GetCurrentMethod().Name, "\r\nCommand line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
         //        // Start ffmpeg to extract the frames.
         //        process.Start();
@@ -295,7 +295,7 @@ namespace RSPro2Video
                 };
 
                 // Log the ffmpeg command line options.
-                WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
 
                 // Start ffmpeg to extract the frames.
                 process.Start();
@@ -475,7 +475,7 @@ namespace RSPro2Video
                     // Add this new file to the ClipDuration dictionary.
                     if (ClipDuration.TryAdd(newFilename, EstimatedDuration) == false)
                     {
-                        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Video file {newFilename} already exists in ClipDuration.\r\n\r\n");
+                        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Video file \"{newFilename}\" already exists in ClipDuration.\r\n\r\n");
                     }
                 }
                 else
@@ -489,7 +489,7 @@ namespace RSPro2Video
                     // Add this new file to the ClipDuration dictionary.
                     if (ClipDuration.TryAdd(newFilename, EstimatedDuration) == false)
                     {
-                        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Video file {newFilename} already exists in ClipDuration.\r\n\r\n");
+                        WriteLog(MethodBase.GetCurrentMethod().Name, $"***Error: Video file \"{newFilename}\" already exists in ClipDuration.\r\n\r\n");
                     }
                 }
 

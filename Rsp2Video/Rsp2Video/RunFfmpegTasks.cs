@@ -36,6 +36,7 @@ namespace RSPro2Video
             List<FFmpegTask> phase2Tasks;
             List<FFmpegTask> phase3Tasks;
 
+            // Calculate how many .NET TPL threads to use, and how many ffmpeg threads to use within each TPL thread.
             if (Environment.ProcessorCount <= 8)
             {
                 // If 8 or fewer processors are available, use one TPL thread for each processor,
@@ -216,13 +217,46 @@ namespace RSPro2Video
             phase3TaskTime = taskTimer.ElapsedMilliseconds;
 
             // Write the performance data to the log.
-            WriteLog(MethodBase.GetCurrentMethod().Name, $"***Performance data:\r\n"
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nPerformance data:\r\n"
                 + $"maxDegree1={tplThreads1}, ffmpegThreads1={ffmpegThreads1}\r\n"
                 + $"maxDegree1={tplThreads2}, ffmpegThreads1={ffmpegThreads2}\r\n"
                 + $"maxDegree1={tplThreads3}, ffmpegThreads1={ffmpegThreads3}\r\n"
                 + $"phase1TaskTime={phase1TaskTime}\r\n"
-                + $"phase1TaskTime={phase2TaskTime}\r\n"
-                + $"phase1TaskTime={phase3TaskTime}\r\n");
+                + $"phase2TaskTime={phase2TaskTime}\r\n"
+                + $"phase3TaskTime={phase3TaskTime}\r\n");
+
+            // Write the list of failed clips to the log.
+            if (FailedClips.Count > 0)
+            {
+                StringBuilder sbFailedClips = new StringBuilder();
+                foreach (String clip in FailedClips)
+                {
+                    sbFailedClips.AppendLine(clip);
+                }
+
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nList of failed clips:\r\n{sbFailedClips}\r\n");
+            }
+            else
+            {
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nList of failed clips:\r\nNone.\r\n");
+            }
+
+            StringBuilder sbVideoOutputs = new StringBuilder();
+            foreach (ClipEntry clipEntry in VideoOutputs[VideoOutputIndex].Clips)
+            {
+                sbVideoOutputs.AppendLine(clipEntry.ClipFilename);
+            }
+
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nVideoOutputs list:\r\n{sbVideoOutputs}\r\n");
+
+            StringBuilder sbFfmpegTaskList = new StringBuilder();
+            List<FFmpegTask> taskList = FFmpegTasks.OrderBy(t => t.VideoFilenames[t.VideoFilenames.Count - 1]).ToList();
+            foreach (FFmpegTask task in taskList)
+            {
+                sbFfmpegTaskList.AppendLine($"{task.VideoFilenames[task.VideoFilenames.Count - 1]}{OutputVideoInterimExtension}, {task.CreatorMethod}");
+            }
+
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nFFmpegTasks list:\r\n{sbFfmpegTaskList}\r\n");
 
             AfterAllFfmpegTasks();
 
@@ -399,7 +433,7 @@ namespace RSPro2Video
                 String command = $"-y -hide_banner -i {randomFileName} -map 0 -map -0:d -c copy -timecode {timecode} {clipEntry.ClipFilename}";
 
                 // Execute the ffmpeg command.
-                RunFfmpegRaw(command);
+                RunFfmpegRaw(MethodBase.GetCurrentMethod().Name, command, "Sets the start time for the clip");
 
                 // Delete the previous file.
                 try { File.Delete(randomFileName); }
@@ -480,19 +514,19 @@ namespace RSPro2Video
         /// <remarks>Used when available memory is sufficient to use the filtergraph reverse method.</remarks>
         private Boolean RunReverseVideoTaskPass1(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
-            String videoFilename = ffmpegTask.VideoFilenames[0];
+            String outputVideoFilename = ffmpegTask.VideoFilenames[0];
 
             // Set the value for the ffmpeg "-threads" parameter.
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
             // Run the command.
-            if (RunFfmpegRaw(ffmpegCommand) == false)
+            if (RunFfmpegTaskRaw(outputVideoFilename, ffmpegCommand, ffmpegTask) == false)
             {
                 return false;
             }
 
             // Get the clip duration and set that duration in the ClipDuration dictionary.
-            ClipDuration clipDuration = GetProgressDuration(videoFilename);
+            ClipDuration clipDuration = GetProgressDuration(outputVideoFilename);
             if (clipDuration.FrameCount < 0)
             {
                 return false;
@@ -510,19 +544,19 @@ namespace RSPro2Video
         /// <remarks>Used when available memory is sufficient to use the filtergraph reverse method.</remarks>
         private Boolean RunReverseVideoTaskPass2(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
-            String videoFilename = ffmpegTask.VideoFilenames[0];
+            String outputVideoFilename = ffmpegTask.VideoFilenames[0];
 
             // Set the value for the ffmpeg "-threads" parameter.
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
             // Run the command.
-            if (RunFfmpegRaw(ffmpegCommand) == false)
+            if (RunFfmpegTaskRaw(outputVideoFilename, ffmpegCommand, ffmpegTask) == false)
             {
                 return false;
             }
 
             // Get the clip duration and set that duration in the ClipDuration dictionary.
-            ClipDuration clipDuration = GetProgressDuration(videoFilename);
+            ClipDuration clipDuration = GetProgressDuration(outputVideoFilename);
             if (clipDuration.FrameCount < 0)
             {
                 return false;
@@ -539,26 +573,26 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunReverseVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
-            String videoFilename = ffmpegTask.VideoFilenames[0];
+            String outputVideoFilename = ffmpegTask.VideoFilenames[0];
 
             // Set the value for the ffmpeg "-threads" parameter.
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
             // Run the command.
-            if (RunFfmpegRaw(ffmpegCommand) == false)
+            if (RunFfmpegTaskRaw(outputVideoFilename, ffmpegCommand, ffmpegTask) == false)
             {
                 return false;
             }
 
             // Get the clip duration and set that duration in the ClipDuration dictionary.
-            ClipDuration clipDuration = GetProgressDuration(videoFilename);
+            ClipDuration clipDuration = GetProgressDuration(outputVideoFilename);
             if (clipDuration.FrameCount < 0)
             {
                 return false;
             }
 
             // Get the first and last frame of the clip.
-            if (CreateFirstAndLastFrameFromClip(videoFilename, clipDuration.Duration) == false)
+            if (CreateFirstAndLastFrameFromClip(outputVideoFilename, clipDuration.Duration) == false)
             {
                 return false;
             }
@@ -574,24 +608,24 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunForwardBookmarkVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
-            String videoFilename = String.Empty;
+            String outputVideoFilename = String.Empty;
 
             // Loop through the ffmpeg commands.
             for (int i = 0; i < ffmpegTask.FFmpegCommands.Count; ++i)
             {
                 // Get the destinationFfilename and the ffmpeg command for this iteration.
-                videoFilename = ffmpegTask.VideoFilenames[i];
+                outputVideoFilename = ffmpegTask.VideoFilenames[i];
                 String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[i], ffmpegThreads);
 
                 // Run the command.
-                if (RunFfmpegRaw(ffmpegCommand) == false)
+                if (RunFfmpegTaskRaw(outputVideoFilename, ffmpegCommand, ffmpegTask) == false)
                 {
                     return false;
                 }
             }
 
             // Get the clip duration of the final destinationFfilename and set that duration in the ClipDuration dictionary.
-            ClipDuration clipDuration = GetProgressDuration(videoFilename);
+            ClipDuration clipDuration = GetProgressDuration(outputVideoFilename);
             if (clipDuration.FrameCount < 0)
             {
                 return false;
@@ -608,20 +642,20 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunForwardVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
-            String videoFilename = ffmpegTask.VideoFilenames[0];
-            String FilenameWithExtension = videoFilename + OutputVideoInterimExtension;
+            String outputVideoFilename = ffmpegTask.VideoFilenames[0];
+            String FilenameWithExtension = outputVideoFilename + OutputVideoInterimExtension;
 
             // Set the value for the ffmpeg "-threads" parameter.
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
             // Run the command.
-            if (RunFfmpegRaw(ffmpegCommand) == false)
+            if (RunFfmpegTaskRaw(outputVideoFilename, ffmpegCommand, ffmpegTask) == false)
             {
                 return false;
             }
 
             // Get the clip duration and set that duration in the ClipDuration dictionary.
-            GetProgressDuration(videoFilename);
+            GetProgressDuration(outputVideoFilename);
 
             return true;
         }
@@ -634,20 +668,20 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunCardVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
-            String videoFilename = ffmpegTask.VideoFilenames[0];
-            String FilenameWithExtension = videoFilename + OutputVideoInterimExtension;
+            String outputVideoFilename = ffmpegTask.VideoFilenames[0];
+            String FilenameWithExtension = outputVideoFilename + OutputVideoInterimExtension;
 
             // Set the value for the ffmpeg "-threads" parameter.
             String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
             // Run the command.
-            if (RunFfmpegRaw(ffmpegCommand) == false)
+            if (RunFfmpegTaskRaw(outputVideoFilename, ffmpegCommand, ffmpegTask) == false)
             {
                 return false;
             }
 
             // Get the clip duration and set that duration in the ClipDuration dictionary.
-            GetProgressDuration(videoFilename);
+            GetProgressDuration(outputVideoFilename);
 
             return true;
         }
@@ -660,26 +694,24 @@ namespace RSPro2Video
         /// <returns>Returns true if successful; otherwise, false.</returns>
         private Boolean RunTransitionVideoTask(int ffmpegThreads, FFmpegTask ffmpegTask)
         {
-            String videoFilename = String.Empty;
-            String FilenameWithExtension = String.Empty;
+            String outputVideoFilename = String.Empty;
 
             // Presently, there are two types of transition videos. Single step and two-step.
             if (ffmpegTask.VideoFilenames.Count == 1)
             {
-                videoFilename = ffmpegTask.VideoFilenames[0];
-                FilenameWithExtension = videoFilename + OutputVideoInterimExtension;
+                outputVideoFilename = ffmpegTask.VideoFilenames[0];
 
                 // Set the value for the ffmpeg "-threads" parameter.
                 String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[0], ffmpegThreads);
 
                 // Run the command.
-                if (RunFfmpegRaw(ffmpegCommand) == false)
+                if (RunFfmpegTaskRaw(outputVideoFilename, ffmpegCommand, ffmpegTask) == false)
                 {
                     return false;
                 }
 
                 // Get the clip duration and set that duration in the ClipDuration dictionary.
-                GetProgressDuration(videoFilename);
+                GetProgressDuration(outputVideoFilename);
             }
             else
             {
@@ -687,18 +719,18 @@ namespace RSPro2Video
                 for (int i = 0; i < ffmpegTask.FFmpegCommands.Count; ++i)
                 {
                     // Get the destinationFfilename and the ffmpeg command for this iteration.
-                    videoFilename = ffmpegTask.VideoFilenames[i];
+                    outputVideoFilename = ffmpegTask.VideoFilenames[i];
                     String ffmpegCommand = String.Format(ffmpegTask.FFmpegCommands[i], ffmpegThreads);
 
                     // Run the command.
-                    if (RunFfmpegRaw(ffmpegCommand) == false)
+                    if (RunFfmpegTaskRaw(outputVideoFilename, ffmpegCommand, ffmpegTask) == false)
                     {
                         return false;
                     }
                 }
 
                 // Get the clip duration of the final destinationFfilename and set that duration in the ClipDuration dictionary.
-                GetProgressDuration(videoFilename);
+                GetProgressDuration(outputVideoFilename);
             }
 
             return true;
@@ -757,7 +789,7 @@ namespace RSPro2Video
         }
 
         /// <summary>
-        /// Creates the {videoFilename}.First.png and {videoFilename}.Last.png for the specified video clip.
+        /// Creates the {outputVideoFilename}.First.png and {outputVideoFilename}.Last.png for the specified video clip.
         /// </summary>
         /// <param name="videoFilename">The filename, without extension, of the clip from which to extract the image files.</param>
         /// <param name="duration">The duration of the clip in seconds.</param>
@@ -783,7 +815,7 @@ namespace RSPro2Video
                 return false;
             }
 
-            // Output the last few imageFiles of the clip in the temp directory.
+            // Output the last few frames of this clip as image files into the temp directory.
 
             String fileOutputString = Path.Combine(frameStorageDirectory, videoFilename);
             for (int i = 0; i < LastFrameSeekBack.Length && retval == false; ++i)
@@ -799,7 +831,8 @@ namespace RSPro2Video
                         + $"-pix_fmt rgb48 -an \"{fileOutputString + ".Last.%05d.png"}\"";
 
                     // Run the ffmpeg command.
-                    retval = RunFfmpegRaw(getLast);
+                    retval = RunFfmpegRaw(MethodBase.GetCurrentMethod().Name, getLast,
+                        "Output the last few frames of this clip as image files into the temp directory.");
                 }
                 else
                 {
@@ -809,7 +842,8 @@ namespace RSPro2Video
                         + $"-pix_fmt rgb48 -an -filter:v \"{fileOutputString + ".Last.%05d.png"}\"";
 
                     // Run the ffmpeg command.
-                    retval = RunFfmpegRaw(getLast);
+                    retval = RunFfmpegRaw(MethodBase.GetCurrentMethod().Name, getLast, 
+                        "The clip is short, so output all frames of this clip as image files into the temp directory.");
                     break;
                 }
             }
@@ -866,7 +900,8 @@ namespace RSPro2Video
                 + $"-pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename}.First.png\"";
 
             // Run the ffmpeg command.
-            if (RunFfmpegRaw(getFirst) == false)
+            if (RunFfmpegRaw(MethodBase.GetCurrentMethod().Name, getFirst, 
+                "Output the first frame as an image file.") == false)
             {
                 return false;
             }
@@ -993,7 +1028,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg FfmpegCommand line options.
-            WriteLog(MethodBase.GetCurrentMethod().Name, $"***Command line: {process.StartInfo.FileName} {process.StartInfo.Arguments}\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
 
             // Start ffmpeg to extract the imageFiles.
             process.Start();
@@ -1012,10 +1047,11 @@ namespace RSPro2Video
             // Return success or failure.
             if (!(ExitCode == 0))
             {
-                WriteLog(MethodBase.GetCurrentMethod().Name, $"Error: ffmpeg exit code {ExitCode}\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n{FfmpegOutput}\r\nError: ffmpeg exit code = {ExitCode}\r\n");
                 return false;
             }
 
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n{FfmpegOutput}\r\n");
             return true;
         }
 
@@ -1023,9 +1059,11 @@ namespace RSPro2Video
         /// Runs the ffmpeg program with the specified argument string without adding the Filename to CreatedClipList or to
         /// VideoOutputs.
         /// </summary>
+        /// <param name="callingMethod">The name of the method that called this method, for logging purposes.</param>
         /// <param name="arguments">The ffmpeg commands.</param>
+        /// <param name="comment">The comment for the log entry.</param>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool RunFfmpegRaw(String arguments)
+        private bool RunFfmpegRaw(String callingMethod, String arguments, String comment = null)
         {
             // Create the Process to call the external program.
             Process process = new Process();
@@ -1041,18 +1079,11 @@ namespace RSPro2Video
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
-            // Log the ffmpeg FfmpegCommand line options.
-            WriteLog(MethodBase.GetCurrentMethod().Name, $"***Command line: {process.StartInfo.FileName} " 
-                + $"{process.StartInfo.Arguments}\r\n\r\n");
-
             // Start ffmpeg to extract the imageFiles.
             process.Start();
 
             // Read the output of ffmpeg.
             String FfmpegOutput = process.StandardError.ReadToEnd();
-
-            // Log the ffmpeg output.
-            WriteLog(MethodBase.GetCurrentMethod().Name, FfmpegOutput);
 
             // Wait here for the process to exit.
             process.WaitForExit();
@@ -1062,8 +1093,86 @@ namespace RSPro2Video
             // Return success or failure.
             if (!(ExitCode == 0))
             {
-                WriteLog(MethodBase.GetCurrentMethod().Name, $"Error: ffmpeg exit code {ExitCode}\r\n");
+                // Log the task, the exit code, and the output.
+                if (comment == null)
+                {
+                    WriteLog(MethodBase.GetCurrentMethod().Name, $"Task Creator Method: {callingMethod}\r\n*Command line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n*** Error: ffmpeg exit code = {ExitCode}\r\n\r\nffmpeg output:\r\n{FfmpegOutput}");
+                }
+                else
+                {
+                    WriteLog(MethodBase.GetCurrentMethod().Name, $"Comment: {comment}\r\nTask Creator Method: {callingMethod}\r\n*Command line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n*** Error: ffmpeg exit code = {ExitCode}\r\n\r\nffmpeg output:\r\n{FfmpegOutput}");
+                }
                 return false;
+            }
+
+            // Log the ffmpeg task and the output.
+            if (comment == null)
+            {
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nTask Creator Method: {callingMethod}\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\nffmpeg output: \r\n{FfmpegOutput}");
+            }
+            else
+            {
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"Comment: {comment}\r\nTask Creator Method: {callingMethod}\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\nffmpeg output: \r\n{FfmpegOutput}");
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Runs the ffmpeg program with the specified argument string without adding the Filename to CreatedClipList or to
+        /// VideoOutputs. Also includes the name of the method that created this ffmpeg task in the logfile.
+        /// </summary>
+        /// <param name="arguments">The ffmpeg commands.</param>
+        /// <returns>Returns true if successful; otherwise false.</returns>
+        private bool RunFfmpegTaskRaw(String outputFilename, String arguments, FFmpegTask ffmpegTask, String comment = null)
+        {
+            // Create the Process to call the external program.
+            Process process = new Process();
+
+            // Configure the process using the StartInfo properties.
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = FfmpegApp,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Maximized
+            };
+
+            // Start ffmpeg to extract the imageFiles.
+            process.Start();
+
+            // Read the output of ffmpeg.
+            String FfmpegOutput = process.StandardError.ReadToEnd();
+
+            // Wait here for the process to exit.
+            process.WaitForExit();
+            int ExitCode = process.ExitCode;
+            process.Close();
+
+            // Return success or failure.
+            if (!(ExitCode == 0))
+            {
+                // Log the task, the exit code, and the output.
+                if (comment == null)
+                {
+                    WriteLog(MethodBase.GetCurrentMethod().Name, $"Output Filename: {outputFilename}{OutputVideoInterimExtension}\r\nTask Creator Method: {ffmpegTask.CreatorMethod}\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n*** Error: ffmpeg exit code = {ExitCode}\r\n\r\nffmpeg output:\r\n{FfmpegOutput}");
+                }
+                else
+                {
+                    WriteLog(MethodBase.GetCurrentMethod().Name, $"Comment: {comment}\r\nOutput Filename: {outputFilename}{OutputVideoInterimExtension}\r\nTask Creator Method: {ffmpegTask.CreatorMethod}\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n*** Error: ffmpeg exit code = {ExitCode}\r\n\r\nffmpeg output:\r\n{FfmpegOutput}");
+                }
+                return false;
+            }
+
+            // Log the ffmpeg task and the output.
+            if (comment == null)
+            {
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"Output Filename: {outputFilename}{OutputVideoInterimExtension}\r\nTask Creator Method: {ffmpegTask.CreatorMethod}\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\nffmpeg output: \r\n{FfmpegOutput}");
+            }
+            else
+            {
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"Comment: {comment}\r\nOutput Filename: {outputFilename}{OutputVideoInterimExtension}\r\nTask Creator Method: {ffmpegTask.CreatorMethod}\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\nffmpeg output: \r\n{FfmpegOutput}");
             }
 
             return true;

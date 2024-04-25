@@ -106,7 +106,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
 
             // Run ffmpeg to create the .wav file.
             process.Start();
@@ -149,7 +149,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
 
             // Run ffmpeg to create the .wav file.
             process.Start();
@@ -237,7 +237,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
 
             // Start ffmpeg to extract the frames.
             process.Start();
@@ -344,7 +344,7 @@ namespace RSPro2Video
         //    };
 
         //    // Log the ffmpeg command line options.
-        //    WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+        //    WriteLog(MethodBase.GetCurrentMethod().Name, "\r\nCommand line: " + process.StartInfo.Arguments + "\r\n\r\n");
 
         //    // Start ffmpeg to extract the frames.
         //    process.Start();
@@ -672,7 +672,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
 
             // Start ffmpeg to extract the frames.
             process.Start();
@@ -724,7 +724,7 @@ namespace RSPro2Video
             };
 
             // Log the ffmpeg command line options.
-            WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
 
             // Start ffmpeg to extract the frames.
             process.Start();
@@ -773,7 +773,7 @@ namespace RSPro2Video
                 };
 
                 // Log the ffmpeg command line options.
-                WriteLog(MethodBase.GetCurrentMethod().Name, "\r\n\r\n***Command line: " + process.StartInfo.Arguments + "\r\n\r\n");
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
 
                 // Start ffmpeg to extract the frames.
                 process.Start();
