@@ -6,26 +6,32 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace RSPro2VideoTool
 {
     public partial class RSPro2VideoToolForm : Form
     {
-        float FramesPerSecond;                                          // The frames per second of the source and output video.
+        Object LogFileLock = new Object();
+        String LogFile;
+
+        int SampleRate;                                                 // The sample rate of the sound file.
+        double FramesPerSecond;                                         // The frames per second of the source and output video.
         int HorizontalResolution;                                       // The horizontal resolution of the video.
         int VerticalResolution;                                         // The vertical resolution of the video.
+        double SourceVideoDuration;                                     // The duration of the source video in seconds.
+        double VideoOffset;                                             // The video offset to align the video with the audio.
+        String FfprobeRawXmlData;                                       // The raw XML data from ffprobe.
         String AudioDescription = String.Empty;                         // The ffprobe description of the audio.
-        String ToolAnimationFile = Path.Combine(Application.StartupPath, "toolanimation.gif");
-        // String ToolAnimationFile = @"D:\Pictures\Animated Gifs\chicken wire.gif";
 
-        String SoxApp = String.Empty;
         String FfmpegApp = String.Empty;
         String FfmprobeApp = String.Empty;
-        String QmeltApp = String.Empty;
 
         public RSPro2VideoToolForm()
         {
@@ -39,16 +45,10 @@ namespace RSPro2VideoTool
             {
                 Application.Exit();
             }
-
-            // If the animation file can't be found, disable it.
-            if (File.Exists(ToolAnimationFile) == false)
-            {
-                ToolAnimationFile = null;
-            }
         }
 
         /// <summary>
-        /// Finds the supporting applications (ffmpeg.exe, ffprobe.exe, qmelt.exe, sox.exe).
+        /// Finds the supporting applications (ffmpeg.exe, ffprobe.exe).
         /// </summary>
         /// <returns>Returns true if successful; otherwise false.</returns>
         private bool FindSupportingApps()
@@ -56,6 +56,8 @@ namespace RSPro2VideoTool
             // Get the Program Files directories.
             String ProgramFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             String ProgramFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+
+            // First, look in "C:\Program Files\ffmpeg\bin".
 
             Boolean ffmpegExists = false;
             Boolean ffprobeExists = false;
@@ -66,16 +68,35 @@ namespace RSPro2VideoTool
             FfmprobeApp = Path.Combine(ProgramFiles, "ffmpeg\\bin", "ffprobe.exe");
             ffprobeExists = File.Exists(FfmprobeApp);
 
-
-            if (ffmpegExists == false || ffprobeExists == false)
+            if (ffmpegExists == true && ffprobeExists == true)
             {
-                // ShotCut needs to be installed.
-                MessageBox.Show("Unable to find ShotCut. ShotCut must be installed for RSPro2VideoTool to work.\r\n\r\n" +
-                    "ShotCut can be downloaded at http://shotcut.org", "Required application not installed");
-                return false;
+                return true;
             }
-            
-            return true;
+
+            // Next, look in "C:\Program Files\kdenlive\bin".
+
+            ffmpegExists = false;
+            ffprobeExists = false;
+
+            FfmpegApp = Path.Combine(ProgramFiles, "kdenlive\\bin", "ffmpeg.exe");
+            ffmpegExists = File.Exists(FfmpegApp);
+
+            FfmprobeApp = Path.Combine(ProgramFiles, "kdenlive\\bin", "ffprobe.exe");
+            ffprobeExists = File.Exists(FfmprobeApp);
+
+            if (ffmpegExists == true && ffprobeExists == true)
+            {
+                return true;
+            }
+
+            // ffmpeg needs to be installed.
+            MessageBox.Show("Unable to find ffmpeg. ffmpeg must be installed for RSPro2Video to work.\r\n\r\n"
+                + "ffmpeg comes with the Kdenlive video editor. You can download and install the\r\n"
+                + "Kdenlive for Windows Installable package from this webpage: https://kdenlive.org/en/download/\r\n\r\n"
+                + "A standalone version of ffmpeg can be found here: https://www.gyan.dev/ffmpeg/builds",
+                "Required application not installed");
+
+            return false;
         }
 
         /// <summary>
@@ -92,11 +113,8 @@ namespace RSPro2VideoTool
             // Set up the ToolTip text for panel1 controls.
             toolTips.SetToolTip(this.panel1, "Drag and drop a video file here.");
             toolTips.SetToolTip(this.groupBox1, "Drag and drop a video file here.");
-            toolTips.SetToolTip(this.buttonExtractAudio, "Extracts a .wav file from the video.");
-            toolTips.SetToolTip(this.buttonSaveVideo240p, "Saves a copy of the video, resized to 240 pixels in height.");
-            toolTips.SetToolTip(this.buttonSaveVideo360p, "Saves a copy of the video, resized to 360 pixels in height.");
-            toolTips.SetToolTip(this.buttonSaveVideo480p, "Saves a copy of the video, resized to 480 pixels in height.");
-            toolTips.SetToolTip(this.buttonSaveVideo720p, "Saves a copy of the video, resized to 720 pixels in height.");
+            toolTips.SetToolTip(this.buttonExtractMp3Audio, "Extracts an .mp3 file from the video.");
+            toolTips.SetToolTip(this.buttonExtractWavAudio, "Extracts an .wav file from the video.");
         }
 
         private void panel1_DragEnter(object sender, DragEventArgs e)
@@ -185,34 +203,28 @@ namespace RSPro2VideoTool
             }
         }
 
-
-        private void buttonExtractAudio_Click(object sender, EventArgs e)
+        private void buttonExtractWavAudio_Click(object sender, EventArgs e)
         {
-            SaveAudio();
+            SaveAudio(AudioOutputType.WAV);
         }
 
-        private void buttonSaveVideo240p_Click(object sender, EventArgs e)
+        private void buttonExtractMp3Audio_Click(object sender, EventArgs e)
         {
-            SaveVideo(240);
+            SaveAudio(AudioOutputType.MP3);
         }
 
-        private void buttonSaveVideo360p_Click(object sender, EventArgs e)
+        private void buttonReencodeVideo_Click(object sender, EventArgs e)
         {
-            SaveVideo(360);
+            ReEncodeVideo();
         }
 
-        private void buttonSaveVideo480p_Click(object sender, EventArgs e)
+        private void buttonSyncVideo_Click(object sender, EventArgs e)
         {
-            SaveVideo(480);
-        }
-
-        private void buttonSaveVideo720p_Click(object sender, EventArgs e)
-        {
-            SaveVideo(720);
+            SyncVideo();
         }
 
         /// <summary>
-        /// Processes the newly chosen video file. Validates the file, getting data from the ffprobe query, displays the data, 
+        /// Processes the newly chosen video file. Validates the file, getting FfprobeRawXmlData from the ffprobe query, displays the FfprobeRawXmlData, 
         /// and enables buttons to save lower resolution versions of the source video file.
         /// </summary>
         private void FileChosen()
@@ -223,25 +235,23 @@ namespace RSPro2VideoTool
                 textBoxSourceVideoFile.Text = String.Empty;
                 labelVideoDescription.Text = "To begin, drag and drop a video file onto this application.";
                 labelAudioDescription.Enabled = false;
-                buttonExtractAudio.Enabled = false;
-                buttonSaveVideo240p.Enabled = false;
-                buttonSaveVideo360p.Enabled = false;
-                buttonSaveVideo480p.Enabled = false;
-                buttonSaveVideo720p.Enabled = false;
+                buttonExtractMp3Audio.Enabled = false;
+                buttonExtractWavAudio.Enabled = false;
+                buttonSyncVideo.Enabled = false;
+                buttonReencodeVideo.Enabled = false;
                 return;
             }
 
             // Display the video and audio descriptions.
-            labelVideoDescription.Text = String.Format("Video: {0}x{1} {2}fps.", HorizontalResolution, VerticalResolution, FramesPerSecond);
+            labelVideoDescription.Text = $"Video: {HorizontalResolution}x{VerticalResolution} {FramesPerSecond}fps.";
             labelAudioDescription.Text = AudioDescription;
             labelAudioDescription.Enabled = true;
 
             // Enable the buttons.
-            buttonExtractAudio.Enabled = true;
-            if (VerticalResolution > 240) { buttonSaveVideo240p.Enabled = true; } else { buttonSaveVideo240p.Enabled = false; }
-            if (VerticalResolution > 360) { buttonSaveVideo360p.Enabled = true; } else { buttonSaveVideo360p.Enabled = false; }
-            if (VerticalResolution > 480) { buttonSaveVideo480p.Enabled = true; } else { buttonSaveVideo480p.Enabled = false; }
-            if (VerticalResolution > 720) { buttonSaveVideo720p.Enabled = true; } else { buttonSaveVideo720p.Enabled = false; }
+            buttonExtractMp3Audio.Enabled = true;
+            buttonExtractWavAudio.Enabled = true;
+            buttonSyncVideo.Enabled = true;
+            buttonReencodeVideo.Enabled = true;
         }
 
         /// <summary>
@@ -252,6 +262,26 @@ namespace RSPro2VideoTool
         {
             if (ValidateVideo() == false) { return false; }
 
+            // Get the XML FfprobeRawXmlData from ffprobe.
+            String XmlFfprobeRawData = RunFfprobeXml(textBoxSourceVideoFile.Text);
+            if (String.IsNullOrEmpty(XmlFfprobeRawData))
+            {
+                labelStatus.Text = "There was an error reading the video file.";
+                labelStatus.Visible = true;
+                return false;
+            }
+
+            // Get the XML FfprobeRawXmlData into an XML document.
+            XmlDocument xmlVideoDocument = new XmlDocument();
+            xmlVideoDocument.LoadXml(XmlFfprobeRawData);
+            XmlElement root = xmlVideoDocument.DocumentElement;
+
+            // Get the first video stream and the first audio stream.
+            XmlNode videoStream = root.SelectSingleNode("/ffprobe/streams/stream[@codec_type='video']");
+            XmlNode audioStream = root.SelectSingleNode("/ffprobe/streams/stream[@codec_type='audio']");
+            XmlNode format = root.SelectSingleNode("/ffprobe/format");
+
+            // Get the text output of ffprobe for the same file.
             Process process = new Process();
 
             // Configure the process using the StartInfo properties.
@@ -283,54 +313,58 @@ namespace RSPro2VideoTool
                 return false;
             }
 
-            // Parse for the frame rate using regular expressions.
-            Match match = Regex.Match(FfprobeOutput, @"(\d+|\d+\.\d+) fps,");
-            if (!match.Success)
+            // Get the frame rate.
+            if (String.IsNullOrEmpty(videoStream.Attributes["r_frame_rate"].InnerText))
             {
-                labelStatus.Text = "There was an error reading this file.";
+                labelStatus.Text = "There was an error reading the video file.";
+                labelStatus.Visible = true;
                 return false;
-            }
-
-            if (float.TryParse(match.Groups[1].Value, out float rate))
-            {
-                FramesPerSecond = rate;
             }
             else
             {
-                labelStatus.Text = "There was an error reading this file.";
+                // Extract the numerator and denominator from the frame rate string.
+                String[] s = videoStream.Attributes["r_frame_rate"].InnerText.Split('/');
+                if (s.Length != 2)
+                {
+                    labelStatus.Text = "There was an error reading the video file.";
+                    labelStatus.Visible = true;
+                    return false;
+                }
+
+                Double.TryParse(s[0], out Double numerator);
+                Double.TryParse(s[1], out Double denominator);
+
+                // Set the frame rate.
+                FramesPerSecond = numerator / denominator;
+            }
+
+            // Get the video resolution.
+            if (Int32.TryParse(videoStream.Attributes["width"].InnerText, out HorizontalResolution) == false ||
+                Int32.TryParse(videoStream.Attributes["height"].InnerText, out VerticalResolution) == false)
+            {
+                labelStatus.Text = "There was an error reading the video file.";
+                labelStatus.Visible = true;
                 return false;
             }
 
-            // Parse for the resolution using regular expressions.
-            match = Regex.Match(FfprobeOutput, @" (\d\d\d+)x(\d\d+)[, ]");
-            if (!match.Success)
+            // Get the video duration.
+            if (Double.TryParse(format.Attributes["duration"].InnerText, out SourceVideoDuration) == false)
             {
-                labelStatus.Text = "There was an error reading this file.";
+                labelStatus.Text = "There was an error reading the video file.";
+                labelStatus.Visible = true;
                 return false;
             }
 
-            if (Int32.TryParse(match.Groups[1].Value, out int horizontal))
+            // Get the audio sample rate.
+            if (Int32.TryParse(audioStream.Attributes["sample_rate"].InnerText, out SampleRate) == false)
             {
-                HorizontalResolution = horizontal;
-            }
-            else
-            {
-                labelStatus.Text = "There was an error reading this file.";
+                labelStatus.Text = "There was an error reading the video file.";
+                labelStatus.Visible = true;
                 return false;
             }
-
-            if (Int32.TryParse(match.Groups[2].Value, out int vertical))
-            {
-                VerticalResolution = vertical;
-            }
-            else
-            {
-                labelStatus.Text = "There was an error reading this file.";
-                return false;
-            }
-
+            
             // Parse for the audio description.
-            match = Regex.Match(FfprobeOutput, @" Audio: ([\s\S]*?.+)\r\n");
+            Match match = Regex.Match(FfprobeOutput, @" Audio: ([\s\S]*?.+)\r\n");
             if (!match.Success)
             {
                 labelStatus.Text = "There was an error reading this file.";
@@ -362,11 +396,13 @@ namespace RSPro2VideoTool
             return true;
         }
 
-        private bool SaveAudio()
+        private async void SaveAudio(AudioOutputType audioOutputType)
         {
-            // Let the user select the output filename.
-            String filename = SaveAudioFileDialog();
-            if (filename == null) { return false; }
+            // Let the user select the output outputFilename.
+            String outputFilename = SaveAudioFileDialog(audioOutputType);
+            if (outputFilename == null) { return; }
+
+            SetLogFileLocation(outputFilename);
 
             // Update the user that their file is being saved.
             labelStatus.Text = "Working ...";
@@ -374,35 +410,58 @@ namespace RSPro2VideoTool
             Application.DoEvents();
 
             // Write the audio file.
-            if (SaveAudioFile(filename) == false)
+            bool result = await Task.Run(() => SaveAudioFile(outputFilename));
+
+            if (result == false)
             {
-                panel1.Enabled = true;
                 labelStatus.Text = "An error occurred saving the audio file.";
-                return false;
+                return;
             }
 
             // Update the status.
             labelStatus.Text = "The audio file was saved.";
             panel1.Enabled = true;
 
-            return true;
+            // Delete the log file.
+            if (checkBoxDeleteLogfile.Checked)
+            {
+                DeleteLogFile();
+            }
+
+            return;
         }
 
-        private String SaveAudioFileDialog()
+        private String SaveAudioFileDialog(AudioOutputType audioOutputType)
         {
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
                 // Select initial search directory
                 String initialDirectory = Path.GetDirectoryName(textBoxSourceVideoFile.Text);
 
-                saveFileDialog.Title = "Save audio file";
                 saveFileDialog.InitialDirectory = initialDirectory;
-                saveFileDialog.Filter = "Wave files (*.wav)|*.wav|All files (*.*)|*.*";
                 saveFileDialog.RestoreDirectory = true;
                 saveFileDialog.AddExtension = true;
-                saveFileDialog.DefaultExt = "wav";
                 saveFileDialog.ValidateNames = true;
-                saveFileDialog.FileName = Path.GetFileNameWithoutExtension(textBoxSourceVideoFile.Text) + ".wav";
+
+                switch (audioOutputType)
+                {
+                    case AudioOutputType.WAV:
+                        saveFileDialog.Title = "Save .wav audio file";
+                        saveFileDialog.Filter = "Wave files (*.wav)|*.wav|All files (*.*)|*.*";
+                        saveFileDialog.DefaultExt = "wav";
+                        saveFileDialog.FileName = Path.GetFileNameWithoutExtension(textBoxSourceVideoFile.Text) + ".wav";
+                        break;
+
+                    case AudioOutputType.MP3:
+                        saveFileDialog.Title = "Save .mp3 audio file";
+                        saveFileDialog.Filter = "MP3 files (*.mp3)|*.mp3|All files (*.*)|*.*";
+                        saveFileDialog.DefaultExt = "mp3";
+                        saveFileDialog.FileName = Path.GetFileNameWithoutExtension(textBoxSourceVideoFile.Text) + ".mp3";
+                        break;
+
+                    default:
+                        return null;
+                }
 
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
@@ -422,13 +481,14 @@ namespace RSPro2VideoTool
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = FfmpegApp,
-                Arguments = String.Format("-i \"{0}\" \"{1}\"",
-                    textBoxSourceVideoFile.Text, audioOutputFile),
+                Arguments = $"-y -hide_banner -i \"{textBoxSourceVideoFile.Text}\" \"{audioOutputFile}\"",
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Maximized
             };
+
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
 
             // Start ffmpeg to extract the frames.
             process.Start();
@@ -443,49 +503,32 @@ namespace RSPro2VideoTool
 
             if (!(ExitCode == 0))
             {
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"Error:\r\n{FfmpegOutput} \r\n\r\n");
                 return false;
             }
+
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"{FfmpegOutput} \r\n\r\n");
 
             return true;
         }
 
-        private async void SaveVideo(int verticalResolution)
+        private async void ReEncodeVideo()
         {
-            // Let the user select the output filename.
-            String filename = SaveVideoFileDialog(verticalResolution);
-            if (filename == null) { return; }
+            // Let the user select the output outputFilename.
+            String outputFilename = SaveVideoFileDialog(VideoOutputType.Encode);
+            if (outputFilename == null) { return; }
 
+            SetLogFileLocation(outputFilename);
+            
             // Update the user that their file is being saved.
             labelStatus.Text = "Working ...";
             panel1.Enabled = false;
             Application.DoEvents();
 
-            // Start the animation.
-            panel1.Visible = false;
-            panel2.Visible = true;
-            if (ToolAnimationFile != null)
-            {
-                pictureBoxToolAnimation.Image = Image.FromFile(ToolAnimationFile);
-
-                // If the image is larger than the picture box.
-                if (pictureBoxToolAnimation.Image.Width > pictureBoxToolAnimation.Width ||
-                    pictureBoxToolAnimation.Image.Height > pictureBoxToolAnimation.Height)
-                {
-                    pictureBoxToolAnimation.SizeMode = PictureBoxSizeMode.Zoom;
-                }
-                else
-                {
-                    pictureBoxToolAnimation.SizeMode = PictureBoxSizeMode.CenterImage;
-                }
-            }
-
             // Write the video file.
-            bool result = await Task.Run(() => SaveVideoFile(textBoxSourceVideoFile.Text, filename, verticalResolution));
+            bool result = await Task.Run(() => ReEncodeVideoFile(textBoxSourceVideoFile.Text, outputFilename));
 
-            // Stop the animation.
-            panel1.Visible = true;
-            panel2.Visible = false;
-            pictureBoxToolAnimation.Image = null;
+            // Controls.Remove(pBar);
 
             if (result == false)
             {
@@ -495,26 +538,45 @@ namespace RSPro2VideoTool
             }
 
             // Update the status.
-            labelStatus.Text = "The video file was saved.";
             panel1.Enabled = true;
+            labelStatus.Text = "The video file was saved.";
+
+            // Delete the log file.
+            if (checkBoxDeleteLogfile.Checked)
+            {
+                DeleteLogFile();
+            }
 
             return;
         }
 
-        private String SaveVideoFileDialog(int verticalResolution)
+        private String SaveVideoFileDialog(VideoOutputType videoOutputType)
         {
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
                 // Select initial search directory
                 String initialDirectory = Path.GetDirectoryName(textBoxSourceVideoFile.Text);
 
+                switch (videoOutputType)
+                {
+                    case VideoOutputType.Encode:
+                        saveFileDialog.FileName = Path.GetFileNameWithoutExtension(textBoxSourceVideoFile.Text) + " (Re-encoded).mp4";
+                        break;
+                    
+                    case VideoOutputType.Sync:
+                        saveFileDialog.FileName = Path.GetFileNameWithoutExtension(textBoxSourceVideoFile.Text) + " (synced).mp4";
+                        break;
+
+                    default:
+                        return null;
+                }
+
                 saveFileDialog.Title = "Save video file";
                 saveFileDialog.InitialDirectory = initialDirectory;
                 saveFileDialog.Filter = "Video files (*.mp4, *.webm, *.avi, *.mov, *.mkv, *.mpg, *.mpeg, *.wmv)|*.mp4;*.webm;*.avi;*.mov;*.mkv;*.mpg;*.mpeg;*.wmv|All files (*.*)|*.*";
                 saveFileDialog.RestoreDirectory = true;
                 saveFileDialog.ValidateNames = true;
-                saveFileDialog.OverwritePrompt = false;
-                saveFileDialog.FileName = Path.GetFileNameWithoutExtension(textBoxSourceVideoFile.Text) + " " + verticalResolution.ToString() + "p" + Path.GetExtension(textBoxSourceVideoFile.Text);
+                saveFileDialog.OverwritePrompt = true;
 
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
@@ -526,12 +588,16 @@ namespace RSPro2VideoTool
             return null;
         }
 
-        private bool SaveVideoFile(String sourceVideoFile, String videoOutputFile, int verticalResolution)
+        private bool ReEncodeVideoFile(String sourceVideoFile, String videoOutputFile)
         {
+            // Set the sample rate for the output audio. If the rate is anything other than 44100, set it to 48000.
+            int audioRate = (SampleRate == 44100) ? 44100 : 48000;
+
             Process process = new Process();
 
-            String arguments = String.Format("-y -i \"{0}\" -vf scale=-2:{1} \"{2}\"",
-                    sourceVideoFile, verticalResolution, videoOutputFile);
+            String arguments = $"-y -hide_banner -i \"{sourceVideoFile}\" "
+                + $"-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 23 -c:a aac -ar {audioRate} -q:a 1 -movflags +faststart "
+                + $"\"{videoOutputFile}\"";
 
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo
@@ -544,6 +610,8 @@ namespace RSPro2VideoTool
                 WindowStyle = ProcessWindowStyle.Maximized
             };
 
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
+
             // Start ffmpeg to extract the frames.
             process.Start();
 
@@ -557,10 +625,205 @@ namespace RSPro2VideoTool
 
             if (!(ExitCode == 0))
             {
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"Error:\r\n{FfmpegOutput} \r\n\r\n");
                 return false;
             }
 
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"{FfmpegOutput} \r\n\r\n");
             return true;
         }
+
+        private async void SyncVideo()
+        {
+            VideoOffset = VideoOffsetDialog.ShowDialog();
+
+            // Let the user select the output outputFilename.
+            String outputFilename = SaveVideoFileDialog(VideoOutputType.Sync);
+            if (outputFilename == null) { return; }
+
+            SetLogFileLocation(outputFilename);
+
+            // Update the user that their file is being saved.
+            labelStatus.Text = "Working ...";
+            panel1.Enabled = false;
+            Application.DoEvents();
+
+            // Write the video file.
+            bool result = await Task.Run(() => SyncVideoFile(textBoxSourceVideoFile.Text, outputFilename, VideoOffset));
+
+            if (result == false)
+            {
+                labelStatus.Text = "An error occurred saving the video file.";
+                return;
+            }
+
+            // Update the status.
+            labelStatus.Text = "The video file was saved.";
+            panel1.Enabled = true;
+
+            // Delete the log file.
+            if (checkBoxDeleteLogfile.Checked)
+            {
+                DeleteLogFile();
+            }
+
+            return;
+        }
+
+        private bool SyncVideoFile(string sourceVideoFile, string outputFilename, double videoOffset)
+        {
+            Process process = new Process();
+
+            String arguments = $"-y -hide_banner -i \"{sourceVideoFile}\" "
+                + $"-itsoffset {(double)videoOffset / FramesPerSecond} -i \"{sourceVideoFile}\" -map 1:v -map 0:a -c copy "
+                + $"\"{outputFilename}\"";
+
+            // Configure the process using the StartInfo properties.
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = FfmpegApp,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Maximized
+            };
+
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"\"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n");
+
+            // Start ffmpeg to extract the frames.
+            process.Start();
+
+            // Read the output of ffmpeg.
+            String FfmpegOutput = process.StandardError.ReadToEnd();
+
+            // Wait here for the process to exit.
+            process.WaitForExit();
+            int ExitCode = process.ExitCode;
+            process.Close();
+
+            if (!(ExitCode == 0))
+            {
+                WriteLog(MethodBase.GetCurrentMethod().Name, $"Error:\r\n{FfmpegOutput} \r\n\r\n");
+                return false;
+            }
+
+            WriteLog(MethodBase.GetCurrentMethod().Name, $"{FfmpegOutput} \r\n\r\n");
+            return true;
+        }
+
+        /// <summary>
+        /// Extracts the ffprobe.exe FfprobeRawXmlData for the given file as an XML string.
+        /// </summary>
+        /// <param name="filename">The name of the file to examine.</param>
+        /// <returns>An XML string of FfprobeRawXmlData about the media file.</returns>
+        String RunFfprobeXml(String filename)
+        {
+            // Create the Process to call the external program.
+            Process process = new Process();
+
+            // Create the arguments string.
+            String arguments = String.Format("-v error -print_format xml -show_format -show_streams \"{0}\"",
+                filename);
+
+            // Configure the process using the StartInfo properties.
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = FfmprobeApp,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Maximized
+            };
+
+            // Start ffmpeg to extract the frames.
+            process.Start();
+
+            // Read the output of ffmpeg.
+            FfprobeRawXmlData = process.StandardOutput.ReadToEnd();
+
+            // Log the ffprobe command line options and output.
+            // WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nComment: XML output from ffprobe for the source video.\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n{FfprobeOutput}\r\n");
+
+            // Wait here for the process to exit.
+            process.WaitForExit();
+            int ExitCode = process.ExitCode;
+            process.Close();
+
+            // Return success or failure.
+            if (!(ExitCode == 0))
+            {
+                return null;
+            }
+
+            return FfprobeRawXmlData;
+        }
+        
+        /// <summary>
+        /// Creates a log file using the source video outputFilename + ".log"
+        /// </summary>
+        /// <returns>Returns true if successful; otherwise false.</returns>
+        private bool SetLogFileLocation(string sourceFile)
+        {
+            // Add ".log" to the end of the full path and outputFilename of the source video file, just like Kdenlive.
+            LogFile = Path.GetFullPath(sourceFile) + ".log";
+
+            // Delete the log file.
+            DeleteLogFile();
+
+            // Write the initial log entry.
+            String LogEntry = $"\r\n***Log start time: {DateTime.Now}\r\nFilename: {sourceFile}\r\n";
+            WriteLog(MethodBase.GetCurrentMethod().Name, LogEntry);
+
+            // Write ffprobe XML file for this media file.
+            WriteLog(MethodBase.GetCurrentMethod().Name,
+                $"XML output from ffprobe for the source file: {textBoxSourceVideoFile.Text}\r\n{FfprobeRawXmlData}\r\n");
+
+            return true;
+        }
+
+        void WriteLog(String CreatorMethod, String LogEntry)
+        {
+            String entry = $"{CreatorMethod}: {LogEntry}\r\n";
+
+            lock (LogFileLock)
+            {
+                File.AppendAllText(LogFile, entry);
+            }
+        }
+
+        private void DeleteLogFile()
+        {
+            // Delete the log file.
+            try
+            {
+                File.Delete(LogFile);
+            }
+            catch { }
+        }
     }
+
+    public static class VideoOffsetDialog
+    {
+        public static double ShowDialog()
+        {
+            Form prompt = new Form();
+            prompt.Width = 202;
+            prompt.Height = 125;
+            prompt.Text = "Enter the video offset";
+            Label textLabel = new Label() { Left = 12, Top = 18, Width = 108, Text = "Video offset in frames" };
+            NumericUpDown inputBox = new NumericUpDown() { Left = 126, Top = 16, Width = 44, Value = 2 };
+            Button confirmation = new Button() { Text = "OK", Left = 90, Top = 45, Width = 80 };
+            confirmation.Click += (sender, e) => { prompt.Close(); };
+            prompt.Controls.Add(confirmation);
+            prompt.Controls.Add(textLabel);
+            prompt.Controls.Add(inputBox);
+            prompt.ShowDialog();
+            return (double)inputBox.Value;
+        }
+    }
+
+    public enum AudioOutputType { None, WAV, MP3 };
+    public enum VideoOutputType { None, Sync, Encode };
 }

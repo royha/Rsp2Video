@@ -28,18 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.buttonExtractAudio = new System.Windows.Forms.Button();
-            this.buttonSaveVideo240p = new System.Windows.Forms.Button();
-            this.buttonSaveVideo360p = new System.Windows.Forms.Button();
-            this.buttonSaveVideo480p = new System.Windows.Forms.Button();
-            this.buttonSaveVideo720p = new System.Windows.Forms.Button();
+            this.buttonExtractMp3Audio = new System.Windows.Forms.Button();
             this.buttonBrowse = new System.Windows.Forms.Button();
             this.textBoxSourceVideoFile = new System.Windows.Forms.TextBox();
             this.labelVideo = new System.Windows.Forms.Label();
             this.labelVideoDescription = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.buttonReencodeVideo = new System.Windows.Forms.Button();
+            this.buttonSyncVideo = new System.Windows.Forms.Button();
+            this.buttonExtractWavAudio = new System.Windows.Forms.Button();
             this.labelStatus = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.checkBoxDeleteLogfile = new System.Windows.Forms.CheckBox();
             this.labelAudioDescription = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.pictureBoxToolAnimation = new System.Windows.Forms.PictureBox();
@@ -49,67 +49,23 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxToolAnimation)).BeginInit();
             this.SuspendLayout();
             // 
-            // buttonExtractAudio
+            // buttonExtractMp3Audio
             // 
-            this.buttonExtractAudio.Enabled = false;
-            this.buttonExtractAudio.Location = new System.Drawing.Point(15, 29);
-            this.buttonExtractAudio.Name = "buttonExtractAudio";
-            this.buttonExtractAudio.Size = new System.Drawing.Size(380, 32);
-            this.buttonExtractAudio.TabIndex = 0;
-            this.buttonExtractAudio.Text = "Extract sound file from video";
-            this.buttonExtractAudio.UseVisualStyleBackColor = true;
-            this.buttonExtractAudio.Click += new System.EventHandler(this.buttonExtractAudio_Click);
-            // 
-            // buttonSaveVideo240p
-            // 
-            this.buttonSaveVideo240p.Enabled = false;
-            this.buttonSaveVideo240p.Location = new System.Drawing.Point(15, 67);
-            this.buttonSaveVideo240p.Name = "buttonSaveVideo240p";
-            this.buttonSaveVideo240p.Size = new System.Drawing.Size(380, 32);
-            this.buttonSaveVideo240p.TabIndex = 1;
-            this.buttonSaveVideo240p.Text = "Save video as 240p";
-            this.buttonSaveVideo240p.UseVisualStyleBackColor = true;
-            this.buttonSaveVideo240p.Click += new System.EventHandler(this.buttonSaveVideo240p_Click);
-            // 
-            // buttonSaveVideo360p
-            // 
-            this.buttonSaveVideo360p.Enabled = false;
-            this.buttonSaveVideo360p.Location = new System.Drawing.Point(15, 105);
-            this.buttonSaveVideo360p.Name = "buttonSaveVideo360p";
-            this.buttonSaveVideo360p.Size = new System.Drawing.Size(380, 32);
-            this.buttonSaveVideo360p.TabIndex = 2;
-            this.buttonSaveVideo360p.Text = "Save video as 360p";
-            this.buttonSaveVideo360p.UseVisualStyleBackColor = true;
-            this.buttonSaveVideo360p.Click += new System.EventHandler(this.buttonSaveVideo360p_Click);
-            // 
-            // buttonSaveVideo480p
-            // 
-            this.buttonSaveVideo480p.Enabled = false;
-            this.buttonSaveVideo480p.Location = new System.Drawing.Point(15, 143);
-            this.buttonSaveVideo480p.Name = "buttonSaveVideo480p";
-            this.buttonSaveVideo480p.Size = new System.Drawing.Size(380, 32);
-            this.buttonSaveVideo480p.TabIndex = 3;
-            this.buttonSaveVideo480p.Text = "Save video as 480p";
-            this.buttonSaveVideo480p.UseVisualStyleBackColor = true;
-            this.buttonSaveVideo480p.Click += new System.EventHandler(this.buttonSaveVideo480p_Click);
-            // 
-            // buttonSaveVideo720p
-            // 
-            this.buttonSaveVideo720p.Enabled = false;
-            this.buttonSaveVideo720p.Location = new System.Drawing.Point(15, 181);
-            this.buttonSaveVideo720p.Name = "buttonSaveVideo720p";
-            this.buttonSaveVideo720p.Size = new System.Drawing.Size(380, 32);
-            this.buttonSaveVideo720p.TabIndex = 4;
-            this.buttonSaveVideo720p.Text = "Save video as 720p";
-            this.buttonSaveVideo720p.UseVisualStyleBackColor = true;
-            this.buttonSaveVideo720p.Click += new System.EventHandler(this.buttonSaveVideo720p_Click);
+            this.buttonExtractMp3Audio.Enabled = false;
+            this.buttonExtractMp3Audio.Location = new System.Drawing.Point(15, 67);
+            this.buttonExtractMp3Audio.Name = "buttonExtractMp3Audio";
+            this.buttonExtractMp3Audio.Size = new System.Drawing.Size(380, 32);
+            this.buttonExtractMp3Audio.TabIndex = 1;
+            this.buttonExtractMp3Audio.Text = "Extract .mp3 file from video";
+            this.buttonExtractMp3Audio.UseVisualStyleBackColor = true;
+            this.buttonExtractMp3Audio.Click += new System.EventHandler(this.buttonExtractMp3Audio_Click);
             // 
             // buttonBrowse
             // 
             this.buttonBrowse.Location = new System.Drawing.Point(366, 60);
             this.buttonBrowse.Name = "buttonBrowse";
             this.buttonBrowse.Size = new System.Drawing.Size(61, 23);
-            this.buttonBrowse.TabIndex = 5;
+            this.buttonBrowse.TabIndex = 11;
             this.buttonBrowse.Text = "Browse...";
             this.buttonBrowse.UseVisualStyleBackColor = true;
             this.buttonBrowse.Click += new System.EventHandler(this.buttonBrowse_Click);
@@ -119,7 +75,7 @@
             this.textBoxSourceVideoFile.Location = new System.Drawing.Point(57, 62);
             this.textBoxSourceVideoFile.Name = "textBoxSourceVideoFile";
             this.textBoxSourceVideoFile.Size = new System.Drawing.Size(303, 20);
-            this.textBoxSourceVideoFile.TabIndex = 6;
+            this.textBoxSourceVideoFile.TabIndex = 10;
             // 
             // labelVideo
             // 
@@ -127,7 +83,7 @@
             this.labelVideo.Location = new System.Drawing.Point(14, 65);
             this.labelVideo.Name = "labelVideo";
             this.labelVideo.Size = new System.Drawing.Size(34, 13);
-            this.labelVideo.TabIndex = 7;
+            this.labelVideo.TabIndex = 12;
             this.labelVideo.Text = "Video";
             // 
             // labelVideoDescription
@@ -141,16 +97,49 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.buttonExtractAudio);
-            this.groupBox1.Controls.Add(this.buttonSaveVideo240p);
-            this.groupBox1.Controls.Add(this.buttonSaveVideo360p);
-            this.groupBox1.Controls.Add(this.buttonSaveVideo480p);
-            this.groupBox1.Controls.Add(this.buttonSaveVideo720p);
+            this.groupBox1.Controls.Add(this.checkBoxDeleteLogfile);
+            this.groupBox1.Controls.Add(this.buttonReencodeVideo);
+            this.groupBox1.Controls.Add(this.buttonSyncVideo);
+            this.groupBox1.Controls.Add(this.buttonExtractWavAudio);
+            this.groupBox1.Controls.Add(this.buttonExtractMp3Audio);
             this.groupBox1.Location = new System.Drawing.Point(17, 146);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(410, 235);
             this.groupBox1.TabIndex = 10;
             this.groupBox1.TabStop = false;
+            // 
+            // buttonReencodeVideo
+            // 
+            this.buttonReencodeVideo.Enabled = false;
+            this.buttonReencodeVideo.Location = new System.Drawing.Point(15, 105);
+            this.buttonReencodeVideo.Name = "buttonReencodeVideo";
+            this.buttonReencodeVideo.Size = new System.Drawing.Size(380, 32);
+            this.buttonReencodeVideo.TabIndex = 2;
+            this.buttonReencodeVideo.Text = "Re-encode video for RS-Video";
+            this.buttonReencodeVideo.UseVisualStyleBackColor = true;
+            this.buttonReencodeVideo.Click += new System.EventHandler(this.buttonReencodeVideo_Click);
+            // 
+            // buttonSyncVideo
+            // 
+            this.buttonSyncVideo.Enabled = false;
+            this.buttonSyncVideo.Location = new System.Drawing.Point(15, 143);
+            this.buttonSyncVideo.Name = "buttonSyncVideo";
+            this.buttonSyncVideo.Size = new System.Drawing.Size(380, 32);
+            this.buttonSyncVideo.TabIndex = 3;
+            this.buttonSyncVideo.Text = "Synchronize video with audio";
+            this.buttonSyncVideo.UseVisualStyleBackColor = true;
+            this.buttonSyncVideo.Click += new System.EventHandler(this.buttonSyncVideo_Click);
+            // 
+            // buttonExtractWavAudio
+            // 
+            this.buttonExtractWavAudio.Enabled = false;
+            this.buttonExtractWavAudio.Location = new System.Drawing.Point(15, 29);
+            this.buttonExtractWavAudio.Name = "buttonExtractWavAudio";
+            this.buttonExtractWavAudio.Size = new System.Drawing.Size(380, 32);
+            this.buttonExtractWavAudio.TabIndex = 0;
+            this.buttonExtractWavAudio.Text = "Extract .wav file from video";
+            this.buttonExtractWavAudio.UseVisualStyleBackColor = true;
+            this.buttonExtractWavAudio.Click += new System.EventHandler(this.buttonExtractWavAudio_Click);
             // 
             // labelStatus
             // 
@@ -175,6 +164,19 @@
             this.panel1.TabIndex = 12;
             this.panel1.DragDrop += new System.Windows.Forms.DragEventHandler(this.panel1_DragDrop);
             this.panel1.DragEnter += new System.Windows.Forms.DragEventHandler(this.panel1_DragEnter);
+            // 
+            // checkBoxDeleteLogfile
+            // 
+            this.checkBoxDeleteLogfile.AutoSize = true;
+            this.checkBoxDeleteLogfile.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.checkBoxDeleteLogfile.Checked = true;
+            this.checkBoxDeleteLogfile.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxDeleteLogfile.Location = new System.Drawing.Point(207, 212);
+            this.checkBoxDeleteLogfile.Name = "checkBoxDeleteLogfile";
+            this.checkBoxDeleteLogfile.Size = new System.Drawing.Size(188, 17);
+            this.checkBoxDeleteLogfile.TabIndex = 4;
+            this.checkBoxDeleteLogfile.Text = "Delete log file after task completes";
+            this.checkBoxDeleteLogfile.UseVisualStyleBackColor = true;
             // 
             // labelAudioDescription
             // 
@@ -216,6 +218,7 @@
             this.Text = "Reverse Speech to Video Tool";
             this.Load += new System.EventHandler(this.RSPro2VideoToolForm_Load);
             this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.panel2.ResumeLayout(false);
@@ -226,11 +229,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Button buttonExtractAudio;
-        private System.Windows.Forms.Button buttonSaveVideo240p;
-        private System.Windows.Forms.Button buttonSaveVideo360p;
-        private System.Windows.Forms.Button buttonSaveVideo480p;
-        private System.Windows.Forms.Button buttonSaveVideo720p;
+        private System.Windows.Forms.Button buttonExtractMp3Audio;
         private System.Windows.Forms.Button buttonBrowse;
         private System.Windows.Forms.TextBox textBoxSourceVideoFile;
         private System.Windows.Forms.Label labelVideo;
@@ -241,6 +240,10 @@
         private System.Windows.Forms.Label labelAudioDescription;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.PictureBox pictureBoxToolAnimation;
+        private System.Windows.Forms.Button buttonExtractWavAudio;
+        private System.Windows.Forms.Button buttonReencodeVideo;
+        private System.Windows.Forms.Button buttonSyncVideo;
+        private System.Windows.Forms.CheckBox checkBoxDeleteLogfile;
     }
 }
 
