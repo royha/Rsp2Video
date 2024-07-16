@@ -115,6 +115,8 @@ namespace RSPro2VideoTool
             toolTips.SetToolTip(this.groupBox1, "Drag and drop a video file here.");
             toolTips.SetToolTip(this.buttonExtractMp3Audio, "Extracts an .mp3 file from the video.");
             toolTips.SetToolTip(this.buttonExtractWavAudio, "Extracts an .wav file from the video.");
+            toolTips.SetToolTip(this.buttonReencodeVideo, "Re-encodes the video and audio into a form acceptable to RS Video.");
+            toolTips.SetToolTip(this.buttonSyncVideo, "Synchronizes the video with the audio by moving the video\r\nforward or backward by the number of frames you specify.");
         }
 
         private void panel1_DragEnter(object sender, DragEventArgs e)
@@ -410,7 +412,29 @@ namespace RSPro2VideoTool
             Application.DoEvents();
 
             // Write the audio file.
-            bool result = await Task.Run(() => SaveAudioFile(outputFilename));
+            bool result = false;
+
+            using (var waitForm = new frmWaitForm())
+            {
+                // Set the focus onto the main form.
+                this.Activate();
+
+                // Change the mouse pointer to an hourglass.
+                Application.UseWaitCursor = true;
+
+                // Show the wait form in a non-blocking way.
+                waitForm.Show();
+
+                // Run the re-encode process asynchronously.
+                result = await Task.Run(() => SaveAudioFile(outputFilename));
+
+                // Close the wait form after the task is completed.
+                waitForm.Close();
+
+                // Restore the mouse pointer to the normal arrow.
+                Application.UseWaitCursor = false;
+            }
+
 
             if (result == false)
             {
@@ -526,9 +550,28 @@ namespace RSPro2VideoTool
             Application.DoEvents();
 
             // Write the video file.
-            bool result = await Task.Run(() => ReEncodeVideoFile(textBoxSourceVideoFile.Text, outputFilename));
+            bool result = false;
 
-            // Controls.Remove(pBar);
+            using(var waitForm = new frmWaitForm())
+            {
+                // Set the focus onto the main form.
+                this.Activate();
+
+                // Change the mouse pointer to an hourglass.
+                Application.UseWaitCursor = true;
+
+                // Show the wait form in a non-blocking way.
+                waitForm.Show();
+
+                // Run the re-encode process asynchronously.
+                result = await Task.Run(() => ReEncodeVideoFile(textBoxSourceVideoFile.Text, outputFilename));
+
+                // Close the wait form after the task is completed.
+                waitForm.Close();
+
+                // Restore the mouse pointer to the normal arrow.
+                Application.UseWaitCursor = false;
+            }
 
             if (result == false)
             {
@@ -649,7 +692,28 @@ namespace RSPro2VideoTool
             Application.DoEvents();
 
             // Write the video file.
-            bool result = await Task.Run(() => SyncVideoFile(textBoxSourceVideoFile.Text, outputFilename, VideoOffset));
+            bool result = false;
+
+            using (var waitForm = new frmWaitForm())
+            {
+                // Set the focus onto the main form.
+                this.Activate();
+
+                // Change the mouse pointer to an hourglass.
+                Application.UseWaitCursor = true;
+
+                // Show the wait form in a non-blocking way.
+                waitForm.Show();
+
+                // Run the re-encode process asynchronously.
+                result = await Task.Run(() => SyncVideoFile(textBoxSourceVideoFile.Text, outputFilename, VideoOffset));
+
+                // Close the wait form after the task is completed.
+                waitForm.Close();
+
+                // Restore the mouse pointer to the normal arrow.
+                Application.UseWaitCursor = false;
+            }
 
             if (result == false)
             {
