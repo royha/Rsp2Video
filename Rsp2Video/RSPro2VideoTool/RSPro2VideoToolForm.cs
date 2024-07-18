@@ -18,20 +18,21 @@ namespace RSPro2VideoTool
 {
     public partial class RSPro2VideoToolForm : Form
     {
-        Object LogFileLock = new Object();
-        String LogFile;
+        public Object LogFileLock = new Object();
+        public String LogFile;
 
-        int SampleRate;                                                 // The sample rate of the sound file.
-        double FramesPerSecond;                                         // The frames per second of the source and output video.
-        int HorizontalResolution;                                       // The horizontal resolution of the video.
-        int VerticalResolution;                                         // The vertical resolution of the video.
-        double SourceVideoDuration;                                     // The duration of the source video in seconds.
-        double VideoOffset;                                             // The video offset to align the video with the audio.
-        String FfprobeRawXmlData;                                       // The raw XML data from ffprobe.
-        String AudioDescription = String.Empty;                         // The ffprobe description of the audio.
+        public int SampleRate;                                                 // The sample rate of the sound file.
+        public double FramesPerSecond;                                         // The frames per second of the source and output video.
+        public int HorizontalResolution;                                       // The horizontal resolution of the video.
+        public int VerticalResolution;                                         // The vertical resolution of the video.
+        public double SourceVideoDuration;                                     // The duration of the source video in seconds.
+        public String FfprobeRawXmlData;                                       // The raw XML data from ffprobe.
+        public String AudioDescription = String.Empty;                         // The ffprobe description of the audio.
+        public String SourceVideoFile;
 
-        String FfmpegApp = String.Empty;
-        String FfmprobeApp = String.Empty;
+
+        public String FfmpegApp = String.Empty;
+        public String FfmprobeApp = String.Empty;
 
         public RSPro2VideoToolForm()
         {
@@ -170,6 +171,7 @@ namespace RSPro2VideoTool
                     case ".mpeg":
                     case ".wmv":
                         textBoxSourceVideoFile.Text = file;
+                        SourceVideoFile = file;
 
                         // Process the selected file.
                         FileChosen();
@@ -678,7 +680,7 @@ namespace RSPro2VideoTool
 
         private async void SyncVideo()
         {
-            VideoOffset = VideoOffsetDialog.ShowDialog();
+            // VideoOffset = VideoOffsetDialog.ShowDialog();
 
             // Let the user select the output outputFilename.
             String outputFilename = SaveVideoFileDialog(VideoOutputType.Sync);
@@ -694,25 +696,13 @@ namespace RSPro2VideoTool
             // Write the video file.
             bool result = false;
 
-            using (var waitForm = new frmWaitForm())
+            using (var videoSyncForm = new VideoSyncForm(this))
             {
-                // Set the focus onto the main form.
-                this.Activate();
-
-                // Change the mouse pointer to an hourglass.
-                Application.UseWaitCursor = true;
-
-                // Show the wait form in a non-blocking way.
-                waitForm.Show();
+                // Show the video sync form in a non-blocking way.
+                DialogResult dialogResult = videoSyncForm.ShowDialog();
 
                 // Run the re-encode process asynchronously.
-                result = await Task.Run(() => SyncVideoFile(textBoxSourceVideoFile.Text, outputFilename, VideoOffset));
-
-                // Close the wait form after the task is completed.
-                waitForm.Close();
-
-                // Restore the mouse pointer to the normal arrow.
-                Application.UseWaitCursor = false;
+                // result = await Task.Run(() => SyncVideoFile(textBoxSourceVideoFile.Text, outputFilename, VideoOffset));
             }
 
             if (result == false)
@@ -847,7 +837,7 @@ namespace RSPro2VideoTool
             return true;
         }
 
-        void WriteLog(String CreatorMethod, String LogEntry)
+        public void WriteLog(String CreatorMethod, String LogEntry)
         {
             String entry = $"{CreatorMethod}: {LogEntry}\r\n";
 
