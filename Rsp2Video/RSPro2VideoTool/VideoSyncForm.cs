@@ -27,14 +27,17 @@ namespace RSPro2VideoTool
         DirectoryInfo diPngDirectory;                                   // Stores information for the TEMP_DIR directory.
         String TEMP_DIR = "_tmp";                                       // The temp working directory to store intermediate files.
         double VideoOffset;                                             // The video offset, in frames, to align the video with the audio.
-        Double VideoDelay;                                              // The video offset, in seconds, to align the video with the audio.
+        Double VideoDelayInSeconds;                                              // The video offset, in seconds, to align the video with the audio.
         List<String> ffmpegCommands1;                                   // The list of ffmpeg command strings to create the test run video, phase 1.
         List<String> ffmpegCommands2;                                   // The list of ffmpeg command strings to create the test run video, phase 2.
         List<String> ffmpegCommands3;                                   // The list of ffmpeg command strings to create the test run video, phase 3.
         double ClipStartTime;                                           // The start time of the test run clip.
         double ClipEndTime;                                             // The end time of the test run clip.
         double ClipDuration;                                            // The ClipDuration of the test run clip.
+        String TestRunFile = "TestRun";
+        String SyncedVideoFilename = String.Empty;
         String OutputVideoInterimExtension = ".mkv";
+        String OutputVideoFinalExtension = ".mp4";
         String OutputInterimSettings = "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 18 -c:a aac -q:a 1 -movflags +faststart";
         String OutputHighSettings = "-pix_fmt yuv420p -c:v libx264 -preset ultrafast -profile:v high -bf 2 -g 30 -coder 1 -crf 16 -c:a aac -q:a 1 -movflags +faststart";
 
@@ -77,6 +80,73 @@ namespace RSPro2VideoTool
             return truncatedTimeSpan;
         }
 
+        private void buttonMakeFinalVideo_Click(object sender, EventArgs e)
+        {
+            // Let the user select the output outputFilename.
+            SyncedVideoFilename = MainForm.SaveVideoFileDialog(VideoOutputType.Sync);
+            if (SyncedVideoFilename == null) { return; }
+
+            String syncedVideoFilenameWithoutExtension = Path.GetFileNameWithoutExtension(SyncedVideoFilename);
+            String syncedVideoPath = Path.GetDirectoryName(SyncedVideoFilename);
+            String syncedVideoFilenameWithoutExtensionWithPath = Path.Combine(syncedVideoPath,
+                syncedVideoFilenameWithoutExtension);
+
+            // Set the log file location.
+            MainForm.SetLogFileLocation(syncedVideoFilenameWithoutExtension);
+
+            // Output the synchronized video file.
+            Process process = new Process();
+
+            String arguments = $"-y -hide_banner -i \"{MainForm.SourceVideoFile}\" "
+                + $"-itsoffset {VideoDelayInSeconds:0.#######} "
+                + $"-i \"{MainForm.SourceVideoFile}\" -map 1:v -map 0:a -c copy "
+                + $"-progress \"{syncedVideoFilenameWithoutExtensionWithPath}.progress\" "
+                + $"\"{SyncedVideoFilename}\"";
+
+            // Configure the process using the StartInfo properties.
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = MainForm.FfmpegApp,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Maximized
+            };
+
+            // Start ffmpeg to extract the frames.
+            process.Start();
+
+            // Read the output of ffmpeg.
+            String FfmpegOutput = process.StandardError.ReadToEnd();
+
+            // Wait here for the process to exit.
+            process.WaitForExit();
+            int ExitCode = process.ExitCode;
+            process.Close();
+
+            // Return success or failure.
+            if (!(ExitCode == 0))
+            {
+                MainForm.WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nComment: Sync audio and video for final output.\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n***Error: Exit code {ExitCode}\r\n\r\n{FfmpegOutput}\r\n");
+
+                MessageBox.Show("The file did not save correctly.", "Error writing synced file");
+
+                this.DialogResult = DialogResult.Abort;
+
+                return;
+            }
+
+            // Log the ffmpeg command line options and the ffmpeg output.
+            MainForm.WriteLog(MethodBase.GetCurrentMethod().Name, $"\r\nComment: Sync audio and video for final output.\r\nCommand line: \"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}\r\n\r\n{FfmpegOutput}\r\n");
+
+            // Remove the _tmp directory and its contents.
+            RemoveTemp_DirDirectory();
+
+            // Close this dialog box.
+            this.DialogResult = DialogResult.OK;
+        }
+
         private void buttonMakeTestRun_Click(object sender, EventArgs e)
         {
             InitializeTestRunVideo();
@@ -85,21 +155,30 @@ namespace RSPro2VideoTool
 
             MakeReverseClipStrings();
 
-            MakeTransitionClipStrings();
+            // MakeTransitionClipStrings();
 
             MakeClipsFromClipStrings();
 
             AssembleTestRunVideo();
 
+            // RemoveTemp_DirDirectory();
+
             // Now that a video is available, enable the button that plays it.
             buttonViewTestRunVideo.Enabled = true;
+
+            // Launch the video player.
+            try
+            {
+                System.Diagnostics.Process.Start(Path.Combine(WorkingDirectory, TestRunFile + OutputVideoFinalExtension));
+            }
+            catch { }
         }
 
         private void InitializeTestRunVideo()
         {
             // Set the video offset/delay.
             VideoOffset = (double)numericOffset.Value;
-            VideoDelay = VideoOffset / MainForm.FramesPerSecond;
+            VideoDelayInSeconds = VideoOffset / MainForm.FramesPerSecond;
 
             // Initialize the lists of ffmpeg command strings.
             ffmpegCommands1 = new List<String>();
@@ -108,6 +187,9 @@ namespace RSPro2VideoTool
 
             // Create the _tmp directory.
             CreateDirectories();
+
+            // Set the log file location.
+            MainForm.SetLogFileLocation(Path.Combine(WorkingDirectory, TestRunFile + OutputVideoFinalExtension));
 
             // Copy and sync the source video into the _tmp directory as v.mp4.
             CopySourceVideoToWorkingDirectory();
@@ -168,11 +250,11 @@ namespace RSPro2VideoTool
 
             // Run all of the phase 3 tasks in order.
             //foreach (String ffmpegCommand in ffmpegCommands3)
-            Parallel.ForEach(ffmpegCommands3, new ParallelOptions { MaxDegreeOfParallelism = tplThreads }, ffmpegCommand =>
-            {
-                RunFfmpegTask(ffmpegThreads, ffmpegCommand);
+            //Parallel.ForEach(ffmpegCommands3, new ParallelOptions { MaxDegreeOfParallelism = tplThreads }, ffmpegCommand =>
+            //{
+            //    RunFfmpegTask(ffmpegThreads, ffmpegCommand);
             //}
-            });
+            //});
         }
 
         /// <summary>
@@ -223,11 +305,11 @@ namespace RSPro2VideoTool
             List<String> fileList = new List<string>
             {
                 "file F1.mkv",
-                "file F1.First-R1.100.First.mkv",
+                // "file F1.First-R1.100.First.mkv",
                 "file R1.100.Text.mkv",
-                "file R1.100.Last-R1.85.First.mkv",
+                // "file R1.100.Last-R1.85.First.mkv",
                 "file R1.85.Text.mkv",
-                "file R1.85.Last-R1.70.First.mkv",
+                // "file R1.85.Last-R1.70.First.mkv",
                 "file R1.70.Text.mkv"
             };
 
@@ -239,7 +321,7 @@ namespace RSPro2VideoTool
 
             // Create the arguments string.
             String arguments = $"-y -hide_banner -f concat -safe 0 -i filelist.txt -c copy "
-                + $"\"..\\{Path.GetFileName(MainForm.OutputVideoFilename)}\"";
+                + $"\"{TestRunFile}{OutputVideoFinalExtension}\"";
 
             // Configure the process using the StartInfo properties.
             process.StartInfo = new ProcessStartInfo
@@ -279,7 +361,7 @@ namespace RSPro2VideoTool
         private bool CreateDirectories()
         {
             // Store current working directory.
-           StoredCurrentDirectory = Directory.GetCurrentDirectory();
+            StoredCurrentDirectory = Directory.GetCurrentDirectory();
 
             // Set the working directory to _tmp under the output video directory.
             WorkingDirectory = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(MainForm.SourceVideoFile)), TEMP_DIR);
@@ -332,7 +414,7 @@ namespace RSPro2VideoTool
             Process process = new Process();
 
             String arguments = $"-y -hide_banner -i \"{MainForm.SourceVideoFile}\" "
-                + $"-itsoffset {VideoDelay / MainForm.FramesPerSecond:0.#######} "
+                + $"-itsoffset {VideoDelayInSeconds:0.#######} "
                 + $"-i \"{MainForm.SourceVideoFile}\" -map 1:v -map 0:a -c copy "
                 + $"-progress \"{WorkingInputVideoFileWithoutExtension}.progress\" "
                 + $"\"{WorkingInputVideoFile}\"";
@@ -551,7 +633,7 @@ namespace RSPro2VideoTool
                 + $"-f lavfi -i color=color=black:size={MainForm.HorizontalResolution}x{MainForm.VerticalResolution} -loop 1 -t {calculatedFrameBasedDuration:0.##########} "
                 + $"-filter_complex \"[0:v] reverse [ReversedV]; "
                 + $"[ReversedV] split [ReversedV1] [ReversedV2]; "
-                + $"[ReversedV2] [0:v] overlay [v]; "
+                + $"[0:v] [ReversedV2] overlay [v]; "
                 + $"[0:a] areverse [a]\" "
                 + $"-map [v] -map [a] -progress \"{videoFilename2}.progress\" -threads {{0}} {OutputInterimSettings} -shortest "
                 + $"\"{videoFilename2}{OutputVideoInterimExtension}\" "
@@ -685,6 +767,12 @@ namespace RSPro2VideoTool
             }
 
             return true;
+        }
+
+        private void buttonCancel_Click(object sender, EventArgs e)
+        {
+            // Cancel out of this dialog box.
+            this.DialogResult = DialogResult.Cancel;
         }
     }
 }

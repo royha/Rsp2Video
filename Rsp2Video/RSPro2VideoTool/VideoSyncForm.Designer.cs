@@ -41,7 +41,7 @@
             this.numericDuration = new System.Windows.Forms.NumericUpDown();
             this.buttonMakeTestRun = new System.Windows.Forms.Button();
             this.buttonViewTestRunVideo = new System.Windows.Forms.Button();
-            this.buttonMakeFinalVideo = new System.Windows.Forms.Button();
+            this.buttonMakeFinalSyncedVideo = new System.Windows.Forms.Button();
             this.labelVideoLengthValue = new System.Windows.Forms.Label();
             this.labelVideoNameValue = new System.Windows.Forms.Label();
             this.groupBoxTestRunVideo = new System.Windows.Forms.GroupBox();
@@ -70,9 +70,15 @@
             // 
             // numericOffset
             // 
+            this.numericOffset.DecimalPlaces = 2;
             this.numericOffset.Location = new System.Drawing.Point(129, 102);
+            this.numericOffset.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
             this.numericOffset.Name = "numericOffset";
-            this.numericOffset.Size = new System.Drawing.Size(33, 20);
+            this.numericOffset.Size = new System.Drawing.Size(52, 20);
             this.numericOffset.TabIndex = 1;
             this.numericOffset.Value = new decimal(new int[] {
             2,
@@ -175,15 +181,16 @@
             this.buttonViewTestRunVideo.Text = "View test run video";
             this.buttonViewTestRunVideo.UseVisualStyleBackColor = true;
             // 
-            // buttonMakeFinalVideo
+            // buttonMakeFinalSyncedVideo
             // 
-            this.buttonMakeFinalVideo.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.buttonMakeFinalVideo.Location = new System.Drawing.Point(12, 353);
-            this.buttonMakeFinalVideo.Name = "buttonMakeFinalVideo";
-            this.buttonMakeFinalVideo.Size = new System.Drawing.Size(109, 23);
-            this.buttonMakeFinalVideo.TabIndex = 14;
-            this.buttonMakeFinalVideo.Text = "Make final video";
-            this.buttonMakeFinalVideo.UseVisualStyleBackColor = true;
+            this.buttonMakeFinalSyncedVideo.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.buttonMakeFinalSyncedVideo.Location = new System.Drawing.Point(12, 353);
+            this.buttonMakeFinalSyncedVideo.Name = "buttonMakeFinalSyncedVideo";
+            this.buttonMakeFinalSyncedVideo.Size = new System.Drawing.Size(130, 23);
+            this.buttonMakeFinalSyncedVideo.TabIndex = 14;
+            this.buttonMakeFinalSyncedVideo.Text = "Make final synced video";
+            this.buttonMakeFinalSyncedVideo.UseVisualStyleBackColor = true;
+            this.buttonMakeFinalSyncedVideo.Click += new System.EventHandler(this.buttonMakeFinalVideo_Click);
             // 
             // labelVideoLengthValue
             // 
@@ -223,12 +230,13 @@
             // buttonCancel
             // 
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Location = new System.Drawing.Point(127, 353);
+            this.buttonCancel.Location = new System.Drawing.Point(148, 353);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 18;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
+            this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
             // 
             // labelStep1a
             // 
@@ -292,6 +300,7 @@
             // 
             // VideoSyncForm
             // 
+            this.AcceptButton = this.buttonMakeTestRun;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(416, 387);
@@ -307,7 +316,7 @@
             this.Controls.Add(this.groupBoxTestRunVideo);
             this.Controls.Add(this.labelVideoNameValue);
             this.Controls.Add(this.labelVideoLengthValue);
-            this.Controls.Add(this.buttonMakeFinalVideo);
+            this.Controls.Add(this.buttonMakeFinalSyncedVideo);
             this.Controls.Add(this.labelVideoLength);
             this.Controls.Add(this.labelVideoName);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -338,7 +347,7 @@
         private System.Windows.Forms.NumericUpDown numericDuration;
         private System.Windows.Forms.Button buttonMakeTestRun;
         private System.Windows.Forms.Button buttonViewTestRunVideo;
-        private System.Windows.Forms.Button buttonMakeFinalVideo;
+        private System.Windows.Forms.Button buttonMakeFinalSyncedVideo;
         private System.Windows.Forms.Label labelVideoLengthValue;
         private System.Windows.Forms.Label labelVideoNameValue;
         private System.Windows.Forms.GroupBox groupBoxTestRunVideo;

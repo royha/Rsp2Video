@@ -594,7 +594,7 @@ namespace RSPro2VideoTool
             return;
         }
 
-        private String SaveVideoFileDialog(VideoOutputType videoOutputType)
+        public String SaveVideoFileDialog(VideoOutputType videoOutputType)
         {
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
@@ -679,45 +679,31 @@ namespace RSPro2VideoTool
 
         private void SyncVideo()
         {
-            // VideoOffset = VideoOffsetDialog.ShowDialog();
+            DialogResult dialogResult = new DialogResult();
 
-            // Let the user select the output outputFilename.
-            OutputVideoFilename = SaveVideoFileDialog(VideoOutputType.Sync);
-            if (OutputVideoFilename == null) { return; }
-
-            SetLogFileLocation(OutputVideoFilename);
-
-            // Update the user that their file is being saved.
-            labelStatus.Text = "Working ...";
-            panel1.Enabled = false;
-            Application.DoEvents();
-
-            // Write the video file.
-            bool result = false;
-
+            // Prepare to show the VideoSyncForm.
             using (var videoSyncForm = new VideoSyncForm(this))
             {
                 // Show the video sync form in a non-blocking way.
-                DialogResult dialogResult = videoSyncForm.ShowDialog();
-
-                // Run the re-encode process asynchronously.
-                // result = await Task.Run(() => SyncVideoFile(textBoxSourceVideoFile.Text, outputFilename, VideoOffset));
+                dialogResult = videoSyncForm.ShowDialog();
             }
 
-            if (result == false)
-            {
-                labelStatus.Text = "An error occurred saving the video file.";
-                return;
-            }
-
-            // Update the status.
-            labelStatus.Text = "The video file was saved.";
             panel1.Enabled = true;
 
-            // Delete the log file.
-            if (checkBoxDeleteLogfile.Checked)
+            // Update the status.
+            switch(dialogResult)
             {
-                DeleteLogFile();
+                case DialogResult.OK:
+                    labelStatus.Text = "The video file was saved.";
+                    break;
+
+                case DialogResult.Abort:
+                    labelStatus.Text = "An error occurred saving the video file.";
+                    break;
+
+                default:
+                    labelStatus.Text = string.Empty;
+                    break;
             }
 
             return;
@@ -817,7 +803,7 @@ namespace RSPro2VideoTool
         /// Creates a log file using the source video outputFilename + ".log"
         /// </summary>
         /// <returns>Returns true if successful; otherwise false.</returns>
-        private bool SetLogFileLocation(string sourceFile)
+        public bool SetLogFileLocation(string sourceFile)
         {
             // Add ".log" to the end of the full path and outputFilename of the source video file, just like Kdenlive.
             LogFile = Path.GetFullPath(sourceFile) + ".log";
@@ -831,7 +817,7 @@ namespace RSPro2VideoTool
 
             // Write ffprobe XML file for this media file.
             WriteLog(MethodBase.GetCurrentMethod().Name,
-                $"XML output from ffprobe for the source file: {textBoxSourceVideoFile.Text}\r\n{FfprobeRawXmlData}\r\n");
+                $"XML output from ffprobe for the source file: {sourceFile}\r\n{FfprobeRawXmlData}\r\n");
 
             return true;
         }
