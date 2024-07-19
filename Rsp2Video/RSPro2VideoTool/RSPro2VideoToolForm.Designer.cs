@@ -28,18 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RSPro2VideoToolForm));
             this.buttonExtractMp3Audio = new System.Windows.Forms.Button();
             this.buttonBrowse = new System.Windows.Forms.Button();
             this.textBoxSourceVideoFile = new System.Windows.Forms.TextBox();
             this.labelVideo = new System.Windows.Forms.Label();
             this.labelVideoDescription = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.checkBoxDeleteLogfile = new System.Windows.Forms.CheckBox();
             this.buttonReencodeVideo = new System.Windows.Forms.Button();
             this.buttonSyncVideo = new System.Windows.Forms.Button();
             this.buttonExtractWavAudio = new System.Windows.Forms.Button();
             this.labelStatus = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.checkBoxDeleteLogfile = new System.Windows.Forms.CheckBox();
             this.labelAudioDescription = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.pictureBoxToolAnimation = new System.Windows.Forms.PictureBox();
@@ -108,6 +109,19 @@
             this.groupBox1.TabIndex = 10;
             this.groupBox1.TabStop = false;
             // 
+            // checkBoxDeleteLogfile
+            // 
+            this.checkBoxDeleteLogfile.AutoSize = true;
+            this.checkBoxDeleteLogfile.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.checkBoxDeleteLogfile.Checked = true;
+            this.checkBoxDeleteLogfile.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxDeleteLogfile.Location = new System.Drawing.Point(207, 212);
+            this.checkBoxDeleteLogfile.Name = "checkBoxDeleteLogfile";
+            this.checkBoxDeleteLogfile.Size = new System.Drawing.Size(188, 17);
+            this.checkBoxDeleteLogfile.TabIndex = 4;
+            this.checkBoxDeleteLogfile.Text = "Delete log file after task completes";
+            this.checkBoxDeleteLogfile.UseVisualStyleBackColor = true;
+            // 
             // buttonReencodeVideo
             // 
             this.buttonReencodeVideo.Enabled = false;
@@ -165,19 +179,6 @@
             this.panel1.DragDrop += new System.Windows.Forms.DragEventHandler(this.panel1_DragDrop);
             this.panel1.DragEnter += new System.Windows.Forms.DragEventHandler(this.panel1_DragEnter);
             // 
-            // checkBoxDeleteLogfile
-            // 
-            this.checkBoxDeleteLogfile.AutoSize = true;
-            this.checkBoxDeleteLogfile.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.checkBoxDeleteLogfile.Checked = true;
-            this.checkBoxDeleteLogfile.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxDeleteLogfile.Location = new System.Drawing.Point(207, 212);
-            this.checkBoxDeleteLogfile.Name = "checkBoxDeleteLogfile";
-            this.checkBoxDeleteLogfile.Size = new System.Drawing.Size(188, 17);
-            this.checkBoxDeleteLogfile.TabIndex = 4;
-            this.checkBoxDeleteLogfile.Text = "Delete log file after task completes";
-            this.checkBoxDeleteLogfile.UseVisualStyleBackColor = true;
-            // 
             // labelAudioDescription
             // 
             this.labelAudioDescription.AutoSize = true;
@@ -214,6 +215,7 @@
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.labelStatus);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "RSPro2VideoToolForm";
             this.Text = "Reverse Speech to Video Tool";
             this.Load += new System.EventHandler(this.RSPro2VideoToolForm_Load);

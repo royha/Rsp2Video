@@ -29,10 +29,9 @@ namespace RSPro2VideoTool
         public String FfprobeRawXmlData;                                       // The raw XML data from ffprobe.
         public String AudioDescription = String.Empty;                         // The ffprobe description of the audio.
         public String SourceVideoFile;
-
-
         public String FfmpegApp = String.Empty;
         public String FfmprobeApp = String.Empty;
+        public String OutputVideoFilename = String.Empty;
 
         public RSPro2VideoToolForm()
         {
@@ -678,15 +677,15 @@ namespace RSPro2VideoTool
             return true;
         }
 
-        private async void SyncVideo()
+        private void SyncVideo()
         {
             // VideoOffset = VideoOffsetDialog.ShowDialog();
 
             // Let the user select the output outputFilename.
-            String outputFilename = SaveVideoFileDialog(VideoOutputType.Sync);
-            if (outputFilename == null) { return; }
+            OutputVideoFilename = SaveVideoFileDialog(VideoOutputType.Sync);
+            if (OutputVideoFilename == null) { return; }
 
-            SetLogFileLocation(outputFilename);
+            SetLogFileLocation(OutputVideoFilename);
 
             // Update the user that their file is being saved.
             labelStatus.Text = "Working ...";
@@ -880,4 +879,6 @@ namespace RSPro2VideoTool
 
     public enum AudioOutputType { None, WAV, MP3 };
     public enum VideoOutputType { None, Sync, Encode };
+    public enum TransitionType { None, XFade, HoldLastFrame }
+
 }

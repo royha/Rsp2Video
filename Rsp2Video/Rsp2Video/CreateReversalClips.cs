@@ -539,10 +539,11 @@ namespace RSPro2Video
 
             // The command to use when memory requirements allow the reverseFiltergraph method.
             // TODO: calculatedFrameBasedStartSeconds is way off and needs fixing.
+            // Also, I added the "-t {calculatedFrameBasedDuration}
             command1 = $"-y -hide_banner "
                 + $"-ss {originalFrameBasedStartSeconds:0.############} -i \"{RelativePathToWorkingInputVideoFile}\" "
                 + $"-filter_complex \"{interpolationFiltergraph1}; {audioFiltergraph1}\" "
-                + $"-map [v] -map [a] -progress \"{videoFilename1}.progress\" -threads {{0}} {OutputHighSettings} "
+                + $"-map [v] -map [a] -t {originalFrameBasedDuration:0.############} -progress \"{videoFilename1}.progress\" -threads {{0}} {OutputHighSettings} "
                 + $"\"{videoFilename1}{OutputVideoInterimExtension}\" "
                 + $"-map [SlowForwardV1] -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename1}.Last.png\"";
             
@@ -552,7 +553,7 @@ namespace RSPro2Video
                 + $"[ReversedV] split [ReversedV1] [ReversedV2]; "
                 + $"[ReversedV2] [1:v] overlay [v]; "
                 + $"[0:a] areverse [a]\" "
-                + $"-map [v] -map [a] -progress \"{videoFilename2}.progress\" -threads {{0}} {OutputInterimSettings} "
+                + $"-map [v] -map [a] -t {calculatedFrameBasedDuration:0.############} -progress \"{videoFilename2}.progress\" -threads {{0}} {OutputInterimSettings} "
                 + $"\"{videoFilename2}{OutputVideoInterimExtension}\" "
                 + $"-map [ReversedV1] -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename1}.First.png\"";
 

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VideoSyncForm));
             this.labelVideoOffset = new System.Windows.Forms.Label();
             this.numericOffset = new System.Windows.Forms.NumericUpDown();
             this.labelStartTime = new System.Windows.Forms.Label();
@@ -309,6 +310,7 @@
             this.Controls.Add(this.buttonMakeFinalVideo);
             this.Controls.Add(this.labelVideoLength);
             this.Controls.Add(this.labelVideoName);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "VideoSyncForm";
             this.Text = "VideoSyncForm";
             ((System.ComponentModel.ISupportInitialize)(this.numericOffset)).EndInit();
