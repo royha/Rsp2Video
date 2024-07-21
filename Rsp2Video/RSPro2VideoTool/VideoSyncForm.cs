@@ -51,14 +51,17 @@ namespace RSPro2VideoTool
             MainForm = callingForm as RSPro2VideoToolForm;
             InitializeComponent();
 
-            // Start with the "View test run video" disabled.
-            buttonViewTestRunVideo.Enabled = false;
-
             // Show the source video filename.
             labelVideoNameValue.Text = Path.GetFileName(MainForm.SourceVideoFile);
 
-            // Show the source video duration.
-            labelVideoLengthValue.Text = FormatTimeSpan(MainForm.SourceVideoDuration);
+            trackBarVideoStartTime.Maximum = (int)MainForm.SourceVideoDuration;
+            trackBarVideoStartTime.Value = 1;
+            trackBarVideoStartTime.Value = 0;
+            trackBarVideoStartTime.Value = (int)(MainForm.SourceVideoDuration / 10.0d);
+            trackBarVideoDuration.Value = 3;
+
+            // Create the _tmp directory.
+            CreateDirectories();
         }
 
         private String FormatTimeSpan (double duration)
@@ -100,7 +103,6 @@ namespace RSPro2VideoTool
             String arguments = $"-y -hide_banner -i \"{MainForm.SourceVideoFile}\" "
                 + $"-itsoffset {VideoDelayInSeconds:0.#######} "
                 + $"-i \"{MainForm.SourceVideoFile}\" -map 1:v -map 0:a -c copy "
-                + $"-progress \"{syncedVideoFilenameWithoutExtensionWithPath}.progress\" "
                 + $"\"{SyncedVideoFilename}\"";
 
             // Configure the process using the StartInfo properties.
@@ -149,8 +151,38 @@ namespace RSPro2VideoTool
 
         private void buttonMakeTestRun_Click(object sender, EventArgs e)
         {
-            InitializeTestRunVideo();
+            labelVideoSyncStatus.Text = "Creating test run video ...";
 
+            groupBoxVideoSync.Enabled = false;
+
+            // Change the mouse pointer to an hourglass.
+            Application.UseWaitCursor = true;
+
+            Application.DoEvents();
+
+            if (InitializeTestRunVideo() == false) { return; }
+
+            // Run the synchronization process asynchronously.
+            Task task = Task.Run(() => MakeTestRunVideo());
+            task.Wait();
+
+            // Restore the mouse pointer to the normal arrow.
+            Application.UseWaitCursor = false;
+
+            labelVideoSyncStatus.Text = String.Empty;
+
+            // Launch the video player.
+            try
+            {
+                System.Diagnostics.Process.Start(Path.Combine(WorkingDirectory, TestRunFile + OutputVideoFinalExtension));
+            }
+            catch { }
+            
+            groupBoxVideoSync.Enabled = true;
+        }
+
+        private void MakeTestRunVideo()
+        {
             MakeForwardClipString();
 
             MakeReverseClipStrings();
@@ -161,20 +193,34 @@ namespace RSPro2VideoTool
 
             AssembleTestRunVideo();
 
-            // RemoveTemp_DirDirectory();
-
-            // Now that a video is available, enable the button that plays it.
-            buttonViewTestRunVideo.Enabled = true;
-
-            // Launch the video player.
-            try
-            {
-                System.Diagnostics.Process.Start(Path.Combine(WorkingDirectory, TestRunFile + OutputVideoFinalExtension));
-            }
-            catch { }
+            //// Delete the log file.
+            //if (MainForm.checkBoxDeleteLogfile.Checked)
+            //{
+            //    MainForm.DeleteLogFile();
+            //}
         }
 
-        private void InitializeTestRunVideo()
+        private void buttonCancel_Click(object sender, EventArgs e)
+        {
+            // Cancel out of this dialog box.
+            this.DialogResult = DialogResult.Cancel;
+
+            // Remove the _tmp directory.
+            RemoveTemp_DirDirectory();
+        }
+
+        private void trackBarVideoStartTime_ValueChanged(object sender, EventArgs e)
+        {
+            labelStartTimeValue.Text = FormatTimeSpan(trackBarVideoStartTime.Value);
+        }
+
+        private void trackBarVideoDuration_ValueChanged(object sender, EventArgs e)
+        {
+            // Update the display.
+            labelDurationValue.Text = $"{trackBarVideoDuration.Value} seconds";
+        }
+
+        private Boolean InitializeTestRunVideo()
         {
             // Set the video offset/delay.
             VideoOffset = (double)numericOffset.Value;
@@ -185,9 +231,6 @@ namespace RSPro2VideoTool
             ffmpegCommands2 = new List<String>();
             ffmpegCommands3 = new List<String>();
 
-            // Create the _tmp directory.
-            CreateDirectories();
-
             // Set the log file location.
             MainForm.SetLogFileLocation(Path.Combine(WorkingDirectory, TestRunFile + OutputVideoFinalExtension));
 
@@ -195,9 +238,21 @@ namespace RSPro2VideoTool
             CopySourceVideoToWorkingDirectory();
 
             // Calculate the start and end points of the clip.
-            ClipStartTime = (double)numericStartTimeMinutes.Value * 60.0d + (double)numericStartTimeSeconds.Value;
-            ClipDuration = (double)numericDuration.Value;
+            ClipStartTime = trackBarVideoStartTime.Value;
+            ClipDuration = trackBarVideoDuration.Value;
+
+            // Is there enough time for the requested duration?
+            if (MainForm.SourceVideoDuration - ClipStartTime < ClipDuration)
+            {
+                MessageBox.Show("The Start time does not leave enough time for your chosen Duration.\r\nPlease change the Start Time or the Duration and try again.",
+                    "Time and Duration error");
+
+                return false;
+            }
+
             ClipEndTime = ClipStartTime + ClipDuration;
+
+            return true;
         }
 
         private void MakeForwardClipString()
@@ -607,8 +662,9 @@ namespace RSPro2VideoTool
             //    + $"\"{videoFilename1}{OutputVideoInterimExtension}\" "
             //    + $"-map [SlowForwardV1] -pix_fmt rgb48 -an -q:v 1 -frames:v 1 \"{videoFilename1}.Last.png\"";
 
+            // Adding the "-t {originalFrameBasedDuration:0.############} " solved the "this made way too long of a clip" issue.
             command1 = $"-y -hide_banner "
-                + $"-ss {originalFrameBasedStartSeconds:0.############} -i \"{RelativePathToWorkingInputVideoFile}\" "
+                + $"-ss {originalFrameBasedStartSeconds:0.############} -t {originalFrameBasedDuration:0.############} -i \"{RelativePathToWorkingInputVideoFile}\" "
                 + $"-filter_complex \"{interpolationFiltergraph1}; {audioFiltergraph1}\" "
                 + $"-map [v] -map [a] -progress \"{videoFilename1}.progress\" -threads {{0}} {OutputHighSettings} "
                 + $"\"{videoFilename1}{OutputVideoInterimExtension}\" "
@@ -767,12 +823,6 @@ namespace RSPro2VideoTool
             }
 
             return true;
-        }
-
-        private void buttonCancel_Click(object sender, EventArgs e)
-        {
-            // Cancel out of this dialog box.
-            this.DialogResult = DialogResult.Cancel;
         }
     }
 }

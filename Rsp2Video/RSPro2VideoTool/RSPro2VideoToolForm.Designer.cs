@@ -245,7 +245,7 @@
         private System.Windows.Forms.Button buttonExtractWavAudio;
         private System.Windows.Forms.Button buttonReencodeVideo;
         private System.Windows.Forms.Button buttonSyncVideo;
-        private System.Windows.Forms.CheckBox checkBoxDeleteLogfile;
+        public System.Windows.Forms.CheckBox checkBoxDeleteLogfile;
     }
 }
 

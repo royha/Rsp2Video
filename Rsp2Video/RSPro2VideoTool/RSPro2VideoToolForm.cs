@@ -832,7 +832,7 @@ namespace RSPro2VideoTool
             }
         }
 
-        private void DeleteLogFile()
+        public void DeleteLogFile()
         {
             // Delete the log file.
             try
