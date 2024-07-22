@@ -54,10 +54,37 @@ namespace RSPro2VideoTool
             // Show the source video filename.
             labelVideoNameValue.Text = Path.GetFileName(MainForm.SourceVideoFile);
 
+            // Set defaults for the form controls.
+
+            // Best guess for default video offset by frame rate.
+            if (MainForm.FramesPerSecond < 23.0d)
+            {
+                numericOffset.Value = 1;
+            }
+            else if (MainForm.FramesPerSecond < 31.0d)
+            {
+                numericOffset.Value = 2;
+            }
+            else if (MainForm.FramesPerSecond < 47.0d)
+            {
+                numericOffset.Value = 3;
+            }
+            else
+            {
+                numericOffset.Value = 4;
+            }
+
+            // Set maximum start time to the source video duration.
             trackBarVideoStartTime.Maximum = (int)MainForm.SourceVideoDuration;
+
+            // Set the start time default value to 12.5% of the source video duration.
             trackBarVideoStartTime.Value = 1;
             trackBarVideoStartTime.Value = 0;
-            trackBarVideoStartTime.Value = (int)(MainForm.SourceVideoDuration / 10.0d);
+            trackBarVideoStartTime.Value = (int)(MainForm.SourceVideoDuration / 12.5d);
+
+            trackBarVideoStartTime.LargeChange = trackBarVideoStartTime.Maximum / 24;
+
+            // Set a default Test Run clip length of 3 seconds.
             trackBarVideoDuration.Value = 3;
 
             // Create the _tmp directory.

@@ -194,6 +194,7 @@
             this.trackBarVideoStartTime.Name = "trackBarVideoStartTime";
             this.trackBarVideoStartTime.Size = new System.Drawing.Size(376, 45);
             this.trackBarVideoStartTime.TabIndex = 14;
+            this.trackBarVideoStartTime.TickFrequency = 36;
             this.trackBarVideoStartTime.ValueChanged += new System.EventHandler(this.trackBarVideoStartTime_ValueChanged);
             // 
             // buttonCancel
@@ -301,12 +302,14 @@
             this.AcceptButton = this.buttonMakeTestRun;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.buttonCancel;
             this.ClientSize = new System.Drawing.Size(457, 501);
             this.Controls.Add(this.labelVideoSyncStatus);
             this.Controls.Add(this.groupBoxVideoSync);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "VideoSyncForm";
-            this.Text = "VideoSyncForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Text = "Synchronize video with audio";
             ((System.ComponentModel.ISupportInitialize)(this.numericOffset)).EndInit();
             this.groupBoxTestRunVideo.ResumeLayout(false);
             this.groupBoxTestRunVideo.PerformLayout();

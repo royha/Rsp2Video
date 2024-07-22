@@ -284,6 +284,25 @@ namespace RSPro2VideoTool
             XmlNode audioStream = root.SelectSingleNode("/ffprobe/streams/stream[@codec_type='audio']");
             XmlNode format = root.SelectSingleNode("/ffprobe/format");
 
+            // Give an error message if this file isn't suitable.
+            if (videoStream == null)
+            {
+                MessageBox.Show("This file does not contain an video stream.", "Error");
+                return false;
+            }
+
+            if (audioStream == null)
+            {
+                MessageBox.Show("This file does not contain a audio stream.", "Error");
+                return false;
+            }
+
+            if (format == null)
+            {
+                MessageBox.Show("Unable to determine the format of this file.", "Error");
+                return false;
+            }
+
             // Get the text output of ffprobe for the same file.
             Process process = new Process();
 
