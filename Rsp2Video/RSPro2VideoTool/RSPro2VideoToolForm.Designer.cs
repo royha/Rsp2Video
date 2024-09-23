@@ -41,6 +41,7 @@
             this.buttonExtractWavAudio = new System.Windows.Forms.Button();
             this.labelStatus = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.progressBarMain = new System.Windows.Forms.ProgressBar();
             this.labelAudioDescription = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.pictureBoxToolAnimation = new System.Windows.Forms.PictureBox();
@@ -166,6 +167,7 @@
             // panel1
             // 
             this.panel1.AllowDrop = true;
+            this.panel1.Controls.Add(this.progressBarMain);
             this.panel1.Controls.Add(this.labelAudioDescription);
             this.panel1.Controls.Add(this.labelVideoDescription);
             this.panel1.Controls.Add(this.labelVideo);
@@ -178,6 +180,16 @@
             this.panel1.TabIndex = 12;
             this.panel1.DragDrop += new System.Windows.Forms.DragEventHandler(this.panel1_DragDrop);
             this.panel1.DragEnter += new System.Windows.Forms.DragEventHandler(this.panel1_DragEnter);
+            // 
+            // progressBarMain
+            // 
+            this.progressBarMain.Location = new System.Drawing.Point(17, 396);
+            this.progressBarMain.Name = "progressBarMain";
+            this.progressBarMain.Size = new System.Drawing.Size(410, 23);
+            this.progressBarMain.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.progressBarMain.TabIndex = 13;
+            this.progressBarMain.Value = 100;
+            this.progressBarMain.Visible = false;
             // 
             // labelAudioDescription
             // 
@@ -217,7 +229,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "RSPro2VideoToolForm";
-            this.Text = "Reverse Speech to Video Tool";
+            this.Text = "RS Power Tools";
             this.Load += new System.EventHandler(this.RSPro2VideoToolForm_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -237,7 +249,6 @@
         private System.Windows.Forms.Label labelVideo;
         private System.Windows.Forms.Label labelVideoDescription;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.Label labelStatus;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label labelAudioDescription;
         private System.Windows.Forms.Panel panel2;
@@ -246,6 +257,8 @@
         private System.Windows.Forms.Button buttonReencodeVideo;
         private System.Windows.Forms.Button buttonSyncVideo;
         public System.Windows.Forms.CheckBox checkBoxDeleteLogfile;
+        private System.Windows.Forms.ProgressBar progressBarMain;
+        public System.Windows.Forms.Label labelStatus;
     }
 }
 

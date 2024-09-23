@@ -15,6 +15,20 @@ namespace RSPro2VideoTool
         public frmWaitForm()
         {
             InitializeComponent();
+
+            // this.StartPosition = FormStartPosition.CenterParent;
+        }
+
+        public frmWaitForm(Form parent)
+        {
+            this.Owner = parent;
+
+            InitializeComponent();
+        }
+
+        private void frmWaitForm_Activated(object sender, EventArgs e)
+        {
+            this.CenterToParent(); ;
         }
     }
 }

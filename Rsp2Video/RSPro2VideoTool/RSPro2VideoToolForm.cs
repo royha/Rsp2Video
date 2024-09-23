@@ -434,27 +434,26 @@ namespace RSPro2VideoTool
             // Write the audio file.
             bool result = false;
 
-            using (var waitForm = new frmWaitForm())
-            {
-                // Set the focus onto the main form.
-                this.Activate();
+            // Show the progress bar.
+            progressBarMain.Visible = true;
 
-                // Change the mouse pointer to an hourglass.
-                Application.UseWaitCursor = true;
+            // Change the mouse pointer to an hourglass.
+            Application.UseWaitCursor = true;
 
-                // Show the wait form in a non-blocking way.
-                waitForm.Show();
+            // Start a stopwatch.
+            Stopwatch sw = Stopwatch.StartNew();
 
-                // Run the re-encode process asynchronously.
-                result = await Task.Run(() => SaveAudioFile(outputFilename));
+            // Run the re-encode process asynchronously.
+            result = await Task.Run(() => SaveAudioFile(outputFilename));
 
-                // Close the wait form after the task is completed.
-                waitForm.Close();
+            // Stop the stopwatch.
+            sw.Stop();
 
-                // Restore the mouse pointer to the normal arrow.
-                Application.UseWaitCursor = false;
-            }
+            // Restore the mouse pointer to the normal arrow.
+            Application.UseWaitCursor = false;
 
+            // Hide the progress bar.
+            progressBarMain.Visible = false;
 
             if (result == false)
             {
@@ -463,7 +462,7 @@ namespace RSPro2VideoTool
             }
 
             // Update the status.
-            labelStatus.Text = "The audio file was saved.";
+            labelStatus.Text = "Time to create audio file: " + FormatTimeSpan(sw.Elapsed.TotalSeconds);
             panel1.Enabled = true;
 
             // Delete the log file.
@@ -572,26 +571,26 @@ namespace RSPro2VideoTool
             // Write the video file.
             bool result = false;
 
-            using(var waitForm = new frmWaitForm())
-            {
-                // Set the focus onto the main form.
-                this.Activate();
+            // Show the progress bar.
+            progressBarMain.Visible = true;
 
-                // Change the mouse pointer to an hourglass.
-                Application.UseWaitCursor = true;
+            // Change the mouse pointer to an hourglass.
+            Application.UseWaitCursor = true;
 
-                // Show the wait form in a non-blocking way.
-                waitForm.Show();
+            // Start a stopwatch.
+            Stopwatch sw = Stopwatch.StartNew();
 
-                // Run the re-encode process asynchronously.
-                result = await Task.Run(() => ReEncodeVideoFile(textBoxSourceVideoFile.Text, outputFilename));
+            // Run the re-encode process asynchronously.
+            result = await Task.Run(() => ReEncodeVideoFile(textBoxSourceVideoFile.Text, outputFilename));
 
-                // Close the wait form after the task is completed.
-                waitForm.Close();
+            // Stop the stopwatch.
+            sw.Stop();
 
-                // Restore the mouse pointer to the normal arrow.
-                Application.UseWaitCursor = false;
-            }
+            // Restore the mouse pointer to the normal arrow.
+            Application.UseWaitCursor = false;
+
+            // Hide the progress bar.
+            progressBarMain.Visible = false;
 
             if (result == false)
             {
@@ -602,7 +601,7 @@ namespace RSPro2VideoTool
 
             // Update the status.
             panel1.Enabled = true;
-            labelStatus.Text = "The video file was saved.";
+            labelStatus.Text = labelStatus.Text = "Time to create video file: " + FormatTimeSpan(sw.Elapsed.TotalSeconds);
 
             // Delete the log file.
             if (checkBoxDeleteLogfile.Checked)
@@ -713,7 +712,7 @@ namespace RSPro2VideoTool
             switch(dialogResult)
             {
                 case DialogResult.OK:
-                    labelStatus.Text = "The video file was saved.";
+                    // The dialog updated the status text. No need to update it here.
                     break;
 
                 case DialogResult.Abort:
@@ -859,6 +858,25 @@ namespace RSPro2VideoTool
                 File.Delete(LogFile);
             }
             catch { }
+        }
+
+        public String FormatTimeSpan(double duration)
+        {
+            // Choose a different format string if this duration is greater than one hour.
+            String formatString = (duration < 3600.0d) ? @"mm\:ss\.ffff" : @"hh\:mm\:ss\.ffff";
+
+            TimeSpan durationTimeSpan = TimeSpan.FromSeconds(duration);
+
+            // Convert to string with full precision
+            string timeSpanString = durationTimeSpan.ToString(formatString);
+
+            // Use regular expression to remove trailing zeros
+            string truncatedTimeSpan = Regex.Replace(timeSpanString, @"(\.\d*?)0+$", "$1");
+
+            // Remove the decimal point if no fractional part remains
+            truncatedTimeSpan = Regex.Replace(truncatedTimeSpan, @"\.$", "");
+
+            return truncatedTimeSpan;
         }
     }
 

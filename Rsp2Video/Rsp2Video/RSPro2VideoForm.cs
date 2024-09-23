@@ -106,15 +106,35 @@ namespace RSPro2Video
             FfmprobeApp = Path.Combine(ProgramFiles, "ffmpeg\\bin", "ffprobe.exe");
             ffprobeExists = File.Exists(FfmprobeApp);
 
-            if (ffmpegExists == false || ffprobeExists == false)
+            if (ffmpegExists == true && ffprobeExists == true)
             {
-                // ffmpeg needs to be installed.
-                MessageBox.Show("Unable to find ffmpeg. ffmpeg must be installed for RSPro2Video to work.\r\n\r\n" +
-                    "ffmpeg can be found at https://www.gyan.dev/ffmpeg/builds",
-                    "Required application not installed");
-                return false;
+                return true;
             }
-            return true;
+
+            // Next, look in "C:\Program Files\kdenlive\bin".
+
+            ffmpegExists = false;
+            ffprobeExists = false;
+
+            FfmpegApp = Path.Combine(ProgramFiles, "kdenlive\\bin", "ffmpeg.exe");
+            ffmpegExists = File.Exists(FfmpegApp);
+
+            FfmprobeApp = Path.Combine(ProgramFiles, "kdenlive\\bin", "ffprobe.exe");
+            ffprobeExists = File.Exists(FfmprobeApp);
+
+            if (ffmpegExists == true && ffprobeExists == true)
+            {
+                return true;
+            }
+
+            // ffmpeg needs to be installed.
+            MessageBox.Show("Unable to find ffmpeg. ffmpeg must be installed for RSPro2Video to work.\r\n\r\n"
+                + "ffmpeg comes with the Kdenlive video editor. You can download and install the\r\n"
+                + "Kdenlive for Windows Installable package from this webpage: https://kdenlive.org/en/download/\r\n\r\n"
+                + "A standalone version of ffmpeg can be found here: https://www.gyan.dev/ffmpeg/builds",
+                "Required application not installed");
+
+            return false;
         }
 
         private void buttonBack_Click(object sender, EventArgs e)

@@ -51,6 +51,7 @@
             this.labelStep1c = new System.Windows.Forms.Label();
             this.groupBoxVideoSync = new System.Windows.Forms.GroupBox();
             this.labelVideoSyncStatus = new System.Windows.Forms.Label();
+            this.progressBarSyncForm = new System.Windows.Forms.ProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.numericOffset)).BeginInit();
             this.groupBoxTestRunVideo.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarVideoDuration)).BeginInit();
@@ -64,7 +65,7 @@
             this.labelVideoOffset.Location = new System.Drawing.Point(17, 111);
             this.labelVideoOffset.Name = "labelVideoOffset";
             this.labelVideoOffset.Size = new System.Drawing.Size(111, 13);
-            this.labelVideoOffset.TabIndex = 0;
+            this.labelVideoOffset.TabIndex = 10;
             this.labelVideoOffset.Text = "Video offset in frames:";
             // 
             // numericOffset
@@ -78,7 +79,7 @@
             -2147483648});
             this.numericOffset.Name = "numericOffset";
             this.numericOffset.Size = new System.Drawing.Size(52, 20);
-            this.numericOffset.TabIndex = 1;
+            this.numericOffset.TabIndex = 0;
             this.numericOffset.Value = new decimal(new int[] {
             2,
             0,
@@ -91,7 +92,7 @@
             this.labelStartTime.Location = new System.Drawing.Point(6, 25);
             this.labelStartTime.Name = "labelStartTime";
             this.labelStartTime.Size = new System.Drawing.Size(54, 13);
-            this.labelStartTime.TabIndex = 4;
+            this.labelStartTime.TabIndex = 14;
             this.labelStartTime.Text = "Start time:";
             // 
             // labelDuration
@@ -109,7 +110,7 @@
             this.labelVideoName.Location = new System.Drawing.Point(17, 76);
             this.labelVideoName.Name = "labelVideoName";
             this.labelVideoName.Size = new System.Drawing.Size(68, 13);
-            this.labelVideoName.TabIndex = 6;
+            this.labelVideoName.TabIndex = 10;
             this.labelVideoName.Text = "Video Name:";
             // 
             // labelDurationValue
@@ -126,7 +127,7 @@
             this.buttonMakeTestRun.Location = new System.Drawing.Point(6, 156);
             this.buttonMakeTestRun.Name = "buttonMakeTestRun";
             this.buttonMakeTestRun.Size = new System.Drawing.Size(152, 23);
-            this.buttonMakeTestRun.TabIndex = 12;
+            this.buttonMakeTestRun.TabIndex = 4;
             this.buttonMakeTestRun.Text = "Make and play test run video";
             this.buttonMakeTestRun.UseVisualStyleBackColor = true;
             this.buttonMakeTestRun.Click += new System.EventHandler(this.buttonMakeTestRun_Click);
@@ -137,7 +138,7 @@
             this.buttonMakeFinalSyncedVideo.Location = new System.Drawing.Point(17, 405);
             this.buttonMakeFinalSyncedVideo.Name = "buttonMakeFinalSyncedVideo";
             this.buttonMakeFinalSyncedVideo.Size = new System.Drawing.Size(130, 23);
-            this.buttonMakeFinalSyncedVideo.TabIndex = 14;
+            this.buttonMakeFinalSyncedVideo.TabIndex = 5;
             this.buttonMakeFinalSyncedVideo.Text = "Make final synced video";
             this.buttonMakeFinalSyncedVideo.UseVisualStyleBackColor = true;
             this.buttonMakeFinalSyncedVideo.Click += new System.EventHandler(this.buttonMakeFinalVideo_Click);
@@ -184,7 +185,7 @@
             this.trackBarVideoDuration.Minimum = 1;
             this.trackBarVideoDuration.Name = "trackBarVideoDuration";
             this.trackBarVideoDuration.Size = new System.Drawing.Size(376, 45);
-            this.trackBarVideoDuration.TabIndex = 15;
+            this.trackBarVideoDuration.TabIndex = 3;
             this.trackBarVideoDuration.Value = 1;
             this.trackBarVideoDuration.ValueChanged += new System.EventHandler(this.trackBarVideoDuration_ValueChanged);
             // 
@@ -193,7 +194,7 @@
             this.trackBarVideoStartTime.Location = new System.Drawing.Point(9, 41);
             this.trackBarVideoStartTime.Name = "trackBarVideoStartTime";
             this.trackBarVideoStartTime.Size = new System.Drawing.Size(376, 45);
-            this.trackBarVideoStartTime.TabIndex = 14;
+            this.trackBarVideoStartTime.TabIndex = 2;
             this.trackBarVideoStartTime.TickFrequency = 36;
             this.trackBarVideoStartTime.ValueChanged += new System.EventHandler(this.trackBarVideoStartTime_ValueChanged);
             // 
@@ -203,7 +204,7 @@
             this.buttonCancel.Location = new System.Drawing.Point(153, 405);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-            this.buttonCancel.TabIndex = 18;
+            this.buttonCancel.TabIndex = 6;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
@@ -292,10 +293,20 @@
             // labelVideoSyncStatus
             // 
             this.labelVideoSyncStatus.AutoSize = true;
-            this.labelVideoSyncStatus.Location = new System.Drawing.Point(13, 469);
+            this.labelVideoSyncStatus.Location = new System.Drawing.Point(12, 485);
             this.labelVideoSyncStatus.Name = "labelVideoSyncStatus";
             this.labelVideoSyncStatus.Size = new System.Drawing.Size(0, 13);
             this.labelVideoSyncStatus.TabIndex = 26;
+            // 
+            // progressBarSyncForm
+            // 
+            this.progressBarSyncForm.Location = new System.Drawing.Point(12, 459);
+            this.progressBarSyncForm.Name = "progressBarSyncForm";
+            this.progressBarSyncForm.Size = new System.Drawing.Size(433, 23);
+            this.progressBarSyncForm.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.progressBarSyncForm.TabIndex = 27;
+            this.progressBarSyncForm.Value = 100;
+            this.progressBarSyncForm.Visible = false;
             // 
             // VideoSyncForm
             // 
@@ -303,7 +314,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(457, 501);
+            this.ClientSize = new System.Drawing.Size(457, 525);
+            this.Controls.Add(this.progressBarSyncForm);
             this.Controls.Add(this.labelVideoSyncStatus);
             this.Controls.Add(this.groupBoxVideoSync);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -346,5 +358,6 @@
         private System.Windows.Forms.TrackBar trackBarVideoDuration;
         private System.Windows.Forms.GroupBox groupBoxVideoSync;
         private System.Windows.Forms.Label labelVideoSyncStatus;
+        private System.Windows.Forms.ProgressBar progressBarSyncForm;
     }
 }

@@ -91,25 +91,6 @@ namespace RSPro2VideoTool
             CreateDirectories();
         }
 
-        private String FormatTimeSpan (double duration)
-        {
-            // Choose a different format string if this duration is greater than one hour.
-            String formatString = (duration < 3600.0d) ? @"mm\:ss\.ffff" : @"hh\:mm\:ss\.ffff";
-
-            TimeSpan durationTimeSpan = TimeSpan.FromSeconds(duration);
-
-            // Convert to string with full precision
-            string timeSpanString = durationTimeSpan.ToString(formatString);
-
-            // Use regular expression to remove trailing zeros
-            string truncatedTimeSpan = Regex.Replace(timeSpanString, @"(\.\d*?)0+$", "$1");
-
-            // Remove the decimal point if no fractional part remains
-            truncatedTimeSpan = Regex.Replace(truncatedTimeSpan, @"\.$", "");
-
-            return truncatedTimeSpan;
-        }
-
         private void buttonMakeFinalVideo_Click(object sender, EventArgs e)
         {
             // Let the user select the output outputFilename.
@@ -120,6 +101,9 @@ namespace RSPro2VideoTool
             String syncedVideoPath = Path.GetDirectoryName(SyncedVideoFilename);
             String syncedVideoFilenameWithoutExtensionWithPath = Path.Combine(syncedVideoPath,
                 syncedVideoFilenameWithoutExtension);
+
+            // Start a stopwatch.
+            Stopwatch sw = Stopwatch.StartNew();
 
             // Set the log file location.
             MainForm.SetLogFileLocation(syncedVideoFilenameWithoutExtension);
@@ -154,6 +138,9 @@ namespace RSPro2VideoTool
             int ExitCode = process.ExitCode;
             process.Close();
 
+            // Stop the stopwatch.
+            sw.Stop();
+
             // Return success or failure.
             if (!(ExitCode == 0))
             {
@@ -172,40 +159,65 @@ namespace RSPro2VideoTool
             // Remove the _tmp directory and its contents.
             RemoveTemp_DirDirectory();
 
+            // Update the status.
+            MainForm.labelStatus.Text = "Time to create synchronized video file: " + MainForm.FormatTimeSpan(sw.Elapsed.TotalSeconds);
+
             // Close this dialog box.
             this.DialogResult = DialogResult.OK;
         }
 
         private void buttonMakeTestRun_Click(object sender, EventArgs e)
         {
+            // Update the status line.
             labelVideoSyncStatus.Text = "Creating test run video ...";
 
+            // Gray out the group box.
             groupBoxVideoSync.Enabled = false;
 
             // Change the mouse pointer to an hourglass.
             Application.UseWaitCursor = true;
-
             Application.DoEvents();
 
-            if (InitializeTestRunVideo() == false) { return; }
+            // Show the progress bar.
+            // progressBarSyncForm.Visible = true;
 
-            // Run the synchronization process asynchronously.
-            Task task = Task.Run(() => MakeTestRunVideo());
-            task.Wait();
+            // Start a stopwatch.
+            Stopwatch sw = Stopwatch.StartNew();
+
+            // Initialize for the test run video.
+            Boolean initSuccessful = InitializeTestRunVideo();
+
+            if (initSuccessful == true) 
+            {
+                // Run the synchronization process in another thread.
+                Task task = Task.Run(() => MakeTestRunVideo());
+                task.Wait();
+            }
+
+            // Stop the stopwatch.
+            sw.Stop();
+
+            // Hide the progress bar.
+            // progressBarSyncForm.Visible = false;
 
             // Restore the mouse pointer to the normal arrow.
             Application.UseWaitCursor = false;
 
-            labelVideoSyncStatus.Text = String.Empty;
+            // Re-enable the group box.
+            groupBoxVideoSync.Enabled = true;
+
+            // Update the status line.
+            labelVideoSyncStatus.Text = "Time to create test run video: " + MainForm.FormatTimeSpan(sw.Elapsed.TotalSeconds);
 
             // Launch the video player.
-            try
+            if (initSuccessful == true)
             {
-                System.Diagnostics.Process.Start(Path.Combine(WorkingDirectory, TestRunFile + OutputVideoFinalExtension));
+                try
+                {
+                    System.Diagnostics.Process.Start(Path.Combine(WorkingDirectory, TestRunFile + OutputVideoFinalExtension));
+                }
+                catch { }
             }
-            catch { }
-            
-            groupBoxVideoSync.Enabled = true;
         }
 
         private void MakeTestRunVideo()
@@ -238,7 +250,7 @@ namespace RSPro2VideoTool
 
         private void trackBarVideoStartTime_ValueChanged(object sender, EventArgs e)
         {
-            labelStartTimeValue.Text = FormatTimeSpan(trackBarVideoStartTime.Value);
+            labelStartTimeValue.Text = MainForm.FormatTimeSpan(trackBarVideoStartTime.Value);
         }
 
         private void trackBarVideoDuration_ValueChanged(object sender, EventArgs e)
